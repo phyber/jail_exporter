@@ -120,6 +120,12 @@ lazy_static!{
         &["name"]
     ).unwrap();
 
+    static ref JAIL_NMSGQ: IntGaugeVec = register_int_gauge_vec!(
+        "jail_nmsgq",
+        "number of SysV message queues",
+        &["name"]
+    ).unwrap();
+
     static ref JAIL_NSEM: IntGaugeVec = register_int_gauge_vec!(
         "jail_nsem",
         "number of SysV semaphores",
@@ -135,6 +141,12 @@ lazy_static!{
     static ref JAIL_NSHM: IntGaugeVec = register_int_gauge_vec!(
         "jail_nshm",
         "number of SysV shared memory segments",
+        &["name"]
+    ).unwrap();
+
+    static ref JAIL_NTHR: IntGaugeVec = register_int_gauge_vec!(
+        "jail_nthr",
+        "number of threads",
         &["name"]
     ).unwrap();
 
@@ -330,6 +342,9 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             "msgqsize" => {
                 JAIL_MSGQSIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
+            "nmsgq" => {
+                JAIL_NMSGQ.with_label_values(&[&name]).set(*value);
+            },
             "nsem" => {
                 JAIL_NSEM.with_label_values(&[&name]).set(*value);
             },
@@ -338,6 +353,9 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             },
             "nshm" => {
                 JAIL_NSHM.with_label_values(&[&name]).set(*value);
+            },
+            "nthr" => {
+                JAIL_NTHR.with_label_values(&[&name]).set(*value);
             },
             "openfiles" => {
                 JAIL_OPENFILES.with_label_values(&[&name]).set(*value);
