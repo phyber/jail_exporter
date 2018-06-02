@@ -19,6 +19,7 @@ use hyper::{
 use hyper::rt::Future;
 use hyper::service::service_fn_ok;
 use prometheus::{
+    CounterVec,
     Encoder,
     IntCounterVec,
     IntGauge,
@@ -44,19 +45,6 @@ const RCTL_DEFAULT_BUFSIZE: usize = 128 * 1024;
 
 // Descriptions of these metrics are taken from rctl(8) where possible.
 lazy_static!{
-    // Seconds metrics
-    static ref JAIL_CPUTIME_SECONDS: IntCounterVec = register_int_counter_vec!(
-        "jail_cputime_seconds",
-        "CPU time, in seconds",
-        &["name"]
-    ).unwrap();
-
-    static ref JAIL_WALLCLOCK_SECONDS: IntCounterVec = register_int_counter_vec!(
-        "jail_wallclock_seconds",
-        "wallclock time, in seconds",
-        &["name"]
-    ).unwrap();
-
     // Bytes metrics
     static ref JAIL_COREDUMPSIZE_BYTES: IntGaugeVec = register_int_gauge_vec!(
         "jail_coredumpsize_bytes",
@@ -109,6 +97,26 @@ lazy_static!{
     static ref JAIL_VMEMORYUSE_BYTES: IntGaugeVec = register_int_gauge_vec!(
         "jail_vmemoryuse_bytes",
         "address space limit, in bytes",
+        &["name"]
+    ).unwrap();
+
+    // Percent metrics
+    static ref JAIL_PCPU_USED: CounterVec = register_counter_vec!(
+        "jail_pcpu_used",
+        "%CPU, in percents of a single CPU core",
+        &["name"]
+    ).unwrap();
+
+    // Seconds metrics
+    static ref JAIL_CPUTIME_SECONDS: IntCounterVec = register_int_counter_vec!(
+        "jail_cputime_seconds_total",
+        "CPU time, in seconds",
+        &["name"]
+    ).unwrap();
+
+    static ref JAIL_WALLCLOCK_SECONDS: IntCounterVec = register_int_counter_vec!(
+        "jail_wallclock_seconds_total",
+        "wallclock time, in seconds",
         &["name"]
     ).unwrap();
 
@@ -272,6 +280,12 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             },
             "msgqsize" => {
                 JAIL_MSGQSIZE_BYTES.with_label_values(&[&name]).set(*value);
+            },
+            "pcpu" => {
+                // rctl reports these as whole integers. Get a usage value
+                // closer to what Prometheus users expect.
+                let pval: f64 = *value as f64 / 100.0;
+                JAIL_PCPU_USED.with_label_values(&[&name]).inc_by(pval);
             },
             "shmsize" => {
                 JAIL_SHMSIZE_BYTES.with_label_values(&[&name]).set(*value);
