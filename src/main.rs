@@ -107,6 +107,25 @@ lazy_static!{
         &["name"]
     ).unwrap();
 
+    // Random numberical values without a specific unit.
+    static ref JAIL_MAXPROC: IntGaugeVec = register_int_gauge_vec!(
+        "jail_maxproc",
+        "number of processes",
+        &["name"]
+    ).unwrap();
+
+    static ref JAIL_NSHM: IntGaugeVec = register_int_gauge_vec!(
+        "jail_nshm",
+        "number of SysV shared memory segments",
+        &["name"]
+    ).unwrap();
+
+    static ref JAIL_PSEUDOTERMINALS: IntGaugeVec = register_int_gauge_vec!(
+        "jail_pseudoterminals",
+        "number of PTYs",
+        &["name"]
+    ).unwrap();
+
     // Seconds metrics
     static ref JAIL_CPUTIME_SECONDS: IntCounterVec = register_int_counter_vec!(
         "jail_cputime_seconds_total",
@@ -272,6 +291,9 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             "datasize" => {
                 JAIL_DATASIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
+            "maxproc" => {
+                JAIL_MAXPROC.with_label_values(&[&name]).set(*value);
+            },
             "memorylocked" => {
                 JAIL_MEMORYLOCKED_BYTES.with_label_values(&[&name]).set(*value);
             },
@@ -281,11 +303,17 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             "msgqsize" => {
                 JAIL_MSGQSIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
+            "nshm" => {
+                JAIL_NSHM.with_label_values(&[&name]).set(*value);
+            },
             "pcpu" => {
                 // rctl reports these as whole integers. Get a usage value
                 // closer to what Prometheus users expect.
                 let pval: f64 = *value as f64 / 100.0;
                 JAIL_PCPU_USED.with_label_values(&[&name]).inc_by(pval);
+            },
+            "pseudoterminals" => {
+                JAIL_PSEUDOTERMINALS.with_label_values(&[&name]).set(*value);
             },
             "shmsize" => {
                 JAIL_SHMSIZE_BYTES.with_label_values(&[&name]).set(*value);
