@@ -51,6 +51,12 @@ lazy_static!{
         &["name"]
     ).unwrap();
 
+    static ref JAIL_WALLCLOCK_SECONDS: IntCounterVec = register_int_counter_vec!(
+        "jail_wallclock_seconds",
+        "wallclock time, in seconds",
+        &["name"]
+    ).unwrap();
+
     // Bytes metrics
     static ref JAIL_COREDUMPSIZE_BYTES: IntGaugeVec = register_int_gauge_vec!(
         "jail_coredumpsize_bytes",
@@ -243,6 +249,7 @@ fn rusage_to_hashmap(
     hash
 }
 
+// Processes the MetricsHash setting the appripriate time series.
 fn process_metrics_hash(name: &str, metrics: MetricsHash) {
     for (key, value) in &metrics {
         match key.as_ref() {
@@ -250,10 +257,9 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
                 JAIL_COREDUMPSIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
             "cputime" => {
-                let inc = metrics.get("cputime").unwrap()
-                    - JAIL_CPUTIME_SECONDS.with_label_values(&[&name]).get();
-
-                JAIL_CPUTIME_SECONDS.with_label_values(&[&name]).inc_by(inc);
+                let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
+                let inc = metrics.get("cputime").unwrap() - series.get();
+                series.inc_by(inc);
             },
             "datasize" => {
                 JAIL_DATASIZE_BYTES.with_label_values(&[&name]).set(*value);
@@ -278,6 +284,11 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             },
             "vmemoryuse" => {
                 JAIL_VMEMORYUSE_BYTES.with_label_values(&[&name]).set(*value);
+            },
+            "wallclock" => {
+                let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
+                let inc = metrics.get("wallclock").unwrap() - series.get();
+                series.inc_by(inc);
             },
             _ => println!("Unrecognised metric: {}", key),
         }
