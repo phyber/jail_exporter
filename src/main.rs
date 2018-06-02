@@ -293,12 +293,12 @@ fn rusage_to_hashmap(
     let mut hash: MetricsHash = HashMap::new();
 
     // Split up the rusage CSV
-    let metrics: Vec<_> = rusage.split(",").collect();
+    let metrics: Vec<_> = rusage.split(',').collect();
 
     // Process each metric.
     for metric in metrics {
         // Split each metric into name and value
-        let arr: Vec<_> = metric.split("=").collect();
+        let arr: Vec<_> = metric.split('=').collect();
 
         // Finally add to the hash.
         let name = arr[0].to_string();
@@ -307,21 +307,21 @@ fn rusage_to_hashmap(
         hash.insert(name, value);
     }
 
-    hash.insert("jid".to_string(), jid as i64);
+    hash.insert("jid".to_string(), i64::from(jid));
 
     hash
 }
 
 // Processes the MetricsHash setting the appripriate time series.
-fn process_metrics_hash(name: &str, metrics: MetricsHash) {
-    for (key, value) in &metrics {
+fn process_metrics_hash(name: &str, metrics: &MetricsHash) {
+    for (key, value) in metrics {
         match key.as_ref() {
             "coredumpsize" => {
                 JAIL_COREDUMPSIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
             "cputime" => {
                 let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
-                let inc = metrics.get("cputime").unwrap() - series.get();
+                let inc = metrics["cputime"] - series.get();
                 series.inc_by(inc);
             },
             "datasize" => {
@@ -383,7 +383,7 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             },
             "wallclock" => {
                 let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
-                let inc = metrics.get("wallclock").unwrap() - series.get();
+                let inc = metrics["wallclock"] - series.get();
                 series.inc_by(inc);
             },
             // jid isn't actually reported by rctl, but we add it into this
@@ -425,7 +425,7 @@ fn get_jail_metrics() {
 
             // Get a hash of resources based on rusage string.
             let m = rusage_to_hashmap(jid, &rusage);
-            process_metrics_hash(&name, m);
+            process_metrics_hash(&name, &m);
 
             JAIL_TOTAL.set(JAIL_TOTAL.get() + 1);
         }
