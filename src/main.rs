@@ -304,6 +304,14 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
                 let inc = metrics.get("wallclock").unwrap() - series.get();
                 series.inc_by(inc);
             },
+            // jid isn't actually reported by rctl, but we add it into this
+            // hash to keep things simpler.
+            "jid" => {
+                JAIL_ID.with_label_values(&[&name]).set(*value);
+            },
+            // Intentionally unhandled metrics.
+            // These are documented being difficult to observe via rctl(8).
+            "readbps" | "writebps" | "readiops" | "writeiops" => {},
             _ => println!("Unrecognised metric: {}", key),
         }
     }
@@ -337,7 +345,6 @@ fn get_jail_metrics() {
             let m = rusage_to_hashmap(jid, &rusage);
             process_metrics_hash(&name, m);
 
-            JAIL_ID.with_label_values(&[&name]).set(jid as i64);
             JAIL_TOTAL.set(JAIL_TOTAL.get() + 1);
         }
         else {
