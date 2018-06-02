@@ -114,9 +114,33 @@ lazy_static!{
         &["name"]
     ).unwrap();
 
+    static ref JAIL_MSGQQUEUED: IntGaugeVec = register_int_gauge_vec!(
+        "jail_msgqqueued",
+        "number of queued SysV messages",
+        &["name"]
+    ).unwrap();
+
+    static ref JAIL_NSEM: IntGaugeVec = register_int_gauge_vec!(
+        "jail_nsem",
+        "number of SysV semaphores",
+        &["name"]
+    ).unwrap();
+
+    static ref JAIL_NSEMOP: IntGaugeVec = register_int_gauge_vec!(
+        "jail_nsemop",
+        "number of SysV semaphores modified in a single semop(2) call",
+        &["name"]
+    ).unwrap();
+
     static ref JAIL_NSHM: IntGaugeVec = register_int_gauge_vec!(
         "jail_nshm",
         "number of SysV shared memory segments",
+        &["name"]
+    ).unwrap();
+
+    static ref JAIL_OPENFILES: IntGaugeVec = register_int_gauge_vec!(
+        "jail_openfiles",
+        "file descriptor table size",
         &["name"]
     ).unwrap();
 
@@ -300,11 +324,23 @@ fn process_metrics_hash(name: &str, metrics: MetricsHash) {
             "memoryuse" => {
                 JAIL_MEMORYUSE_BYTES.with_label_values(&[&name]).set(*value);
             },
+            "msgqqueued" => {
+                JAIL_MSGQQUEUED.with_label_values(&[&name]).set(*value);
+            },
             "msgqsize" => {
                 JAIL_MSGQSIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
+            "nsem" => {
+                JAIL_NSEM.with_label_values(&[&name]).set(*value);
+            },
+            "nsemop" => {
+                JAIL_NSEMOP.with_label_values(&[&name]).set(*value);
+            },
             "nshm" => {
                 JAIL_NSHM.with_label_values(&[&name]).set(*value);
+            },
+            "openfiles" => {
+                JAIL_OPENFILES.with_label_values(&[&name]).set(*value);
             },
             "pcpu" => {
                 // rctl reports these as whole integers. Get a usage value
