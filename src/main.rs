@@ -15,6 +15,7 @@ use hyper::{
     Request,
     Response,
     Server,
+    StatusCode,
 };
 use hyper::rt::Future;
 use hyper::service::service_fn_ok;
@@ -276,10 +277,10 @@ fn rctl_get_jail(jail_name: &str) -> Result<String, Error> {
             CStr::from_ptr(outbuf.as_ptr() as *mut i8)
         }.to_string_lossy().into_owned();
 
-        return Ok(rusage);
+        Ok(rusage)
     }
     else {
-        return Err(Error::last_os_error());
+        Err(Error::last_os_error())
     }
 }
 
@@ -456,7 +457,13 @@ fn metrics(_req: Request<Body>) -> Response<Body> {
     let mut buffer = vec![];
     encoder.encode(&metric_families, &mut buffer).unwrap();
 
-    Response::new(Body::from(buffer))
+    let resp = Response::builder()
+        .status(StatusCode::OK)
+        .header(hyper::header::CONTENT_TYPE, "text/plain")
+        .body(Body::from(buffer))
+        .unwrap();
+
+    resp
 }
 
 fn main() {
