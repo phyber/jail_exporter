@@ -322,7 +322,7 @@ fn process_metrics_hash(name: &str, metrics: &MetricsHash) {
             },
             "cputime" => {
                 let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
-                let inc = metrics["cputime"] - series.get();
+                let inc = *value - series.get();
                 series.inc_by(inc);
             },
             "datasize" => {
@@ -384,7 +384,7 @@ fn process_metrics_hash(name: &str, metrics: &MetricsHash) {
             },
             "wallclock" => {
                 let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
-                let inc = metrics["wallclock"] - series.get();
+                let inc = *value - series.get();
                 series.inc_by(inc);
             },
             // jid isn't actually reported by rctl, but we add it into this
@@ -457,17 +457,16 @@ fn metrics(_req: Request<Body>) -> Response<Body> {
     let mut buffer = vec![];
     encoder.encode(&metric_families, &mut buffer).unwrap();
 
-    let resp = Response::builder()
+    Response::builder()
         .status(StatusCode::OK)
         .header(hyper::header::CONTENT_TYPE, "text/plain")
         .body(Body::from(buffer))
-        .unwrap();
-
-    resp
+        .unwrap()
 }
 
 fn main() {
-    let addr = ([127, 0, 0, 1], 9999).into();
+    let addr = "127.0.0.1:9999".parse()
+        .expect("unable to parse socket address");
 
     let metrics_svc = || {
         service_fn_ok(metrics)
