@@ -1,6 +1,6 @@
 # Jail Exporter
 
-Jail Exporter is a [Prometheus] export for [FreeBSD] jail metrics as reported
+Jail Exporter is a [Prometheus] exporter for [FreeBSD] jail metrics as reported
 by [`rctl(8)`].
 
 The exporter is written in [Rust] and uses the C FFI to obtain the relavent
