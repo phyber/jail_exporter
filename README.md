@@ -16,6 +16,14 @@ in the following table:
 | `web.listen-address` | `127.0.0.1:9999` | Address on which to expose metrics and web interface. |
 | `web.telemetry-path` | `/metrics`       | Path under which to expose metrics. |
 
+## Running
+
+The exporter needs to run as `root` in order to have enough permission to
+execute the [`rctl_get_racct(2)`] calls.
+
+A no port or `rc(8)` script is available yet, but work on a port will happen
+soon.
+
 ## Exposed Metrics
 
 This exporter was developed under FreeBSD 11.1 and currently exports all
