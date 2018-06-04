@@ -21,7 +21,7 @@ in the following table:
 The exporter needs to run as `root` in order to have enough permission to
 execute the [`rctl_get_racct(2)`] calls.
 
-A no port or `rc(8)` script is available yet, but work on a port will happen
+No port or `rc(8)` script is available yet, but work on a port will happen
 soon.
 
 ## Exposed Metrics
