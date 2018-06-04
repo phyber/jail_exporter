@@ -90,7 +90,7 @@ lazy_static!{
 
     static ref JAIL_STACKSIZE_BYTES: IntGaugeVec = register_int_gauge_vec!(
         "jail_stacksize_bytes",
-        "data size, in bytes",
+        "stack size, in bytes",
         &["name"]
     ).unwrap();
 
