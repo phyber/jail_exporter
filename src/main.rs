@@ -2,12 +2,13 @@
  * jail_exporter
  * -------------
  *
- * An exporter for Prometheus, exporting jail metrics as reported by rctl.
+ * An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
  *
  */
 extern crate hyper;
-#[macro_use] extern crate lazy_static;
 extern crate libc;
+#[macro_use] extern crate clap;
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate prometheus;
 
 use hyper::{
@@ -34,6 +35,8 @@ use std::ffi::{
 };
 use std::io::Error;
 use std::mem::size_of;
+use std::net::SocketAddr;
+use std::str::FromStr;
 
 // MetricsHash stores our Key: Value hashmap
 type MetricsHash = HashMap<String, i64>;
@@ -464,9 +467,34 @@ fn metrics(_req: Request<Body>) -> Response<Body> {
         .unwrap()
 }
 
+// Used as a validator for the argument parsing.
+fn is_ipaddress(s: String) -> Result<(), String> {
+    let res = SocketAddr::from_str(&s);
+    match res {
+        Ok(_) => Ok(()),
+        Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
+    }
+}
+
 fn main() {
-    let addr = "127.0.0.1:9999".parse()
-        .expect("unable to parse socket address");
+    let matches = clap::App::new(crate_name!())
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
+        .arg(clap::Arg::with_name("WEB_LISTEN_ADDRESS")
+             .long("web.listen-address")
+             .value_name("[ADDR:PORT]")
+             .help("Address and port to listen on")
+             .takes_value(true)
+             .default_value("127.0.0.1:9999")
+             .validator(is_ipaddress))
+        .get_matches();
+
+    // This should always be fine, we've already validated it during arg
+    // parsing.
+    // However, we keep the expect as a last resort.
+    let addr: SocketAddr = matches.value_of("WEB_LISTEN_ADDRESS").unwrap()
+        .parse().expect("unable to parse socket address");
 
     let metrics_svc = || {
         service_fn_ok(metrics)

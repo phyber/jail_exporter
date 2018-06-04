@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["David O'Rourke <david.orourke@gmail.com>"]
 
 [dependencies]
+clap = "2.31"
 hyper = "0.12"
 lazy_static = "1.0"
 libc = "0.2"
