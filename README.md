@@ -20,7 +20,7 @@ in the following table:
 
 This exporter was developed under FreeBSD 11.1 and currently exports all
 resources listed under the `RESOURCES` section of [`rctl(8)`] with the
-exception of `readbps, `writebps`, `readiops`, and `writeiops` as these are
+exception of `readbps`, `writebps`, `readiops`, and `writeiops` as these are
 listed as being difficult to measure properly. They may appear in the future.
 
 All exported metrics are prefixed with `jail` and have a `name` label
