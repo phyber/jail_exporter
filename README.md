@@ -72,4 +72,4 @@ future.
 [`node_exporter`]: https://github.com/prometheus/node_exporter/
 [`jail_get(2)`]: https://www.freebsd.org/cgi/man.cgi?query=jail_get&sektion=2
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
-[`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_acct&sektion=2
+[`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
