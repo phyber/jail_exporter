@@ -13,11 +13,13 @@ extern crate libc;
 
 use hyper::{
     Body,
+    Method,
     Request,
     Response,
     Server,
     StatusCode,
 };
+use hyper::header::CONTENT_TYPE;
 use hyper::rt::Future;
 use hyper::service::service_fn_ok;
 use prometheus::{
@@ -462,9 +464,24 @@ fn metrics(_req: Request<Body>) -> Response<Body> {
 
     Response::builder()
         .status(StatusCode::OK)
-        .header(hyper::header::CONTENT_TYPE, "text/plain")
+        .header(CONTENT_TYPE, "text/plain")
         .body(Body::from(buffer))
         .unwrap()
+}
+
+// HTTP request router
+fn http_router(req: Request<Body>) -> Response<Body> {
+    match (req.method(), req.uri().path()) {
+        (&Method::GET, "/metrics") => {
+            metrics(req)
+        },
+        _ => {
+            Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .body(Body::empty())
+                .unwrap()
+        },
+    }
 }
 
 // Used as a validator for the argument parsing.
@@ -484,10 +501,16 @@ fn main() {
         .arg(clap::Arg::with_name("WEB_LISTEN_ADDRESS")
              .long("web.listen-address")
              .value_name("[ADDR:PORT]")
-             .help("Address and port to listen on")
+             .help("Address on which to expose metrics and web interface.")
              .takes_value(true)
              .default_value("127.0.0.1:9999")
              .validator(is_ipaddress))
+        .arg(clap::Arg::with_name("WEB_TELEMETRY_PATH")
+             .long("web.telemetry-path")
+             .value_name("PATH")
+             .help("Path under which to expose metrics.")
+             .takes_value(true)
+             .default_value("/metrics"))
         .get_matches();
 
     // This should always be fine, we've already validated it during arg
@@ -496,12 +519,12 @@ fn main() {
     let addr: SocketAddr = matches.value_of("WEB_LISTEN_ADDRESS").unwrap()
         .parse().expect("unable to parse socket address");
 
-    let metrics_svc = || {
-        service_fn_ok(metrics)
+    let router = || {
+        service_fn_ok(http_router)
     };
 
     let server = Server::bind(&addr)
-        .serve(metrics_svc)
+        .serve(router)
         .map_err(|e| eprintln!("server error: {}", e));
 
     hyper::rt::run(server);
