@@ -12,6 +12,7 @@ extern crate libc;
 #[macro_use] extern crate prometheus;
 
 mod jail;
+mod rctl;
 
 use hyper::{
     Body,
@@ -32,20 +33,9 @@ use prometheus::{
     IntGaugeVec,
     TextEncoder,
 };
-use std::collections::HashMap;
-use std::ffi::{
-    CStr,
-    CString,
-};
 use std::io::Error;
 use std::net::SocketAddr;
 use std::str::FromStr;
-
-// MetricsHash stores our Key: Value hashmap
-type MetricsHash = HashMap<String, i64>;
-
-// Set to the same value as found in rctl.c in FreeBSD 11.1
-const RCTL_DEFAULT_BUFSIZE: usize = 128 * 1024;
 
 // Descriptions of these metrics are taken from rctl(8) where possible.
 lazy_static!{
@@ -192,84 +182,8 @@ lazy_static!{
     ).unwrap();
 }
 
-fn rctl_get_jail(jail_name: &str) -> Result<String, Error> {
-    extern "C" {
-        fn rctl_get_racct(
-            inbufp: *const libc::c_char,
-            inbuflen: libc::size_t,
-            outbufp: *mut libc::c_char,
-            outbuflen: libc::size_t,
-        ) -> libc::c_int;
-    }
-
-    // Create the filter for this specific jail and take the length of the
-    // string.
-    let mut filter = "jail:".to_string();
-    filter.push_str(jail_name);
-    let filterlen = filter.len() + 1;
-
-    // C compatible output buffer.
-    let outbuflen: usize = RCTL_DEFAULT_BUFSIZE / 4;
-    let mut outbuf: Vec<i8> = vec![0; outbuflen];
-
-    // Get the filter as a C string.
-    let cfilter = CString::new(filter).unwrap();
-
-    // Unsafe C call to get the jail resource usage.
-    let error = unsafe {
-        rctl_get_racct(
-            cfilter.as_ptr(),
-            filterlen,
-            outbuf.as_mut_ptr(),
-            outbuflen,
-        )
-    };
-
-    // If everything went well, convert the return C string in the outbuf back
-    // into an easily usable Rust string and return.
-    if error == 0 {
-        let rusage = unsafe {
-            CStr::from_ptr(outbuf.as_ptr() as *mut i8)
-        }.to_string_lossy().into_owned();
-
-        Ok(rusage)
-    }
-    else {
-        Err(Error::last_os_error())
-    }
-}
-
-// Takes an rusage string and builds a hash of metric: value.
-// This function is complete trash as iterators are HARD.
-fn rusage_to_hashmap(
-    jid: i32,
-    rusage: &str,
-) -> MetricsHash {
-    // Create a hashmap to collect our metrics in.
-    let mut hash: MetricsHash = HashMap::new();
-
-    // Split up the rusage CSV
-    let metrics: Vec<_> = rusage.split(',').collect();
-
-    // Process each metric.
-    for metric in metrics {
-        // Split each metric into name and value
-        let arr: Vec<_> = metric.split('=').collect();
-
-        // Finally add to the hash.
-        let name = arr[0].to_string();
-        let value: i64 = arr[1].parse().unwrap();
-
-        hash.insert(name, value);
-    }
-
-    hash.insert("jid".to_string(), i64::from(jid));
-
-    hash
-}
-
 // Processes the MetricsHash setting the appripriate time series.
-fn process_metrics_hash(name: &str, metrics: &MetricsHash) {
+fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
     for (key, value) in metrics {
         match key.as_ref() {
             "coredumpsize" => {
@@ -371,7 +285,7 @@ fn get_jail_metrics() {
                 None => "".to_string(),
             };
 
-            let rusage = match rctl_get_jail(&name) {
+            let rusage = match rctl::get_resource_usage(jid, &name) {
                 Ok(res) => res,
                 Err(err) => {
                     err.to_string();
@@ -380,8 +294,7 @@ fn get_jail_metrics() {
             };
 
             // Get a hash of resources based on rusage string.
-            let m = rusage_to_hashmap(jid, &rusage);
-            process_metrics_hash(&name, &m);
+            process_metrics_hash(&name, &rusage);
 
             JAIL_TOTAL.set(JAIL_TOTAL.get() + 1);
         }
