@@ -11,6 +11,8 @@ extern crate libc;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate prometheus;
 
+mod jail;
+
 use hyper::{
     Body,
     Method,
@@ -36,15 +38,11 @@ use std::ffi::{
     CString,
 };
 use std::io::Error;
-use std::mem::size_of;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
 // MetricsHash stores our Key: Value hashmap
 type MetricsHash = HashMap<String, i64>;
-
-// Hardcoded for now to the value of security.jail.param.name on FreeBSD 11.1.
-const JAIL_NAME_LEN: usize = 256;
 
 // Set to the same value as found in rctl.c in FreeBSD 11.1
 const RCTL_DEFAULT_BUFSIZE: usize = 128 * 1024;
@@ -192,54 +190,6 @@ lazy_static!{
         "jail_num",
         "Current number of running jails."
     ).unwrap();
-}
-
-// Calls libc::jail_get to get jail jid and name.
-// Contains unsafe code.
-fn jail_get(jid: i32) -> (i32, Option<String>) {
-    // Storage for the returned jail name
-    let mut value: Vec<u8> = vec![0; JAIL_NAME_LEN];
-
-    // Prepare jail_get parameters.
-    let mut iov = vec![
-        libc::iovec{
-            iov_base: b"lastjid\0" as *const _ as *mut _,
-            iov_len:  b"lastjid\0".len(),
-        },
-        libc::iovec{
-            iov_base: &jid as *const _ as *mut _,
-            iov_len:  size_of::<i32>(),
-        },
-        libc::iovec{
-            iov_base: b"name\0" as *const _ as *mut _,
-            iov_len:  b"name\0".len(),
-        },
-        libc::iovec{
-            iov_base: value.as_mut_ptr() as *mut _,
-            iov_len:  JAIL_NAME_LEN,
-        },
-    ];
-
-    // Execute jail_get with the above parameters
-    let jid = unsafe {
-        libc::jail_get(
-            iov[..].as_mut_ptr() as *mut libc::iovec,
-            iov.len() as u32,
-            libc::JAIL_DYING,
-        )
-    };
-
-    // If we found a jail, get its name as a Rust string and return.
-    if jid > 0 {
-        let name = unsafe {
-            CStr::from_ptr(value.as_ptr() as *mut i8)
-        }.to_string_lossy().into_owned();
-
-        return (jid, Some(name));
-    }
-
-    // We didn't find anything.
-    (jid, None)
 }
 
 fn rctl_get_jail(jail_name: &str) -> Result<String, Error> {
@@ -413,7 +363,7 @@ fn get_jail_metrics() {
 
     // Loop over jails.
     while lastjid >= 0 {
-        let (jid, value) = jail_get(lastjid);
+        let (jid, value) = jail::get(lastjid);
 
         if jid > 0 {
             let name = match value {
