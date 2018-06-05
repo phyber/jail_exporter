@@ -1,4 +1,5 @@
 extern crate libc;
+extern crate sysctl;
 
 use libc::JAIL_DYING;
 use libc::{
@@ -8,18 +9,35 @@ use libc::{
 use std::ffi::CStr;
 use std::mem::size_of;
 
-// Hardcoded for now to the value of security.jail.param.name on FreeBSD 11.1.
-const JAIL_NAME_LEN: usize = 256;
+// Default param length if we fail to get one from sysctl.
+const DEFAULT_PARAM_LEN: usize = 256;
 
 // jail_get parameter strings
 const PARAM_LASTJID: &[u8] = b"lastjid\0";
 const PARAM_NAME: &[u8] = b"name\0";
 
+// Attempts to get the real param length from sysctl. If it cannot, it simply
+// returns DEFAULT_PARAM_LEN
+fn get_param_length(param: &str) -> usize {
+    let ctl = format!("security.jail.param.{}", param);
+    let val_enum = sysctl::value(&ctl).unwrap();
+
+    if let sysctl::CtlValue::Int(val) = val_enum {
+        val as usize
+    }
+    else {
+        DEFAULT_PARAM_LEN
+    }
+}
+
 // Calls libc::jail_get to get jail jid and name.
 // Contains unsafe code.
 pub fn get(jid: i32) -> (i32, Option<String>) {
+    // Get parameter length from sysctl
+    let max_name_len = get_param_length("name");
+
     // Storage for the returned jail name
-    let mut value: Vec<u8> = vec![0; JAIL_NAME_LEN];
+    let mut value: Vec<u8> = vec![0; max_name_len];
 
     // Prepare jail_get parameters.
     let mut iov = vec![
@@ -37,7 +55,7 @@ pub fn get(jid: i32) -> (i32, Option<String>) {
         },
         iovec{
             iov_base: value.as_mut_ptr() as *mut _,
-            iov_len:  JAIL_NAME_LEN,
+            iov_len:  max_name_len,
         },
     ];
 
