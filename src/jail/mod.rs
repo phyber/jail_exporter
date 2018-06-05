@@ -1,7 +1,7 @@
 extern crate libc;
 
+use libc::JAIL_DYING;
 use libc::{
-    JAIL_DYING,
     iovec,
     jail_get,
 };
