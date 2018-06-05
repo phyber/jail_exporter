@@ -1,4 +1,5 @@
 extern crate libc;
+extern crate sysctl;
 
 use std::collections::HashMap;
 use std::ffi::{
@@ -9,6 +10,14 @@ use std::io::Error;
 
 // MetricsHash stores our Key: Value hashmap
 pub type MetricsHash = HashMap<String, i64>;
+
+// Enum representing the state of RACCT/RCTL in the kernel.
+pub enum State {
+    Disabled,
+    Enabled,
+    NotPresent,
+    UnknownError(String),
+}
 
 // Set to the same value as found in rctl.c in FreeBSD 11.1
 const RCTL_DEFAULT_BUFSIZE: usize = 128 * 1024;
@@ -99,4 +108,31 @@ pub fn get_resource_usage(
     };
 
     Ok(rusage_to_hashmap(jid, &rusage_str))
+}
+
+// Checks sysctl to see if RACCT/RCTL is enabled in the kernel.
+pub fn is_enabled() -> State {
+    let ctl = "kern.racct.enable";
+    let res = sysctl::value(&ctl);
+
+    match res {
+        Ok(val_enum) => {
+            if let sysctl::CtlValue::Uint(val) = val_enum {
+                match val {
+                    1 => State::Enabled,
+                    _ => State::Disabled,
+                }
+            }
+            else {
+                let err = format!("Unknown value: {:?}", val_enum);
+                State::UnknownError(err)
+            }
+        },
+        Err(type_) => {
+            match type_ {
+                sysctl::SysctlError::UnknownType => State::NotPresent,
+                _ => State::UnknownError("Unknown Error".to_owned()),
+            }
+        }
+    }
 }

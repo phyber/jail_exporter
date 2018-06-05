@@ -35,6 +35,7 @@ use prometheus::{
 };
 use std::io::Error;
 use std::net::SocketAddr;
+use std::process::exit;
 use std::str::FromStr;
 
 // Descriptions of these metrics are taken from rctl(8) where possible.
@@ -357,6 +358,32 @@ fn is_ipaddress(s: String) -> Result<(), String> {
 }
 
 fn main() {
+    // First, check if RACCT/RCTL is available.
+    let racct_rctl_available = match rctl::is_enabled() {
+        rctl::State::Disabled => {
+            eprintln!("RACCT/RCTL present, but disabled; enable using \
+                      kern.racct.enable=1 tunable");
+            false
+        },
+        rctl::State::Enabled => {
+            true
+        },
+        rctl::State::NotPresent => {
+            eprintln!("RACCT/RCTL support not present in kernel; see rctl(8) \
+                      for details");
+            false
+        },
+        rctl::State::UnknownError(s) => {
+            eprintln!("Unknown error while checking RACCT/RCTL state: {}", s);
+            false
+        },
+    };
+
+    // If it's not available, exit.
+    if !racct_rctl_available {
+        exit(1);
+    }
+
     let matches = clap::App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
