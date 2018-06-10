@@ -5,10 +5,12 @@
  * An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
  *
  */
+extern crate env_logger;
 extern crate hyper;
 extern crate libc;
 #[macro_use] extern crate clap;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate log;
 #[macro_use] extern crate prometheus;
 
 mod jail;
@@ -26,7 +28,6 @@ use hyper::header::CONTENT_TYPE;
 use hyper::rt::Future;
 use hyper::service::service_fn_ok;
 use prometheus::{
-    CounterVec,
     Encoder,
     IntCounterVec,
     IntGauge,
@@ -96,7 +97,7 @@ lazy_static!{
     ).unwrap();
 
     // Percent metrics
-    static ref JAIL_PCPU_USED: CounterVec = register_counter_vec!(
+    static ref JAIL_PCPU_USED: IntCounterVec = register_int_counter_vec!(
         "jail_pcpu_used",
         "%CPU, in percents of a single CPU core",
         &["name"]
@@ -185,6 +186,8 @@ lazy_static!{
 
 // Processes the MetricsHash setting the appripriate time series.
 fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
+    debug!("process_metrics_hash");
+
     for (key, value) in metrics {
         match key.as_ref() {
             "coredumpsize" => {
@@ -232,10 +235,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 JAIL_OPENFILES.with_label_values(&[&name]).set(*value);
             },
             "pcpu" => {
-                // rctl reports these as whole integers. Get a usage value
-                // closer to what Prometheus users expect.
-                let pval: f64 = *value as f64 / 100.0;
-                JAIL_PCPU_USED.with_label_values(&[&name]).inc_by(pval);
+                JAIL_PCPU_USED.with_label_values(&[&name]).inc_by(*value);
             },
             "pseudoterminals" => {
                 JAIL_PSEUDOTERMINALS.with_label_values(&[&name]).set(*value);
@@ -271,6 +271,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
 }
 
 fn get_jail_metrics() {
+    debug!("get_jail_metrics");
     let mut lastjid = 0;
 
     // Set JAIL_TOTAL to zero before gathering.
@@ -278,7 +279,8 @@ fn get_jail_metrics() {
 
     // Loop over jails.
     while lastjid >= 0 {
-        let (jid, value) = jail::get(lastjid);
+        let (jid, value) = jail::get(lastjid, "name");
+        debug!("JID: {}, Name: {:?}", jid, value);
 
         if jid > 0 {
             let name = match value {
@@ -320,6 +322,8 @@ fn get_jail_metrics() {
 }
 
 fn metrics(_req: Request<Body>) -> Response<Body> {
+    debug!("Processing metrics request");
+
     get_jail_metrics();
     let encoder = TextEncoder::new();
     let metric_families = prometheus::gather();
@@ -340,6 +344,7 @@ fn http_router(req: Request<Body>) -> Response<Body> {
             metrics(req)
         },
         _ => {
+            debug!("No handler for request found");
             Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body(Body::empty())
@@ -358,7 +363,10 @@ fn is_ipaddress(s: String) -> Result<(), String> {
 }
 
 fn main() {
+    env_logger::init();
+
     // First, check if RACCT/RCTL is available.
+    debug!("Checking RACCT/RCTL status");
     let racct_rctl_available = match rctl::is_enabled() {
         rctl::State::Disabled => {
             eprintln!("RACCT/RCTL present, but disabled; enable using \
@@ -384,6 +392,7 @@ fn main() {
         exit(1);
     }
 
+    debug!("Parsing command line arguments");
     let matches = clap::App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
@@ -413,6 +422,7 @@ fn main() {
         service_fn_ok(http_router)
     };
 
+    info!("Starting HTTP server on {}", addr);
     let server = Server::bind(&addr)
         .serve(router)
         .map_err(|e| eprintln!("server error: {}", e));

@@ -23,6 +23,8 @@ pub enum State {
 const RCTL_DEFAULT_BUFSIZE: usize = 128 * 1024;
 
 fn rctl_get_jail(jail_name: &str) -> Result<String, Error> {
+    debug!("rctl_get_jail");
+
     extern "C" {
         fn rctl_get_racct(
             inbufp: *const libc::c_char,
@@ -37,6 +39,8 @@ fn rctl_get_jail(jail_name: &str) -> Result<String, Error> {
     let mut filter = "jail:".to_string();
     filter.push_str(jail_name);
     let filterlen = filter.len() + 1;
+
+    debug!("Getting resource usage for {}", filter);
 
     // C compatible output buffer.
     let outbuflen: usize = RCTL_DEFAULT_BUFSIZE / 4;
@@ -75,6 +79,8 @@ fn rusage_to_hashmap(
     jid: i32,
     rusage: &str,
 ) -> MetricsHash {
+    debug!("rusage_to_hashmap: {}, {}", jid, rusage);
+
     // Create a hashmap to collect our metrics in.
     let mut hash: MetricsHash = HashMap::new();
 
@@ -102,6 +108,8 @@ pub fn get_resource_usage(
     jid: i32,
     jail_name: &str
 ) -> Result<MetricsHash, String> {
+    debug!("get_resource_usage: {}, {}", jid, jail_name);
+
     let rusage_str = match rctl_get_jail(&jail_name) {
         Ok(res) => res,
         Err(err) => err.to_string(),
@@ -112,6 +120,8 @@ pub fn get_resource_usage(
 
 // Checks sysctl to see if RACCT/RCTL is enabled in the kernel.
 pub fn is_enabled() -> State {
+    debug!("is_enabled");
+
     let ctl = "kern.racct.enable";
     let res = sysctl::value(&ctl);
 
