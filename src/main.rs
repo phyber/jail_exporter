@@ -41,6 +41,14 @@ use std::str::FromStr;
 
 // Descriptions of these metrics are taken from rctl(8) where possible.
 lazy_static!{
+    // build info metric
+    static ref JAIL_EXPORTER_BUILD_INFO: IntGaugeVec = register_int_gauge_vec!(
+        "jail_exporter_build_info",
+        "A metric with a constant '1' value labelled by version \
+         from which jail_exporter was built",
+        &["version"]
+    ).unwrap();
+
     // Bytes metrics
     static ref JAIL_COREDUMPSIZE_BYTES: IntGaugeVec = register_int_gauge_vec!(
         "jail_coredumpsize_bytes",
@@ -421,6 +429,13 @@ fn main() {
     let router = || {
         service_fn_ok(http_router)
     };
+
+    // Set build_info metric.
+    let build_info_labels = [
+        crate_version!(),
+    ];
+
+    JAIL_EXPORTER_BUILD_INFO.with_label_values(&build_info_labels).set(1);
 
     info!("Starting HTTP server on {}", addr);
     let server = Server::bind(&addr)
