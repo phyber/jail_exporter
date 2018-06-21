@@ -410,7 +410,7 @@ fn main() {
              .value_name("[ADDR:PORT]")
              .help("Address on which to expose metrics and web interface.")
              .takes_value(true)
-             .default_value("127.0.0.1:9999")
+             .default_value("127.0.0.1:9452")
              .validator(is_ipaddress))
         .arg(clap::Arg::with_name("WEB_TELEMETRY_PATH")
              .long("web.telemetry-path")
