@@ -13,7 +13,7 @@ in the following table:
 
 | Argument             | Default          | Purpose                       |
 |----------------------|------------------|-------------------------------|
-| `web.listen-address` | `127.0.0.1:9999` | Address on which to expose metrics and web interface. |
+| `web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface. |
 | `web.telemetry-path` | `/metrics`       | Path under which to expose metrics. |
 
 ## Running
