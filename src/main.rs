@@ -204,7 +204,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
             "cputime" => {
                 let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
                 let inc = *value - series.get();
-                series.inc_by(inc);
+                series.inc_by(inc.abs());
             },
             "datasize" => {
                 JAIL_DATASIZE_BYTES.with_label_values(&[&name]).set(*value);
@@ -263,7 +263,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
             "wallclock" => {
                 let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
                 let inc = *value - series.get();
-                series.inc_by(inc);
+                series.inc_by(inc.abs());
             },
             // jid isn't actually reported by rctl, but we add it into this
             // hash to keep things simpler.
