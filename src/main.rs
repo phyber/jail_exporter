@@ -12,8 +12,8 @@ extern crate libc;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 #[macro_use] extern crate prometheus;
+extern crate jail;
 
-mod jail;
 mod rctl;
 
 use hyper::{
@@ -27,6 +27,7 @@ use hyper::{
 use hyper::header::CONTENT_TYPE;
 use hyper::rt::Future;
 use hyper::service::service_fn_ok;
+use jail::RunningJail;
 use prometheus::{
     Encoder,
     IntCounterVec,
@@ -34,7 +35,6 @@ use prometheus::{
     IntGaugeVec,
     TextEncoder,
 };
-use std::io::Error;
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str::FromStr;
@@ -280,52 +280,29 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
 
 fn get_jail_metrics() {
     debug!("get_jail_metrics");
-    let mut lastjid = 0;
 
     // Set JAIL_TOTAL to zero before gathering.
     JAIL_TOTAL.set(0);
 
     // Loop over jails.
-    while lastjid >= 0 {
-        let (jid, value) = jail::get(lastjid, "name");
-        debug!("JID: {}, Name: {:?}", jid, value);
+    for jail in RunningJail::all() {
+        let name = jail.name()
+            .expect("Could not get jail name");
 
-        if jid > 0 {
-            let name = match value {
-                Some(value) => value,
-                None => "".to_string(),
-            };
+        debug!("JID: {}, Name: {:?}", jail.jid, name);
 
-            let rusage = match rctl::get_resource_usage(jid, &name) {
-                Ok(res) => res,
-                Err(err) => {
-                    err.to_string();
-                    break;
-                },
-            };
+        let rusage = match rctl::get_resource_usage(jail.jid, &name) {
+            Ok(res) => res,
+            Err(err) => {
+                err.to_string();
+                break;
+            },
+        };
 
-            // Get a hash of resources based on rusage string.
-            process_metrics_hash(&name, &rusage);
+        // Get a hash of resources based on rusage string.
+        process_metrics_hash(&name, &rusage);
 
-            JAIL_TOTAL.set(JAIL_TOTAL.get() + 1);
-        }
-        else {
-            // Lastjid was never changed and jail_get returned < -1
-            // Some error other than not finding jails occurred
-            if lastjid == 0 && jid < -1 {
-                println!("{:?}", Error::last_os_error());
-            }
-            // lastjid was changed and jid is -1
-            // We successfully interated over jails and none are left.
-            else if lastjid != 0 && jid == -1 {
-
-            }
-            else {
-                println!("No jails found");
-            }
-        }
-
-        lastjid = jid;
+        JAIL_TOTAL.set(JAIL_TOTAL.get() + 1);
     }
 }
 
