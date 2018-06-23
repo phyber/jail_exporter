@@ -211,7 +211,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match *old_value < *value {
+                let inc = match *old_value <= *value {
                     true => *value - *old_value,
                     false => *value,
                 };
@@ -282,7 +282,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match *old_value < *value {
+                let inc = match *old_value <= *value {
                     true => *value - *old_value,
                     false => *value,
                 };
@@ -485,6 +485,11 @@ mod tests {
         hash.insert("cputime".to_string(), 50);
         process_metrics_hash(&name, &hash);
         assert_eq!(series.get(), 1070);
+
+        // Fifth, add 0, total 1070
+        hash.insert("cputime".to_string(), 50);
+        process_metrics_hash(&name, &hash);
+        assert_eq!(series.get(), 1070);
     }
 
     #[test]
@@ -512,6 +517,11 @@ mod tests {
         assert_eq!(series.get(), 1030);
 
         // Fourth, adds 40, total 1070.
+        hash.insert("wallclock".to_string(), 50);
+        process_metrics_hash(&name, &hash);
+        assert_eq!(series.get(), 1070);
+
+        // Fifth, add 0, total 1070
         hash.insert("wallclock".to_string(), 50);
         process_metrics_hash(&name, &hash);
         assert_eq!(series.get(), 1070);
