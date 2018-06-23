@@ -38,6 +38,7 @@ use prometheus::{
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str::FromStr;
+use std::sync::Mutex;
 
 // Descriptions of these metrics are taken from rctl(8) where possible.
 lazy_static!{
@@ -167,6 +168,7 @@ lazy_static!{
     ).unwrap();
 
     // Seconds metrics
+    static ref JAIL_CPUTIME_SECONDS_OLD: Mutex<i64> = Mutex::new(0);
     static ref JAIL_CPUTIME_SECONDS: IntCounterVec = register_int_counter_vec!(
         "jail_cputime_seconds_total",
         "CPU time, in seconds",
@@ -202,9 +204,21 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 JAIL_COREDUMPSIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
             "cputime" => {
-                let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
-                let inc = *value - series.get();
-                series.inc_by(inc.abs());
+                // Get the value from last time.
+                let mut old_value = JAIL_CPUTIME_SECONDS_OLD.lock().unwrap();
+
+                // Work out what our increase should be.
+                // If old_value < value, OS counter has continued to increment,
+                // otherwise it has reset.
+                let inc = match *old_value < *value {
+                    true => *value - *old_value,
+                    false => *value,
+                };
+
+                // Update book keeping.
+                *old_value = *value;
+
+                JAIL_CPUTIME_SECONDS.with_label_values(&[&name]).inc_by(inc);
             },
             "datasize" => {
                 JAIL_DATASIZE_BYTES.with_label_values(&[&name]).set(*value);
@@ -263,7 +277,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
             "wallclock" => {
                 let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
                 let inc = *value - series.get();
-                series.inc_by(inc.abs());
+                series.inc_by(inc);
             },
             // jid isn't actually reported by rctl, but we add it into this
             // hash to keep things simpler.
