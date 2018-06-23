@@ -31,6 +31,9 @@ resources listed under the `RESOURCES` section of [`rctl(8)`] with the
 exception of `readbps`, `writebps`, `readiops`, and `writeiops` as these are
 listed as being difficult to measure properly. They may appear in the future.
 
+The `id` and `num` time series are calculated based on other information and do
+not come from [`rctl(8)`] directly. 
+
 All exported metrics are prefixed with `jail` and have a `name` label
 representing the name of the jail. As such, jail names are expected to be
 unique.
@@ -63,13 +66,6 @@ Metric                    | `rctl(8)` name    | Description
 `swapuse_bytes`           | `swapuse`         | swap space that may be reserved or used, in bytes
 `vmemoryuse_bytes`        | `vmemoryuse`      | address space limit, in bytes
 `wallclock_seconds_total` | `wallclock`       | wallclock time, in seconds
-
-The `id` and `num` time series are calculated based on other information and do
-not come from [`rctl(8)`] directly. 
-
-The `readbps`, `writebps`, `readiops`, and `writeiops` resources are missing as
-[`rctl(8)`] mentions they are difficult to observe. They may appear in the
-future.
 
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
