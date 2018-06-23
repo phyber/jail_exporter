@@ -66,9 +66,6 @@ applicable.
 
 The `id` and `num` time series are calculated based on other information and do
 not come from [`rctl(8)`] directly. 
-The `pcpu` time series receives some treatment before being presented to turn
-it into a floating point number more in line with how exporters like
-[`node_exporter`] treat CPU metrics.
 
 The `readbps`, `writebps`, `readiops`, and `writeiops` resources are missing as
 [`rctl(8)`] mentions they are difficult to observe. They may appear in the
@@ -77,7 +74,6 @@ future.
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
 [Rust]: https://www.rust-lang.org/
-[`node_exporter`]: https://github.com/prometheus/node_exporter/
 [`jail_get(2)`]: https://www.freebsd.org/cgi/man.cgi?query=jail_get&sektion=2
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
