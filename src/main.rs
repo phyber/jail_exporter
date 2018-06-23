@@ -299,8 +299,10 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
             },
             // Intentionally unhandled metrics.
             // These are documented being difficult to observe via rctl(8).
-            "readbps" | "writebps" | "readiops" | "writeiops" => {},
-            _ => println!("Unrecognised metric: {}", key),
+            "readbps" | "writebps" | "readiops" | "writeiops" => {
+                debug!("Intentionally unhandled metric: {}", key)
+            },
+            _ => debug!("Unrecognised metric: {}", key),
         }
     }
 }
