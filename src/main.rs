@@ -35,10 +35,14 @@ use prometheus::{
     IntGaugeVec,
     TextEncoder,
 };
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str::FromStr;
 use std::sync::Mutex;
+
+// Book keeping for the jail counters.
+type CounterBookKeeper = HashMap<String, i64>;
 
 // Descriptions of these metrics are taken from rctl(8) where possible.
 lazy_static!{
@@ -168,14 +172,18 @@ lazy_static!{
     ).unwrap();
 
     // Seconds metrics
-    static ref JAIL_CPUTIME_SECONDS_OLD: Mutex<i64> = Mutex::new(0);
+    static ref JAIL_CPUTIME_SECONDS_OLD: Mutex<CounterBookKeeper> = Mutex::new(
+        CounterBookKeeper::new()
+    );
     static ref JAIL_CPUTIME_SECONDS: IntCounterVec = register_int_counter_vec!(
         "jail_cputime_seconds_total",
         "CPU time, in seconds",
         &["name"]
     ).unwrap();
 
-    static ref JAIL_WALLCLOCK_SECONDS_OLD: Mutex<i64> = Mutex::new(0);
+    static ref JAIL_WALLCLOCK_SECONDS_OLD: Mutex<CounterBookKeeper> = Mutex::new(
+        CounterBookKeeper::new()
+    );
     static ref JAIL_WALLCLOCK_SECONDS: IntCounterVec = register_int_counter_vec!(
         "jail_wallclock_seconds_total",
         "wallclock time, in seconds",
@@ -205,19 +213,25 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 JAIL_COREDUMPSIZE_BYTES.with_label_values(&[&name]).set(*value);
             },
             "cputime" => {
-                // Get the value from last time.
-                let mut old_value = JAIL_CPUTIME_SECONDS_OLD.lock().unwrap();
+                // Get the Book of Old Values
+                let mut book = JAIL_CPUTIME_SECONDS_OLD.lock().unwrap();
+
+                // Get the old value for this jail, if there isn't one, use 0.
+                let old_value = match book.get(name).cloned() {
+                    Some(v) => v,
+                    None    => 0,
+                };
 
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match *old_value <= *value {
-                    true => *value - *old_value,
+                let inc = match old_value <= *value {
+                    true  => *value - old_value,
                     false => *value,
                 };
 
                 // Update book keeping.
-                *old_value = *value;
+                book.insert(name.to_string(), *value);
 
                 JAIL_CPUTIME_SECONDS.with_label_values(&[&name]).inc_by(inc);
             },
@@ -276,19 +290,25 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 JAIL_VMEMORYUSE_BYTES.with_label_values(&[&name]).set(*value);
             },
             "wallclock" => {
-                // Get the value from last time.
-                let mut old_value = JAIL_WALLCLOCK_SECONDS_OLD.lock().unwrap();
+                // Get the Book of Old Values
+                let mut book = JAIL_WALLCLOCK_SECONDS_OLD.lock().unwrap();
+
+                // Get the old value for this jail, if there isn't one, use 0.
+                let old_value = match book.get(name).cloned() {
+                    Some(v) => v,
+                    None    => 0,
+                };
 
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match *old_value <= *value {
-                    true => *value - *old_value,
+                let inc = match old_value <= *value {
+                    true  => *value - old_value,
                     false => *value,
                 };
 
                 // Update book keeping.
-                *old_value = *value;
+                book.insert(name.to_string(), *value);
 
                 JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]).inc_by(inc);
             },
