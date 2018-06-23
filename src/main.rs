@@ -175,6 +175,7 @@ lazy_static!{
         &["name"]
     ).unwrap();
 
+    static ref JAIL_WALLCLOCK_SECONDS_OLD: Mutex<i64> = Mutex::new(0);
     static ref JAIL_WALLCLOCK_SECONDS: IntCounterVec = register_int_counter_vec!(
         "jail_wallclock_seconds_total",
         "wallclock time, in seconds",
@@ -275,9 +276,21 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 JAIL_VMEMORYUSE_BYTES.with_label_values(&[&name]).set(*value);
             },
             "wallclock" => {
-                let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
-                let inc = *value - series.get();
-                series.inc_by(inc);
+                // Get the value from last time.
+                let mut old_value = JAIL_WALLCLOCK_SECONDS_OLD.lock().unwrap();
+
+                // Work out what our increase should be.
+                // If old_value < value, OS counter has continued to increment,
+                // otherwise it has reset.
+                let inc = match *old_value < *value {
+                    true => *value - *old_value,
+                    false => *value,
+                };
+
+                // Update book keeping.
+                *old_value = *value;
+
+                JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]).inc_by(inc);
             },
             // jid isn't actually reported by rctl, but we add it into this
             // hash to keep things simpler.
@@ -446,7 +459,6 @@ mod tests {
     fn cputime_counter_increase() {
         let name = "test";
         let mut hash: HashMap<String, i64> = HashMap::new();
-        //let cputime = hash.entry("cputime".to_string()).or_insert(1000);
         let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
 
         // First get, should be zero. We didn't set anything yet.
@@ -469,6 +481,36 @@ mod tests {
 
         // Fourth, adds 40, total 1070.
         hash.insert("cputime".to_string(), 50);
+        process_metrics_hash(&name, &hash);
+        assert_eq!(series.get(), 1070);
+    }
+
+    #[test]
+    fn wallclock_counter_increase() {
+        let name = "test";
+        let mut hash: HashMap<String, i64> = HashMap::new();
+        let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
+
+        // First get, should be zero. We didn't set anything yet.
+        assert_eq!(series.get(), 0);
+
+        // First run, adds 1000, total 1000.
+        hash.insert("wallclock".to_string(), 1000);
+        process_metrics_hash(&name, &hash);
+        assert_eq!(series.get(), 1000);
+
+        // Second, adds 20, total 1020
+        hash.insert("wallclock".to_string(), 1020);
+        process_metrics_hash(&name, &hash);
+        assert_eq!(series.get(), 1020);
+
+        // Third, counter was reset. Adds 10, total 1030.
+        hash.insert("wallclock".to_string(), 10);
+        process_metrics_hash(&name, &hash);
+        assert_eq!(series.get(), 1030);
+
+        // Fourth, adds 40, total 1070.
+        hash.insert("wallclock".to_string(), 50);
         process_metrics_hash(&name, &hash);
         assert_eq!(series.get(), 1070);
     }
