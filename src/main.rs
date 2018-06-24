@@ -475,75 +475,88 @@ fn main() {
 mod tests {
     // We need some of the main functions.
     use super::*;
-    use std::collections::HashMap;
 
     #[test]
     fn cputime_counter_increase() {
-        let name = "test";
-        let mut hash: HashMap<String, i64> = HashMap::new();
-        let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
+        let names = [
+            "test",
+            "test2",
+        ];
 
-        // First get, should be zero. We didn't set anything yet.
-        assert_eq!(series.get(), 0);
+        let mut hash = rctl::MetricsHash::new();
 
-        // First run, adds 1000, total 1000.
-        hash.insert("cputime".to_string(), 1000);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1000);
+        for name in names.iter() {
+            let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
 
-        // Second, adds 20, total 1020
-        hash.insert("cputime".to_string(), 1020);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1020);
+            // Initial check, should be zero. We didn't set anything yet.
+            assert_eq!(series.get(), 0);
 
-        // Third, counter was reset. Adds 10, total 1030.
-        hash.insert("cputime".to_string(), 10);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1030);
+            // First run, adds 1000, total 1000.
+            hash.insert("cputime".to_string(), 1000);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1000);
 
-        // Fourth, adds 40, total 1070.
-        hash.insert("cputime".to_string(), 50);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1070);
+            // Second, adds 20, total 1020
+            hash.insert("cputime".to_string(), 1020);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1020);
 
-        // Fifth, add 0, total 1070
-        hash.insert("cputime".to_string(), 50);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1070);
+            // Third, counter was reset. Adds 10, total 1030.
+            hash.insert("cputime".to_string(), 10);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1030);
+
+            // Fourth, adds 40, total 1070.
+            hash.insert("cputime".to_string(), 50);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1070);
+
+            // Fifth, add 0, total 1070
+            hash.insert("cputime".to_string(), 50);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1070);
+        }
     }
 
     #[test]
     fn wallclock_counter_increase() {
-        let name = "test";
-        let mut hash: HashMap<String, i64> = HashMap::new();
-        let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
+        let names = [
+            "test",
+            "test2",
+        ];
 
-        // First get, should be zero. We didn't set anything yet.
-        assert_eq!(series.get(), 0);
+        let mut hash = rctl::MetricsHash::new();
 
-        // First run, adds 1000, total 1000.
-        hash.insert("wallclock".to_string(), 1000);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1000);
+        for name in names.iter() {
+            let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
 
-        // Second, adds 20, total 1020
-        hash.insert("wallclock".to_string(), 1020);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1020);
+            // Initial check, should be zero. We didn't set anything yet.
+            assert_eq!(series.get(), 0);
 
-        // Third, counter was reset. Adds 10, total 1030.
-        hash.insert("wallclock".to_string(), 10);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1030);
+            // First run, adds 1000, total 1000.
+            hash.insert("wallclock".to_string(), 1000);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1000);
 
-        // Fourth, adds 40, total 1070.
-        hash.insert("wallclock".to_string(), 50);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1070);
+            // Second, adds 20, total 1020
+            hash.insert("wallclock".to_string(), 1020);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1020);
 
-        // Fifth, add 0, total 1070
-        hash.insert("wallclock".to_string(), 50);
-        process_metrics_hash(&name, &hash);
-        assert_eq!(series.get(), 1070);
+            // Third, counter was reset. Adds 10, total 1030.
+            hash.insert("wallclock".to_string(), 10);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1030);
+
+            // Fourth, adds 40, total 1070.
+            hash.insert("wallclock".to_string(), 50);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1070);
+
+            // Fifth, add 0, total 1070
+            hash.insert("wallclock".to_string(), 50);
+            process_metrics_hash(&name, &hash);
+            assert_eq!(series.get(), 1070);
+        }
     }
 }
