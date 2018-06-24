@@ -7,12 +7,12 @@
  */
 extern crate env_logger;
 extern crate hyper;
+extern crate jail;
 extern crate libc;
 #[macro_use] extern crate clap;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 #[macro_use] extern crate prometheus;
-extern crate jail;
 
 mod rctl;
 
@@ -341,7 +341,7 @@ fn get_jail_metrics() {
         debug!("JID: {}, Name: {:?}", jail.jid, name);
 
         let rusage = match rctl::get_resource_usage(jail.jid, &name) {
-            Ok(res) => res,
+            Ok(res)  => res,
             Err(err) => {
                 err.to_string();
                 break;
