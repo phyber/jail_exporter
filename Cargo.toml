@@ -1,7 +1,9 @@
 [package]
 name = "jail_exporter"
 version = "0.3.0"
-authors = ["David O'Rourke <david.orourke@gmail.com>"]
+authors = [
+    "David O'Rourke <david.orourke@gmail.com>",
+]
 
 [dependencies]
 clap = "2.31"

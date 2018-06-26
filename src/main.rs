@@ -110,7 +110,7 @@ lazy_static!{
     ).unwrap();
 
     // Percent metrics
-    static ref JAIL_PCPU_USED: IntCounterVec = register_int_counter_vec!(
+    static ref JAIL_PCPU_USED: IntGaugeVec = register_int_gauge_vec!(
         "jail_pcpu_used",
         "%CPU, in percents of a single CPU core",
         &["name"]
@@ -272,7 +272,7 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 JAIL_OPENFILES.with_label_values(&[&name]).set(*value);
             },
             "pcpu" => {
-                JAIL_PCPU_USED.with_label_values(&[&name]).inc_by(*value);
+                JAIL_PCPU_USED.with_label_values(&[&name]).set(*value);
             },
             "pseudoterminals" => {
                 JAIL_PSEUDOTERMINALS.with_label_values(&[&name]).set(*value);
@@ -391,7 +391,7 @@ fn http_router(req: Request<Body>) -> Response<Body> {
 fn is_ipaddress(s: String) -> Result<(), String> {
     let res = SocketAddr::from_str(&s);
     match res {
-        Ok(_) => Ok(()),
+        Ok(_)  => Ok(()),
         Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
     }
 }
