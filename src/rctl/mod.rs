@@ -62,9 +62,9 @@ fn rctl_get_jail(jail_name: &str) -> Result<String, Error> {
     // If everything went well, convert the return C string in the outbuf back
     // into an easily usable Rust string and return.
     if error == 0 {
-        let rusage = unsafe {
-            CStr::from_ptr(outbuf.as_ptr() as *mut i8)
-        }.to_string_lossy().into_owned();
+        let rusage = unsafe { CStr::from_ptr(outbuf.as_ptr() as *mut i8) }
+            .to_string_lossy()
+            .into_owned();
 
         Ok(rusage)
     }
@@ -75,10 +75,7 @@ fn rctl_get_jail(jail_name: &str) -> Result<String, Error> {
 
 // Takes an rusage string and builds a hash of metric: value.
 // This function is complete trash as iterators are HARD.
-fn rusage_to_hashmap(
-    jid: i32,
-    rusage: &str,
-) -> MetricsHash {
+fn rusage_to_hashmap(jid: i32, rusage: &str) -> MetricsHash {
     debug!("rusage_to_hashmap: {}, {}", jid, rusage);
 
     // Create a hashmap to collect our metrics in.
@@ -106,7 +103,7 @@ fn rusage_to_hashmap(
 
 pub fn get_resource_usage(
     jid: i32,
-    jail_name: &str
+    jail_name: &str,
 ) -> Result<MetricsHash, String> {
     debug!("get_resource_usage: {}, {}", jid, jail_name);
 
@@ -138,11 +135,9 @@ pub fn is_enabled() -> State {
                 State::UnknownError(err)
             }
         },
-        Err(type_) => {
-            match type_ {
-                sysctl::SysctlError::UnknownType => State::NotPresent,
-                _ => State::UnknownError("Unknown Error".to_owned()),
-            }
-        }
+        Err(type_) => match type_ {
+            sysctl::SysctlError::UnknownType => State::NotPresent,
+            _ => State::UnknownError("Unknown Error".to_owned()),
+        },
     }
 }

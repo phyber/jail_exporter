@@ -1,21 +1,29 @@
-/*
- * jail_exporter
- * -------------
- *
- * An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
- *
- */
+//
+// jail_exporter
+//
+// An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
+//
+
 extern crate env_logger;
 extern crate hyper;
 extern crate jail;
 extern crate libc;
-#[macro_use] extern crate clap;
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate log;
-#[macro_use] extern crate prometheus;
+
+// Macro using crates.
+#[macro_use]
+extern crate clap;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate prometheus;
 
 mod rctl;
 
+use hyper::header::CONTENT_TYPE;
+use hyper::rt::Future;
+use hyper::service::service_fn_ok;
 use hyper::{
     Body,
     Method,
@@ -24,9 +32,6 @@ use hyper::{
     Server,
     StatusCode,
 };
-use hyper::header::CONTENT_TYPE;
-use hyper::rt::Future;
-use hyper::service::service_fn_ok;
 use jail::RunningJail;
 use prometheus::{
     Encoder,
@@ -219,14 +224,14 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 // Get the old value for this jail, if there isn't one, use 0.
                 let old_value = match book.get(name).cloned() {
                     Some(v) => v,
-                    None    => 0,
+                    None => 0,
                 };
 
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
                 let inc = match old_value <= *value {
-                    true  => *value - old_value,
+                    true => *value - old_value,
                     false => *value,
                 };
 
@@ -296,14 +301,14 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 // Get the old value for this jail, if there isn't one, use 0.
                 let old_value = match book.get(name).cloned() {
                     Some(v) => v,
-                    None    => 0,
+                    None => 0,
                 };
 
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
                 let inc = match old_value <= *value {
-                    true  => *value - old_value,
+                    true => *value - old_value,
                     false => *value,
                 };
 
@@ -335,13 +340,12 @@ fn get_jail_metrics() {
 
     // Loop over jails.
     for jail in RunningJail::all() {
-        let name = jail.name()
-            .expect("Could not get jail name");
+        let name = jail.name().expect("Could not get jail name");
 
         debug!("JID: {}, Name: {:?}", jail.jid, name);
 
         let rusage = match rctl::get_resource_usage(jail.jid, &name) {
-            Ok(res)  => res,
+            Ok(res) => res,
             Err(err) => {
                 err.to_string();
                 break;
@@ -374,9 +378,7 @@ fn metrics(_req: Request<Body>) -> Response<Body> {
 // HTTP request router
 fn http_router(req: Request<Body>) -> Response<Body> {
     match (req.method(), req.uri().path()) {
-        (&Method::GET, "/metrics") => {
-            metrics(req)
-        },
+        (&Method::GET, "/metrics") => metrics(req),
         _ => {
             debug!("No handler for request found");
             Response::builder()
@@ -391,7 +393,7 @@ fn http_router(req: Request<Body>) -> Response<Body> {
 fn is_ipaddress(s: String) -> Result<(), String> {
     let res = SocketAddr::from_str(&s);
     match res {
-        Ok(_)  => Ok(()),
+        Ok(_) => Ok(()),
         Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
     }
 }
@@ -403,16 +405,18 @@ fn main() {
     debug!("Checking RACCT/RCTL status");
     let racct_rctl_available = match rctl::is_enabled() {
         rctl::State::Disabled => {
-            eprintln!("RACCT/RCTL present, but disabled; enable using \
-                      kern.racct.enable=1 tunable");
+            eprintln!(
+                "RACCT/RCTL present, but disabled; enable using \
+                 kern.racct.enable=1 tunable"
+            );
             false
         },
-        rctl::State::Enabled => {
-            true
-        },
+        rctl::State::Enabled => true,
         rctl::State::NotPresent => {
-            eprintln!("RACCT/RCTL support not present in kernel; see rctl(8) \
-                      for details");
+            eprintln!(
+                "RACCT/RCTL support not present in kernel; see rctl(8) \
+                 for details"
+            );
             false
         },
         rctl::State::UnknownError(s) => {
@@ -431,35 +435,38 @@ fn main() {
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
-        .arg(clap::Arg::with_name("WEB_LISTEN_ADDRESS")
-             .long("web.listen-address")
-             .value_name("[ADDR:PORT]")
-             .help("Address on which to expose metrics and web interface.")
-             .takes_value(true)
-             .default_value("127.0.0.1:9452")
-             .validator(is_ipaddress))
-        .arg(clap::Arg::with_name("WEB_TELEMETRY_PATH")
-             .long("web.telemetry-path")
-             .value_name("PATH")
-             .help("Path under which to expose metrics.")
-             .takes_value(true)
-             .default_value("/metrics"))
+        .arg(
+            clap::Arg::with_name("WEB_LISTEN_ADDRESS")
+                .long("web.listen-address")
+                .value_name("[ADDR:PORT]")
+                .help("Address on which to expose metrics and web interface.")
+                .takes_value(true)
+                .default_value("127.0.0.1:9452")
+                .validator(is_ipaddress),
+        )
+        .arg(
+            clap::Arg::with_name("WEB_TELEMETRY_PATH")
+                .long("web.telemetry-path")
+                .value_name("PATH")
+                .help("Path under which to expose metrics.")
+                .takes_value(true)
+                .default_value("/metrics"),
+        )
         .get_matches();
 
     // This should always be fine, we've already validated it during arg
     // parsing.
     // However, we keep the expect as a last resort.
-    let addr: SocketAddr = matches.value_of("WEB_LISTEN_ADDRESS").unwrap()
-        .parse().expect("unable to parse socket address");
+    let addr: SocketAddr = matches
+        .value_of("WEB_LISTEN_ADDRESS")
+        .unwrap()
+        .parse()
+        .expect("unable to parse socket address");
 
-    let router = || {
-        service_fn_ok(http_router)
-    };
+    let router = || service_fn_ok(http_router);
 
     // Set build_info metric.
-    let build_info_labels = [
-        crate_version!(),
-    ];
+    let build_info_labels = [crate_version!()];
 
     JAIL_EXPORTER_BUILD_INFO.with_label_values(&build_info_labels).set(1);
 
@@ -478,10 +485,7 @@ mod tests {
 
     #[test]
     fn cputime_counter_increase() {
-        let names = [
-            "test",
-            "test2",
-        ];
+        let names = ["test", "test2"];
 
         let mut hash = rctl::MetricsHash::new();
 
@@ -520,10 +524,7 @@ mod tests {
 
     #[test]
     fn wallclock_counter_increase() {
-        let names = [
-            "test",
-            "test2",
-        ];
+        let names = ["test", "test2"];
 
         let mut hash = rctl::MetricsHash::new();
 
