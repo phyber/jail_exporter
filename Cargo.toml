@@ -1,6 +1,6 @@
 [package]
 name = "jail_exporter"
-version = "0.3.0"
+version = "0.4.0"
 authors = [
     "David O'Rourke <david.orourke@gmail.com>",
 ]
