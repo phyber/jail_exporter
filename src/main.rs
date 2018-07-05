@@ -230,9 +230,11 @@ fn process_metrics_hash(name: &str, metrics: &MetricsHash) {
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match old_value <= value {
-                    true => value - old_value,
-                    false => value,
+                let inc = if old_value <= value {
+                    value - old_value
+                }
+                else {
+                    value
                 };
 
                 // Update book keeping.
@@ -307,9 +309,11 @@ fn process_metrics_hash(name: &str, metrics: &MetricsHash) {
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match old_value <= value {
-                    true => value - old_value,
-                    false => value,
+                let inc = if old_value <= value {
+                    value - old_value
+                }
+                else {
+                    value
                 };
 
                 // Update book keeping.
@@ -351,7 +355,7 @@ fn get_jail_metrics() {
         // Get a hash of resources based on rusage string.
         process_metrics_hash(&name, &rusage);
 
-        JAIL_ID.with_label_values(&[&name]).set(jail.jid as i64);
+        JAIL_ID.with_label_values(&[&name]).set(i64::from(jail.jid));
         JAIL_TOTAL.set(JAIL_TOTAL.get() + 1);
     }
 }
