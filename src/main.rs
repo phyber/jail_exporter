@@ -46,6 +46,7 @@ use std::sync::Mutex;
 
 // Book keeping for the jail counters.
 type CounterBookKeeper = HashMap<String, i64>;
+type MetricsHash = HashMap<rctl::Resource, usize>;
 
 // Descriptions of these metrics are taken from rctl(8) where possible.
 lazy_static!{
@@ -207,7 +208,7 @@ lazy_static!{
 }
 
 // Processes the MetricsHash setting the appripriate time series.
-fn process_metrics_hash(name: &str, metrics: &HashMap<rctl::Resource, usize>) {
+fn process_metrics_hash(name: &str, metrics: &MetricsHash) {
     debug!("process_metrics_hash");
 
     for (key, value) in metrics {
@@ -474,8 +475,6 @@ fn main() {
 mod tests {
     // We need some of the main functions.
     use super::*;
-
-    type MetricsHash = HashMap<rctl::Resource, usize>;
 
     #[test]
     fn cputime_counter_increase() {
