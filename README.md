@@ -4,7 +4,8 @@ Jail Exporter is a [Prometheus] exporter for [FreeBSD] jail metrics as reported
 by [`rctl(8)`].
 
 The exporter is written in [Rust] and uses the C FFI to obtain the relavent
-data from [`jail_get(2)`] (via [`libjail-rs`]) and [`rctl_get_racct(2)`].
+data from [`jail_get(2)`] (via [`libjail-rs`]) and [`rctl_get_racct(2)`] (via
+`libjail-rs` and [`librctl-rs`]).
 
 ## Configuration
 
@@ -72,5 +73,6 @@ Metric                    | `rctl(8)` name    | Description
 [Rust]: https://www.rust-lang.org/
 [`jail_get(2)`]: https://www.freebsd.org/cgi/man.cgi?query=jail_get&sektion=2
 [`libjail-rs`]: https://github.com/fubarnetes/libjail-rs
+[`librctl-rs`]: https://github.com/fubarnetes/rctl
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
