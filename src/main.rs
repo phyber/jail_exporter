@@ -7,7 +7,6 @@
 extern crate env_logger;
 extern crate hyper;
 extern crate jail;
-extern crate libc;
 extern crate rctl;
 
 // Macro using crates.
