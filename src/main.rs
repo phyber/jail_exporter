@@ -391,7 +391,7 @@ fn http_router(req: Request<Body>) -> Response<Body> {
 }
 
 // Used as a validator for the argument parsing.
-fn is_ipaddress(s: String) -> Result<(), String> {
+fn is_ipaddress(s: &str) -> Result<(), String> {
     let res = SocketAddr::from_str(&s);
     match res {
         Ok(_) => Ok(()),
@@ -439,7 +439,7 @@ fn main() {
                 .help("Address on which to expose metrics and web interface.")
                 .takes_value(true)
                 .default_value("127.0.0.1:9452")
-                .validator(is_ipaddress),
+                .validator(|v| is_ipaddress(&v)),
         )
         .arg(
             clap::Arg::with_name("WEB_TELEMETRY_PATH")
