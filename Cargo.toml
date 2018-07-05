@@ -6,7 +6,7 @@ authors = [
 ]
 
 [dependencies]
-clap = "2.31"
+clap = "2.32"
 env_logger = "0.5"
 hyper = "0.12"
 jail = "0.0.5"
