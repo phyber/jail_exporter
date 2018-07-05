@@ -475,11 +475,13 @@ mod tests {
     // We need some of the main functions.
     use super::*;
 
+    type MetricsHash = HashMap<rctl::Resource, usize>;
+
     #[test]
     fn cputime_counter_increase() {
         let names = ["test", "test2"];
 
-        let mut hash = rctl::MetricsHash::new();
+        let mut hash = MetricsHash::new();
 
         for name in names.iter() {
             let series = JAIL_CPUTIME_SECONDS.with_label_values(&[&name]);
@@ -488,27 +490,27 @@ mod tests {
             assert_eq!(series.get(), 0);
 
             // First run, adds 1000, total 1000.
-            hash.insert("cputime".to_string(), 1000);
+            hash.insert(rctl::Resource::CpuTime, 1000);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
-            hash.insert("cputime".to_string(), 1020);
+            hash.insert(rctl::Resource::CpuTime, 1020);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
-            hash.insert("cputime".to_string(), 10);
+            hash.insert(rctl::Resource::CpuTime, 10);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
-            hash.insert("cputime".to_string(), 50);
+            hash.insert(rctl::Resource::CpuTime, 50);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
-            hash.insert("cputime".to_string(), 50);
+            hash.insert(rctl::Resource::CpuTime, 50);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
@@ -518,7 +520,7 @@ mod tests {
     fn wallclock_counter_increase() {
         let names = ["test", "test2"];
 
-        let mut hash = rctl::MetricsHash::new();
+        let mut hash = MetricsHash::new();
 
         for name in names.iter() {
             let series = JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]);
@@ -527,27 +529,27 @@ mod tests {
             assert_eq!(series.get(), 0);
 
             // First run, adds 1000, total 1000.
-            hash.insert("wallclock".to_string(), 1000);
+            hash.insert(rctl::Resource::Wallclock, 1000);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
-            hash.insert("wallclock".to_string(), 1020);
+            hash.insert(rctl::Resource::Wallclock, 1020);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
-            hash.insert("wallclock".to_string(), 10);
+            hash.insert(rctl::Resource::Wallclock, 10);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
-            hash.insert("wallclock".to_string(), 50);
+            hash.insert(rctl::Resource::Wallclock, 50);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
-            hash.insert("wallclock".to_string(), 50);
+            hash.insert(rctl::Resource::Wallclock, 50);
             process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
