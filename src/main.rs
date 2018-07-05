@@ -8,6 +8,7 @@ extern crate env_logger;
 extern crate hyper;
 extern crate jail;
 extern crate libc;
+extern crate rctl;
 
 // Macro using crates.
 #[macro_use]
@@ -18,8 +19,6 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate prometheus;
-
-mod rctl;
 
 use hyper::header::CONTENT_TYPE;
 use hyper::rt::Future;
@@ -209,15 +208,16 @@ lazy_static!{
 }
 
 // Processes the MetricsHash setting the appripriate time series.
-fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
+fn process_metrics_hash(name: &str, metrics: &HashMap<rctl::Resource, usize>) {
     debug!("process_metrics_hash");
 
     for (key, value) in metrics {
-        match key.as_ref() {
-            "coredumpsize" => {
-                JAIL_COREDUMPSIZE_BYTES.with_label_values(&[&name]).set(*value);
+        let value = *value as i64;
+        match key {
+            rctl::Resource::CoreDumpSize => {
+                JAIL_COREDUMPSIZE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "cputime" => {
+            rctl::Resource::CpuTime => {
                 // Get the Book of Old Values
                 let mut book = JAIL_CPUTIME_SECONDS_OLD.lock().unwrap();
 
@@ -230,71 +230,71 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match old_value <= *value {
-                    true => *value - old_value,
-                    false => *value,
+                let inc = match old_value <= value {
+                    true => value - old_value,
+                    false => value,
                 };
 
                 // Update book keeping.
-                book.insert(name.to_string(), *value);
+                book.insert(name.to_string(), value);
 
                 JAIL_CPUTIME_SECONDS.with_label_values(&[&name]).inc_by(inc);
             },
-            "datasize" => {
-                JAIL_DATASIZE_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::DataSize => {
+                JAIL_DATASIZE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "maxproc" => {
-                JAIL_MAXPROC.with_label_values(&[&name]).set(*value);
+            rctl::Resource::MaxProcesses => {
+                JAIL_MAXPROC.with_label_values(&[&name]).set(value);
             },
-            "memorylocked" => {
-                JAIL_MEMORYLOCKED_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::MemoryLocked => {
+                JAIL_MEMORYLOCKED_BYTES.with_label_values(&[&name]).set(value);
             },
-            "memoryuse" => {
-                JAIL_MEMORYUSE_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::MemoryUse => {
+                JAIL_MEMORYUSE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "msgqqueued" => {
-                JAIL_MSGQQUEUED.with_label_values(&[&name]).set(*value);
+            rctl::Resource::MsgqQueued => {
+                JAIL_MSGQQUEUED.with_label_values(&[&name]).set(value);
             },
-            "msgqsize" => {
-                JAIL_MSGQSIZE_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::MsgqSize => {
+                JAIL_MSGQSIZE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "nmsgq" => {
-                JAIL_NMSGQ.with_label_values(&[&name]).set(*value);
+            rctl::Resource::NMsgq => {
+                JAIL_NMSGQ.with_label_values(&[&name]).set(value);
             },
-            "nsem" => {
-                JAIL_NSEM.with_label_values(&[&name]).set(*value);
+            rctl::Resource::Nsem => {
+                JAIL_NSEM.with_label_values(&[&name]).set(value);
             },
-            "nsemop" => {
-                JAIL_NSEMOP.with_label_values(&[&name]).set(*value);
+            rctl::Resource::NSemop => {
+                JAIL_NSEMOP.with_label_values(&[&name]).set(value);
             },
-            "nshm" => {
-                JAIL_NSHM.with_label_values(&[&name]).set(*value);
+            rctl::Resource::NShm => {
+                JAIL_NSHM.with_label_values(&[&name]).set(value);
             },
-            "nthr" => {
-                JAIL_NTHR.with_label_values(&[&name]).set(*value);
+            rctl::Resource::NThreads => {
+                JAIL_NTHR.with_label_values(&[&name]).set(value);
             },
-            "openfiles" => {
-                JAIL_OPENFILES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::OpenFiles => {
+                JAIL_OPENFILES.with_label_values(&[&name]).set(value);
             },
-            "pcpu" => {
-                JAIL_PCPU_USED.with_label_values(&[&name]).set(*value);
+            rctl::Resource::PercentCpu => {
+                JAIL_PCPU_USED.with_label_values(&[&name]).set(value);
             },
-            "pseudoterminals" => {
-                JAIL_PSEUDOTERMINALS.with_label_values(&[&name]).set(*value);
+            rctl::Resource::PseudoTerminals => {
+                JAIL_PSEUDOTERMINALS.with_label_values(&[&name]).set(value);
             },
-            "shmsize" => {
-                JAIL_SHMSIZE_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::ShmSize => {
+                JAIL_SHMSIZE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "stacksize" => {
-                JAIL_STACKSIZE_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::StackSize => {
+                JAIL_STACKSIZE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "swapuse" => {
-                JAIL_SWAPUSE_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::SwapUse => {
+                JAIL_SWAPUSE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "vmemoryuse" => {
-                JAIL_VMEMORYUSE_BYTES.with_label_values(&[&name]).set(*value);
+            rctl::Resource::VMemoryUse => {
+                JAIL_VMEMORYUSE_BYTES.with_label_values(&[&name]).set(value);
             },
-            "wallclock" => {
+            rctl::Resource::Wallclock => {
                 // Get the Book of Old Values
                 let mut book = JAIL_WALLCLOCK_SECONDS_OLD.lock().unwrap();
 
@@ -307,27 +307,24 @@ fn process_metrics_hash(name: &str, metrics: &rctl::MetricsHash) {
                 // Work out what our increase should be.
                 // If old_value < value, OS counter has continued to increment,
                 // otherwise it has reset.
-                let inc = match old_value <= *value {
-                    true => *value - old_value,
-                    false => *value,
+                let inc = match old_value <= value {
+                    true => value - old_value,
+                    false => value,
                 };
 
                 // Update book keeping.
-                book.insert(name.to_string(), *value);
+                book.insert(name.to_string(), value);
 
                 JAIL_WALLCLOCK_SECONDS.with_label_values(&[&name]).inc_by(inc);
             },
-            // jid isn't actually reported by rctl, but we add it into this
-            // hash to keep things simpler.
-            "jid" => {
-                JAIL_ID.with_label_values(&[&name]).set(*value);
-            },
             // Intentionally unhandled metrics.
             // These are documented being difficult to observe via rctl(8).
-            "readbps" | "writebps" | "readiops" | "writeiops" => {
+            rctl::Resource::ReadBps
+                | rctl::Resource::WriteBps
+                | rctl::Resource::ReadIops
+                | rctl::Resource::WriteIops => {
                 debug!("Intentionally unhandled metric: {}", key)
             },
-            _ => debug!("Unrecognised metric: {}", key),
         }
     }
 }
@@ -341,20 +338,20 @@ fn get_jail_metrics() {
     // Loop over jails.
     for jail in RunningJail::all() {
         let name = jail.name().expect("Could not get jail name");
-
-        debug!("JID: {}, Name: {:?}", jail.jid, name);
-
-        let rusage = match rctl::get_resource_usage(jail.jid, &name) {
-            Ok(res) => res,
+        let rusage = match jail.racct_statistics() {
+            Ok(stats) => stats,
             Err(err) => {
                 err.to_string();
                 break;
             },
         };
 
+        debug!("JID: {}, Name: {:?}", jail.jid, name);
+
         // Get a hash of resources based on rusage string.
         process_metrics_hash(&name, &rusage);
 
+        JAIL_ID.with_label_values(&[&name]).set(jail.jid as i64);
         JAIL_TOTAL.set(JAIL_TOTAL.get() + 1);
     }
 }
@@ -403,7 +400,7 @@ fn main() {
 
     // First, check if RACCT/RCTL is available.
     debug!("Checking RACCT/RCTL status");
-    let racct_rctl_available = match rctl::is_enabled() {
+    let racct_rctl_available = match rctl::State::check() {
         rctl::State::Disabled => {
             eprintln!(
                 "RACCT/RCTL present, but disabled; enable using \
@@ -417,10 +414,6 @@ fn main() {
                 "RACCT/RCTL support not present in kernel; see rctl(8) \
                  for details"
             );
-            false
-        },
-        rctl::State::UnknownError(s) => {
-            eprintln!("Unknown error while checking RACCT/RCTL state: {}", s);
             false
         },
     };
