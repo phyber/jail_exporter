@@ -360,7 +360,7 @@ fn get_jail_metrics() {
     }
 }
 
-fn metrics(_req: Request<Body>) -> Response<Body> {
+fn metrics(_req: &Request<Body>) -> Response<Body> {
     debug!("Processing metrics request");
 
     get_jail_metrics();
@@ -377,9 +377,9 @@ fn metrics(_req: Request<Body>) -> Response<Body> {
 }
 
 // HTTP request router
-fn http_router(req: Request<Body>) -> Response<Body> {
+fn http_router(req: &Request<Body>) -> Response<Body> {
     match (req.method(), req.uri().path()) {
-        (&Method::GET, "/metrics") => metrics(req),
+        (&Method::GET, "/metrics") => metrics(&req),
         _ => {
             debug!("No handler for request found");
             Response::builder()
@@ -460,7 +460,7 @@ fn main() {
         .parse()
         .expect("unable to parse socket address");
 
-    let router = || service_fn_ok(http_router);
+    let router = || service_fn_ok(|req| http_router(&req));
 
     // Set build_info metric.
     let build_info_labels = [crate_version!()];
