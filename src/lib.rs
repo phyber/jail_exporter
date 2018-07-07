@@ -57,9 +57,9 @@ pub struct Metrics {
     wallclock_seconds_total_old: Mutex<CounterBookKeeper>,
 }
 
-impl Metrics {
+impl Default for Metrics {
     // Descriptions of these metrics are taken from rctl(8) where possible.
-    pub fn new() -> Metrics {
+    fn default() -> Self {
         let metrics = Metrics{
             // build info metric
             build_info: register_int_gauge_vec!(
@@ -222,6 +222,12 @@ impl Metrics {
         let build_info_labels = [env!("CARGO_PKG_VERSION")];
         metrics.build_info.with_label_values(&build_info_labels).set(1);
         metrics
+    }
+}
+
+impl Metrics {
+    pub fn new() -> Self {
+        Default::default()
     }
 
     // Processes the MetricsHash setting the appripriate time series.
@@ -406,20 +412,31 @@ impl Metrics {
     }
 }
 
+// Tests
+#[cfg(test)]
+#[macro_use]
+extern crate lazy_static;
+
 #[cfg(test)]
 mod tests {
     // We need some of the main functions.
     use super::*;
 
+    // We have to register this here as the Prometheus library maintains a
+    // global registry. Trying to Metrics::new() in each test will result
+    // in errors as duplicate time series will be created.
+    lazy_static!{
+        static ref TEST_METRICS: Metrics = Metrics::new();
+    }
+
     #[test]
     fn cputime_counter_increase() {
-        let metrics = Metrics::new();
         let names = ["test", "test2"];
 
         let mut hash = MetricsHash::new();
 
         for name in names.iter() {
-            let series = metrics
+            let series = TEST_METRICS
                 .cputime_seconds_total
                 .with_label_values(&[&name]);
 
@@ -428,40 +445,39 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::CpuTime, 1000);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::CpuTime, 1020);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::CpuTime, 10);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::CpuTime, 50);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::CpuTime, 50);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
 
     #[test]
     fn wallclock_counter_increase() {
-        let metrics = Metrics::new();
         let names = ["test", "test2"];
 
         let mut hash = MetricsHash::new();
 
         for name in names.iter() {
-            let series = metrics
+            let series = TEST_METRICS
                 .wallclock_seconds_total
                 .with_label_values(&[&name]);
 
@@ -470,27 +486,27 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::Wallclock, 1000);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::Wallclock, 1020);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::Wallclock, 10);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::Wallclock, 50);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::Wallclock, 50);
-            metrics.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_metrics_hash(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
