@@ -16,10 +16,19 @@ Argument             | Default          | Purpose
 `web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
 `web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
 
+_Note:_ Although the `web.telemetry-path` command line argument exists, it is not
+      yet used, so the exporter will always present metrics at `/metrics` for
+      now.
+
 ## Running
 
 The exporter needs to run as `root` in order to have enough permission to
 execute the [`rctl_get_racct(2)`] calls.
+
+As jails may come and go during the lifetime of the exporter, so to will the
+time series that the exporter exports. If you wish to account for resource
+usage for jails that have disappeared, you may wish to make use of the
+Prometheus [recording rules] to track total resource usage across all jails.
 
 No port or `rc(8)` script is available yet, but work on a port will happen
 soon.
@@ -70,6 +79,7 @@ Metric                    | `rctl(8)` name    | Description
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
 [Rust]: https://www.rust-lang.org/
+[recording rules]: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
 [`jail_get(2)`]: https://www.freebsd.org/cgi/man.cgi?query=jail_get&sektion=2
 [`libjail-rs`]: https://github.com/fubarnetes/libjail-rs
 [`librctl-rs`]: https://github.com/fubarnetes/rctl
