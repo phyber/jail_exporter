@@ -520,27 +520,27 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::CpuTime, 1000);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::CpuTime, 1020);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::CpuTime, 10);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::CpuTime, 50);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::CpuTime, 50);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
@@ -561,27 +561,27 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::Wallclock, 1000);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::Wallclock, 1020);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::Wallclock, 10);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::Wallclock, 50);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::Wallclock, 50);
-            TEST_METRICS.process_metrics_hash(&name, &hash);
+            TEST_METRICS.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
