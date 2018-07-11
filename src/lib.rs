@@ -26,9 +26,12 @@ use std::sync::Mutex;
 
 // Book keeping for the jail counters.
 type CounterBookKeeper = HashMap<String, i64>;
-type MetricsHash = HashMap<rctl::Resource, usize>;
+type Rusage = HashMap<rctl::Resource, usize>;
+type DeadJails = Vec<String>;
+type SeenJails = Vec<String>;
 
 pub struct Metrics {
+    // Prometheus time series
     build_info: IntGaugeVec,
     coredumpsize_bytes: IntGaugeVec,
     datasize_bytes: IntGaugeVec,
@@ -53,6 +56,8 @@ pub struct Metrics {
     wallclock_seconds_total: IntCounterVec,
     jail_id: IntGaugeVec,
     jail_total: IntGauge,
+
+    // Counter bookkeeping
     cputime_seconds_total_old: Mutex<CounterBookKeeper>,
     wallclock_seconds_total_old: Mutex<CounterBookKeeper>,
 }
@@ -230,16 +235,19 @@ impl Metrics {
         Default::default()
     }
 
-    // Processes the MetricsHash setting the appripriate time series.
-    fn process_metrics_hash(&self, name: &str, metrics: &MetricsHash) {
+    // Processes the Rusage setting the appripriate time series.
+    fn process_rusage(&self, name: &str, metrics: &Rusage) {
         debug!("process_metrics_hash");
+
+        // Convenience variable
+        let labels: &[&str] = &[&name];
 
         for (key, value) in metrics {
             let value = *value as i64;
             match key {
                 rctl::Resource::CoreDumpSize => {
                     self.coredumpsize_bytes
-                        .with_label_values(&[&name])
+                        .with_label_values(labels)
                         .set(value);
                 },
                 rctl::Resource::CpuTime => {
@@ -269,70 +277,64 @@ impl Metrics {
                     book.insert(name.to_string(), value);
 
                     self.cputime_seconds_total
-                        .with_label_values(&[&name])
+                        .with_label_values(labels)
                         .inc_by(inc);
                 },
                 rctl::Resource::DataSize => {
-                    self.datasize_bytes.with_label_values(&[&name]).set(value);
+                    self.datasize_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::MaxProcesses => {
-                    self.maxproc.with_label_values(&[&name]).set(value);
+                    self.maxproc.with_label_values(labels).set(value);
                 },
                 rctl::Resource::MemoryLocked => {
                     self.memorylocked_bytes
-                        .with_label_values(&[&name])
+                        .with_label_values(labels)
                         .set(value);
                 },
                 rctl::Resource::MemoryUse => {
-                    self.memoryuse_bytes.with_label_values(&[&name]).set(value);
+                    self.memoryuse_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::MsgqQueued => {
-                    self.msgqqueued.with_label_values(&[&name]).set(value);
+                    self.msgqqueued.with_label_values(labels).set(value);
                 },
                 rctl::Resource::MsgqSize => {
-                    self.msgqsize_bytes.with_label_values(&[&name]).set(value);
+                    self.msgqsize_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::NMsgq => {
-                    self.nmsgq.with_label_values(&[&name]).set(value);
+                    self.nmsgq.with_label_values(labels).set(value);
                 },
                 rctl::Resource::Nsem => {
-                    self.nsem.with_label_values(&[&name]).set(value);
+                    self.nsem.with_label_values(labels).set(value);
                 },
                 rctl::Resource::NSemop => {
-                    self.nsemop.with_label_values(&[&name]).set(value);
+                    self.nsemop.with_label_values(labels).set(value);
                 },
                 rctl::Resource::NShm => {
-                    self.nshm.with_label_values(&[&name]).set(value);
+                    self.nshm.with_label_values(labels).set(value);
                 },
                 rctl::Resource::NThreads => {
-                    self.nthr.with_label_values(&[&name]).set(value);
+                    self.nthr.with_label_values(labels).set(value);
                 },
                 rctl::Resource::OpenFiles => {
-                    self.openfiles.with_label_values(&[&name]).set(value);
+                    self.openfiles.with_label_values(labels).set(value);
                 },
                 rctl::Resource::PercentCpu => {
-                    self.pcpu_used.with_label_values(&[&name]).set(value);
+                    self.pcpu_used.with_label_values(labels).set(value);
                 },
                 rctl::Resource::PseudoTerminals => {
-                    self.pseudoterminals.with_label_values(&[&name]).set(value);
+                    self.pseudoterminals.with_label_values(labels).set(value);
                 },
                 rctl::Resource::ShmSize => {
-                    self.shmsize_bytes.with_label_values(&[&name]).set(value);
+                    self.shmsize_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::StackSize => {
-                    self.stacksize_bytes
-                        .with_label_values(&[&name])
-                        .set(value);
+                    self.stacksize_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::SwapUse => {
-                    self.swapuse_bytes
-                        .with_label_values(&[&name])
-                        .set(value);
+                    self.swapuse_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::VMemoryUse => {
-                    self.vmemoryuse_bytes
-                        .with_label_values(&[&name])
-                        .set(value);
+                    self.vmemoryuse_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::Wallclock => {
                     // Get the Book of Old Values
@@ -340,15 +342,16 @@ impl Metrics {
                         .lock()
                         .unwrap();
 
-                    // Get the old value for this jail, if there isn't one, use 0.
+                    // Get the old value for this jail, if there isn't one,
+                    // use 0.
                     let old_value = match book.get(name).cloned() {
                         Some(v) => v,
                         None => 0,
                     };
 
                     // Work out what our increase should be.
-                    // If old_value < value, OS counter has continued to increment,
-                    // otherwise it has reset.
+                    // If old_value < value, OS counter has continued to
+                    // increment, otherwise it has reset.
                     let inc = if old_value <= value {
                         value - old_value
                     }
@@ -360,7 +363,7 @@ impl Metrics {
                     book.insert(name.to_string(), value);
 
                     self.wallclock_seconds_total
-                        .with_label_values(&[&name])
+                        .with_label_values(labels)
                         .inc_by(inc);
                 },
                 // Intentionally unhandled metrics.
@@ -381,6 +384,9 @@ impl Metrics {
         // Set jail_total to zero before gathering.
         self.jail_total.set(0);
 
+        // Get a new vec of seen jails.
+        let mut seen = SeenJails::new();
+
         // Loop over jails.
         for jail in RunningJail::all() {
             let name = jail.name().expect("Could not get jail name");
@@ -394,20 +400,89 @@ impl Metrics {
 
             debug!("JID: {}, Name: {:?}", jail.jid, name);
 
-            // Get a hash of resources based on rusage string.
-            self.process_metrics_hash(&name, &rusage);
+            // Add to our vec of seen jails.
+            seen.push(name.to_string());
+
+            // Process rusage for the named jail, setting time series.
+            self.process_rusage(&name, &rusage);
 
             self.jail_id.with_label_values(&[&name]).set(i64::from(jail.jid));
             self.jail_total.set(self.jail_total.get() + 1);
         }
+
+        // Get a list of dead jails based on what we've seen, and reap them.
+        // Performed in two steps due to Mutex locking issues.
+        let dead = self.dead_jails(&seen);
+        self.reap(&dead);
+    }
+
+    // Loop over jail names from the previous run, as determined by book
+    // keeping, and create a vector of jail names that no longer exist.
+    fn dead_jails(&self, seen: &SeenJails) -> DeadJails {
+        let mut dead = DeadJails::new();
+        let book = self.cputime_seconds_total_old.lock().unwrap();
+
+        for name in book.keys() {
+            if !seen.contains(&name) {
+                dead.push(name.to_string());
+            }
+        }
+
+        dead
+    }
+
+    // Loop over DeadJails removing old labels and killing old book keeping.
+    fn reap(&self, dead: &DeadJails) {
+        let mut book = self.cputime_seconds_total_old.lock().unwrap();
+
+        for name in dead {
+            self.remove_jail_metrics(&name);
+            book.remove(name);
+        }
+    }
+
+    fn remove_jail_metrics(&self, name: &str) {
+        // Convenience variable
+        let labels: &[&str] = &[&name];
+
+        // Remove the jail metrics
+        self.coredumpsize_bytes.remove_label_values(labels).ok();
+        self.datasize_bytes.remove_label_values(labels).ok();
+        self.memorylocked_bytes.remove_label_values(labels).ok();
+        self.memoryuse_bytes.remove_label_values(labels).ok();
+        self.msgqsize_bytes.remove_label_values(labels).ok();
+        self.shmsize_bytes.remove_label_values(labels).ok();
+        self.stacksize_bytes.remove_label_values(labels).ok();
+        self.swapuse_bytes.remove_label_values(labels).ok();
+        self.vmemoryuse_bytes.remove_label_values(labels).ok();
+        self.pcpu_used.remove_label_values(labels).ok();
+        self.maxproc.remove_label_values(labels).ok();
+        self.msgqqueued.remove_label_values(labels).ok();
+        self.nmsgq.remove_label_values(labels).ok();
+        self.nsem.remove_label_values(labels).ok();
+        self.nsemop.remove_label_values(labels).ok();
+        self.nshm.remove_label_values(labels).ok();
+        self.nthr.remove_label_values(labels).ok();
+        self.openfiles.remove_label_values(labels).ok();
+        self.pseudoterminals.remove_label_values(labels).ok();
+        self.cputime_seconds_total.remove_label_values(labels).ok();
+        self.wallclock_seconds_total.remove_label_values(labels).ok();
+        self.jail_id.remove_label_values(labels).ok();
     }
 
     pub fn export(&self) -> Vec<u8> {
+        // Collect metrics
         self.get_jail_metrics();
-        let encoder = TextEncoder::new();
+
+        // Gather them
         let metric_families = prometheus::gather();
+
+        // Collect them in a buffer
         let mut buffer = vec![];
+        let encoder = TextEncoder::new();
         encoder.encode(&metric_families, &mut buffer).unwrap();
+
+        // Return the exported metrics
         buffer
     }
 }
@@ -433,7 +508,7 @@ mod tests {
     fn cputime_counter_increase() {
         let names = ["test", "test2"];
 
-        let mut hash = MetricsHash::new();
+        let mut hash = Rusage::new();
 
         for name in names.iter() {
             let series = TEST_METRICS
@@ -474,7 +549,7 @@ mod tests {
     fn wallclock_counter_increase() {
         let names = ["test", "test2"];
 
-        let mut hash = MetricsHash::new();
+        let mut hash = Rusage::new();
 
         for name in names.iter() {
             let series = TEST_METRICS
