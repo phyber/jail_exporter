@@ -6,6 +6,21 @@ by [`rctl(8)`].
 The exporter is written in [Rust] and uses [`libjail-rs`] and [`librctl-rs`] to
 obtain metrics.
 
+## Building
+
+At a minimum, building Jail Exporter should require:
+
+  - Rust
+  - Cargo
+
+A BSD [`make(1)`] Makefile is provided for convenience, if you already have
+Rust and Cargo available, executing `make` will build a debug release of Jail
+Exporter at `target/debug/jail_exporter`. `make release` will build a release
+version at `target/release/jail_exporter`.
+
+If you don't wish to use `make(1)`, the usual `cargo build` command should work
+just fine.
+
 ## Configuration
 
 All configuration is via the command line, the arguments you may use are shown
@@ -83,5 +98,6 @@ Metric                    | `rctl(8)` name    | Description
 [`jail_get(2)`]: https://www.freebsd.org/cgi/man.cgi?query=jail_get&sektion=2
 [`libjail-rs`]: https://github.com/fubarnetes/libjail-rs
 [`librctl-rs`]: https://github.com/fubarnetes/rctl
+[`make(1)`]: https://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
