@@ -9,6 +9,7 @@ extern crate env_logger;
 extern crate hyper;
 extern crate jail_exporter;
 extern crate rctl;
+extern crate warp;
 
 // Macro using crates.
 #[macro_use]
@@ -18,48 +19,33 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 
-use hyper::header::CONTENT_TYPE;
-use hyper::rt::Future;
-use hyper::service::service_fn_ok;
-use hyper::{
-    Body,
-    Method,
-    Request,
-    Response,
-    Server,
-    StatusCode,
-};
 use std::net::SocketAddr;
 use std::process::exit;
+use std::str;
 use std::str::FromStr;
+use warp::{
+    Filter,
+    http::Response,
+};
 
+// The Prometheus exporter.
 lazy_static!{
     static ref EXPORTER: jail_exporter::Metrics = jail_exporter::Metrics::new();
 }
 
-fn metrics(_req: &Request<Body>) -> Response<Body> {
+// Returns a warp Reply containing the Prometheus Exporter output, or a
+// Rejection if things fail for some reason.
+fn metrics(_: ()) -> Result<impl warp::Reply, warp::Rejection> {
     debug!("Processing metrics request");
 
+    // Get exporter output
     let output = EXPORTER.export();
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(CONTENT_TYPE, "text/plain")
-        .body(Body::from(output))
-        .unwrap()
-}
-
-// HTTP request router
-fn http_router(req: &Request<Body>) -> Response<Body> {
-    match (req.method(), req.uri().path()) {
-        (&Method::GET, "/metrics") => metrics(&req),
-        _ => {
-            debug!("No handler for request found");
-            Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::empty())
-                .unwrap()
-        },
+    // Create a string from the exporter output, or return a server error if
+    // the exporter failed.
+    match str::from_utf8(&output) {
+        Ok(v) => Ok(Response::builder().body(String::from(v))),
+        Err(_) => Err(warp::reject::server_error()),
     }
 }
 
@@ -132,13 +118,46 @@ fn main() {
         .unwrap()
         .parse()
         .expect("unable to parse socket address");
+    debug!("web.listen-address: {}", addr);
 
-    let router = || service_fn_ok(|req| http_router(&req));
+    // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
+    // into the route handler below.
+    let telemetry_path = matches
+        .value_of("WEB_TELEMETRY_PATH")
+        .unwrap();
+    let telemetry_path = telemetry_path.to_owned();
+    debug!("web.telemetry-path: {}", telemetry_path);
 
+    // Telemetry path handler.
+    // We cannot use the usual warp path handling, as it requires static &str
+    // with sizes known ahead of time. However, we can work around this as
+    // suggested by the author here:
+    //   https://github.com/seanmonstar/warp/issues/31
+    let telemetry = warp::get2()
+        .and(warp::path::param::<String>())
+        .and_then(move |param: String| {
+            // Turn the param into a path we can compare.
+            let mut get_path = "/".to_owned();
+            get_path.push_str(&param);
+
+            if get_path == telemetry_path {
+                Ok(())
+            }
+            else {
+                Err(warp::reject::not_found())
+            }
+        });
+
+    // If the above evaluates to Ok, then we get the metrics.
+    let telemetry = telemetry.and_then(metrics);
+
+    // We only have the single telemetry route for now.
+    let routes = telemetry;
+
+    // Create a server to serve our routes.
+    let server = warp::serve(routes);
+
+    // Run it!
     info!("Starting HTTP server on {}", addr);
-    let server = Server::bind(&addr)
-        .serve(router)
-        .map_err(|e| eprintln!("server error: {}", e));
-
-    hyper::rt::run(server);
+    server.run(addr);
 }
