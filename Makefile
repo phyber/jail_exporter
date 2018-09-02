@@ -18,4 +18,4 @@ update:
 	$(CARGO) update
 
 doc:
-	$(CARGO) doc
+	$(CARGO) doc --no-deps
