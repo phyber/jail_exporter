@@ -1,21 +1,21 @@
-CARGO=			cargo
-CARGO_BUILD=		$(CARGO) build
-CARGO_BUILD_RELEASE=	$(CARGO_BUILD) --release
-CARGO_OUTDATED=		$(CARGO) outdated
-CARGO_TEST=		$(CARGO) test
-CARGO_UPDATE=		$(CARGO) update
+CARGO=	cargo
+
+.PHONY: build release test outdated update doc
 
 build:
-	$(CARGO_BUILD)
+	$(CARGO) build
 
 release:
-	$(CARGO_BUILD_RELEASE)
+	$(CARGO) build --release
 
 test:
-	$(CARGO_TEST)
+	$(CARGO) test
 
 outdated:
-	$(CARGO_OUTDATED)
+	$(CARGO) outdated
 
 update:
-	$(CARGO_UPDATE)
+	$(CARGO) update
+
+doc:
+	$(CARGO) doc
