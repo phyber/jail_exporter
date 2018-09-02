@@ -31,10 +31,6 @@ Argument             | Default          | Purpose
 `web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
 `web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
 
-_Note:_ Although the `web.telemetry-path` command line argument exists, it is not
-      yet used, so the exporter will always present metrics at `/metrics` for
-      now.
-
 ## Running
 
 The exporter needs to run as `root` in order to have enough permission to
