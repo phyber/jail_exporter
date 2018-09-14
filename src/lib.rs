@@ -25,12 +25,17 @@ use prometheus::{
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-// Book keeping for the jail counters.
+/// Book keeping for the jail counters.
 type CounterBookKeeper = HashMap<String, i64>;
 type Rusage = HashMap<rctl::Resource, usize>;
+/// Vector of String representing jails that have disappeared since the last
+/// scrape.
 type DeadJails = Vec<String>;
+/// Vector of String representing jails that we have seen during the current
+/// scrape.
 type SeenJails = Vec<String>;
 
+/// Metrics structure containing the metrics that are being tracked.
 pub struct Metrics {
     // Prometheus time series
     build_info: IntGaugeVec,
@@ -231,12 +236,14 @@ impl Default for Metrics {
     }
 }
 
+/// Metrics implementation
 impl Metrics {
+    /// Return a new Metrics instance.
     pub fn new() -> Self {
         Default::default()
     }
 
-    // Processes the Rusage setting the appripriate time series.
+    /// Processes the Rusage setting the appripriate time series.
     fn process_rusage(&self, name: &str, metrics: &Rusage) {
         debug!("process_metrics_hash");
 
@@ -471,6 +478,7 @@ impl Metrics {
         self.jail_id.remove_label_values(labels).ok();
     }
 
+    /// Collect and export the rctl metrics.
     pub fn export(&self) -> Vec<u8> {
         // Collect metrics
         self.get_jail_metrics();
