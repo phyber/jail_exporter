@@ -3,7 +3,7 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
-#[forbid(unsafe_code)]
+#![forbid(unsafe_code)]
 
 extern crate env_logger;
 extern crate jail;

@@ -3,7 +3,6 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
-#[forbid(unsafe_code)]
 
 extern crate env_logger;
 extern crate hyper;
@@ -29,6 +28,7 @@ use warp::{
 };
 
 // The Prometheus exporter.
+// lazy_static! uses unsafe code.
 lazy_static!{
     static ref EXPORTER: jail_exporter::Metrics = jail_exporter::Metrics::new();
 }
