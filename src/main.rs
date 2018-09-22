@@ -92,6 +92,8 @@ fn main() {
         .about(crate_description!())
         .arg(
             clap::Arg::with_name("WEB_LISTEN_ADDRESS")
+                .env("JAIL_EXPORTER_WEB_LISTEN_ADDRESS")
+                .hide_env_values(true)
                 .long("web.listen-address")
                 .value_name("[ADDR:PORT]")
                 .help("Address on which to expose metrics and web interface.")
@@ -101,6 +103,8 @@ fn main() {
         )
         .arg(
             clap::Arg::with_name("WEB_TELEMETRY_PATH")
+                .env("JAIL_EXPORTER_WEB_TELEMETRY_PATH")
+                .hide_env_values(true)
                 .long("web.telemetry-path")
                 .value_name("PATH")
                 .help("Path under which to expose metrics.")
