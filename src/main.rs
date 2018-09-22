@@ -92,6 +92,8 @@ fn main() {
         .about(crate_description!())
         .arg(
             clap::Arg::with_name("WEB_LISTEN_ADDRESS")
+                .env("JAIL_EXPORTER_WEB_LISTEN_ADDRESS")
+                .hide_env_values(true)
                 .long("web.listen-address")
                 .value_name("[ADDR:PORT]")
                 .help("Address on which to expose metrics and web interface.")
@@ -101,6 +103,8 @@ fn main() {
         )
         .arg(
             clap::Arg::with_name("WEB_TELEMETRY_PATH")
+                .env("JAIL_EXPORTER_WEB_TELEMETRY_PATH")
+                .hide_env_values(true)
                 .long("web.telemetry-path")
                 .value_name("PATH")
                 .help("Path under which to expose metrics.")
@@ -159,4 +163,30 @@ fn main() {
     // Run it!
     info!("Starting HTTP server on {}", addr);
     server.run(addr);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_ipaddress_with_port() {
+        let addr = "127.0.0.1:9452";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_is_ipaddress_without_port() {
+        let addr = "127.0.0.1";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_ip_address_no_ip() {
+        let addr = "random string";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_err());
+    }
 }
