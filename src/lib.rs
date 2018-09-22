@@ -3,7 +3,6 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
-#![forbid(unsafe_code)]
 
 extern crate env_logger;
 extern crate jail;
@@ -39,7 +38,6 @@ type SeenJails = Vec<String>;
 pub struct Metrics {
     // Prometheus time series
     // These come from rctl
-    build_info: IntGaugeVec,
     coredumpsize_bytes: IntGaugeVec,
     cputime_seconds_total: IntCounterVec,
     datasize_bytes: IntGaugeVec,
@@ -67,6 +65,7 @@ pub struct Metrics {
     writeiops: IntGaugeVec,
 
     // Metrics this library generates
+    build_info: IntGaugeVec,
     jail_id: IntGaugeVec,
     jail_total: IntGauge,
 
@@ -360,6 +359,12 @@ impl Metrics {
                 rctl::Resource::PseudoTerminals => {
                     self.pseudoterminals.with_label_values(labels).set(value);
                 },
+                rctl::Resource::ReadBps => {
+                    self.readbps.with_label_values(labels).set(value);
+                },
+                rctl::Resource::ReadIops => {
+                    self.readiops.with_label_values(labels).set(value);
+                },
                 rctl::Resource::ShmSize => {
                     self.shmsize_bytes.with_label_values(labels).set(value);
                 },
@@ -402,14 +407,12 @@ impl Metrics {
                         .with_label_values(labels)
                         .inc_by(inc);
                 },
-                // Intentionally unhandled metrics.
-                // These are documented being difficult to observe via rctl(8).
-                rctl::Resource::ReadBps
-                    | rctl::Resource::WriteBps
-                    | rctl::Resource::ReadIops
-                    | rctl::Resource::WriteIops => {
-                        debug!("Intentionally unhandled metric: {}", key)
-                    },
+                rctl::Resource::WriteBps => {
+                    self.writebps.with_label_values(labels).set(value)
+                },
+                rctl::Resource::WriteIops => {
+                    self.writeiops.with_label_values(labels).set(value)
+                },
             }
         }
     }
@@ -483,26 +486,32 @@ impl Metrics {
 
         // Remove the jail metrics
         self.coredumpsize_bytes.remove_label_values(labels).ok();
+        self.cputime_seconds_total.remove_label_values(labels).ok();
         self.datasize_bytes.remove_label_values(labels).ok();
+        self.maxproc.remove_label_values(labels).ok();
         self.memorylocked_bytes.remove_label_values(labels).ok();
         self.memoryuse_bytes.remove_label_values(labels).ok();
-        self.msgqsize_bytes.remove_label_values(labels).ok();
-        self.shmsize_bytes.remove_label_values(labels).ok();
-        self.stacksize_bytes.remove_label_values(labels).ok();
-        self.swapuse_bytes.remove_label_values(labels).ok();
-        self.vmemoryuse_bytes.remove_label_values(labels).ok();
-        self.pcpu_used.remove_label_values(labels).ok();
-        self.maxproc.remove_label_values(labels).ok();
         self.msgqqueued.remove_label_values(labels).ok();
+        self.msgqsize_bytes.remove_label_values(labels).ok();
         self.nmsgq.remove_label_values(labels).ok();
         self.nsem.remove_label_values(labels).ok();
         self.nsemop.remove_label_values(labels).ok();
         self.nshm.remove_label_values(labels).ok();
         self.nthr.remove_label_values(labels).ok();
         self.openfiles.remove_label_values(labels).ok();
+        self.pcpu_used.remove_label_values(labels).ok();
         self.pseudoterminals.remove_label_values(labels).ok();
-        self.cputime_seconds_total.remove_label_values(labels).ok();
+        self.readbps.remove_label_values(labels).ok();
+        self.readiops.remove_label_values(labels).ok();
+        self.shmsize_bytes.remove_label_values(labels).ok();
+        self.stacksize_bytes.remove_label_values(labels).ok();
+        self.swapuse_bytes.remove_label_values(labels).ok();
+        self.vmemoryuse_bytes.remove_label_values(labels).ok();
         self.wallclock_seconds_total.remove_label_values(labels).ok();
+        self.writebps.remove_label_values(labels).ok();
+        self.writeiops.remove_label_values(labels).ok();
+
+        // Reset metrics we generated.
         self.jail_id.remove_label_values(labels).ok();
     }
 
