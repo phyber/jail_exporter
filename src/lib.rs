@@ -175,13 +175,13 @@ impl Default for Metrics {
             ).unwrap(),
 
             readbps: register_int_gauge_vec!(
-                "readbps",
+                "jail_readbps",
                 "filesystem reads, in bytes per second",
                 &["name"]
             ).unwrap(),
 
             readiops: register_int_gauge_vec!(
-                "readiops",
+                "jail_readiops",
                 "filesystem reads, in operations per second",
                 &["name"]
             ).unwrap(),
@@ -217,13 +217,13 @@ impl Default for Metrics {
             ).unwrap(),
 
             writebps: register_int_gauge_vec!(
-                "writebps",
+                "jail_writebps",
                 "filesystem writes, in bytes per second",
                 &["name"]
             ).unwrap(),
 
             writeiops: register_int_gauge_vec!(
-                "writeiops",
+                "jail_writeiops",
                 "filesystem writes, in operations per second",
                 &["name"]
             ).unwrap(),
