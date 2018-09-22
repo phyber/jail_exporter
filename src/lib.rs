@@ -56,11 +56,15 @@ pub struct Metrics {
     openfiles: IntGaugeVec,
     pcpu_used: IntGaugeVec,
     pseudoterminals: IntGaugeVec,
+    readbps: IntGaugeVec,
+    readiops: IntGaugeVec,
     shmsize_bytes: IntGaugeVec,
     stacksize_bytes: IntGaugeVec,
     swapuse_bytes: IntGaugeVec,
     vmemoryuse_bytes: IntGaugeVec,
     wallclock_seconds_total: IntCounterVec,
+    writebps: IntGaugeVec,
+    writeiops: IntGaugeVec,
 
     // Metrics this library generates
     jail_id: IntGaugeVec,
@@ -75,24 +79,27 @@ impl Default for Metrics {
     // Descriptions of these metrics are taken from rctl(8) where possible.
     fn default() -> Self {
         let metrics = Metrics{
-            // build info metric
-            build_info: register_int_gauge_vec!(
-                "jail_exporter_build_info",
-                "A metric with a constant '1' value labelled by version \
-                from which jail_exporter was built",
-                &["version"]
-            ).unwrap(),
-
-            // Bytes metrics
             coredumpsize_bytes: register_int_gauge_vec!(
                 "jail_coredumpsize_bytes",
                 "core dump size, in bytes",
                 &["name"]
             ).unwrap(),
 
+            cputime_seconds_total: register_int_counter_vec!(
+                "jail_cputime_seconds_total",
+                "CPU time, in seconds",
+                &["name"]
+            ).unwrap(),
+
             datasize_bytes: register_int_gauge_vec!(
                 "jail_datasize_bytes",
                 "data size, in bytes",
+                &["name"]
+            ).unwrap(),
+
+            maxproc: register_int_gauge_vec!(
+                "jail_maxproc",
+                "number of processes",
                 &["name"]
             ).unwrap(),
 
@@ -108,53 +115,15 @@ impl Default for Metrics {
                 &["name"]
             ).unwrap(),
 
-            msgqsize_bytes: register_int_gauge_vec!(
-                "jail_msgqsize_bytes",
-                "SysV message queue size, in bytes",
-                &["name"]
-            ).unwrap(),
-
-            shmsize_bytes: register_int_gauge_vec!(
-                "jail_shmsize_bytes",
-                "SysV shared memory size, in bytes",
-                &["name"]
-            ).unwrap(),
-
-            stacksize_bytes: register_int_gauge_vec!(
-                "jail_stacksize_bytes",
-                "stack size, in bytes",
-                &["name"]
-            ).unwrap(),
-
-            swapuse_bytes: register_int_gauge_vec!(
-                "jail_swapuse_bytes",
-                "swap space that may be reserved or used, in bytes",
-                &["name"]
-            ).unwrap(),
-
-            vmemoryuse_bytes: register_int_gauge_vec!(
-                "jail_vmemoryuse_bytes",
-                "address space limit, in bytes",
-                &["name"]
-            ).unwrap(),
-
-            // Percent metrics
-            pcpu_used: register_int_gauge_vec!(
-                "jail_pcpu_used",
-                "%CPU, in percents of a single CPU core",
-                &["name"]
-            ).unwrap(),
-
-            // Random numberical values without a specific unit.
-            maxproc: register_int_gauge_vec!(
-                "jail_maxproc",
-                "number of processes",
-                &["name"]
-            ).unwrap(),
-
             msgqqueued: register_int_gauge_vec!(
                 "jail_msgqqueued",
                 "number of queued SysV messages",
+                &["name"]
+            ).unwrap(),
+
+            msgqsize_bytes: register_int_gauge_vec!(
+                "jail_msgqsize_bytes",
+                "SysV message queue size, in bytes",
                 &["name"]
             ).unwrap(),
 
@@ -194,25 +163,53 @@ impl Default for Metrics {
                 &["name"]
             ).unwrap(),
 
+            pcpu_used: register_int_gauge_vec!(
+                "jail_pcpu_used",
+                "%CPU, in percents of a single CPU core",
+                &["name"]
+            ).unwrap(),
+
             pseudoterminals: register_int_gauge_vec!(
                 "jail_pseudoterminals",
                 "number of PTYs",
                 &["name"]
             ).unwrap(),
 
-            // Seconds metrics
-            cputime_seconds_total_old: Mutex::new(
-                CounterBookKeeper::new()
-            ),
-            cputime_seconds_total: register_int_counter_vec!(
-                "jail_cputime_seconds_total",
-                "CPU time, in seconds",
+            readbps: register_int_gauge_vec!(
+                "readbps",
+                "filesystem reads, in bytes per second",
                 &["name"]
             ).unwrap(),
 
-            wallclock_seconds_total_old: Mutex::new(
-                CounterBookKeeper::new()
-            ),
+            readiops: register_int_gauge_vec!(
+                "readiops",
+                "filesystem reads, in operations per second",
+                &["name"]
+            ).unwrap(),
+
+            shmsize_bytes: register_int_gauge_vec!(
+                "jail_shmsize_bytes",
+                "SysV shared memory size, in bytes",
+                &["name"]
+            ).unwrap(),
+
+            stacksize_bytes: register_int_gauge_vec!(
+                "jail_stacksize_bytes",
+                "stack size, in bytes",
+                &["name"]
+            ).unwrap(),
+
+            swapuse_bytes: register_int_gauge_vec!(
+                "jail_swapuse_bytes",
+                "swap space that may be reserved or used, in bytes",
+                &["name"]
+            ).unwrap(),
+
+            vmemoryuse_bytes: register_int_gauge_vec!(
+                "jail_vmemoryuse_bytes",
+                "address space limit, in bytes",
+                &["name"]
+            ).unwrap(),
 
             wallclock_seconds_total: register_int_counter_vec!(
                 "jail_wallclock_seconds_total",
@@ -220,7 +217,26 @@ impl Default for Metrics {
                 &["name"]
             ).unwrap(),
 
+            writebps: register_int_gauge_vec!(
+                "writebps",
+                "filesystem writes, in bytes per second",
+                &["name"]
+            ).unwrap(),
+
+            writeiops: register_int_gauge_vec!(
+                "writeiops",
+                "filesystem writes, in operations per second",
+                &["name"]
+            ).unwrap(),
+
             // Metrics created by the exporter
+            build_info: register_int_gauge_vec!(
+                "jail_exporter_build_info",
+                "A metric with a constant '1' value labelled by version \
+                from which jail_exporter was built",
+                &["version"]
+            ).unwrap(),
+
             jail_id: register_int_gauge_vec!(
                 "jail_id",
                 "ID of the named jail.",
@@ -231,6 +247,15 @@ impl Default for Metrics {
                 "jail_num",
                 "Current number of running jails."
             ).unwrap(),
+
+            // Book keeping
+            cputime_seconds_total_old: Mutex::new(
+                CounterBookKeeper::new()
+            ),
+
+            wallclock_seconds_total_old: Mutex::new(
+                CounterBookKeeper::new()
+            ),
         };
 
         let build_info_labels = [env!("CARGO_PKG_VERSION")];
