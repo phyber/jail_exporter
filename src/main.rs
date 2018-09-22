@@ -5,7 +5,6 @@
 //
 
 extern crate env_logger;
-extern crate hyper;
 extern crate jail_exporter;
 extern crate rctl;
 extern crate warp;
