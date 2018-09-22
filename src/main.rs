@@ -160,3 +160,29 @@ fn main() {
     info!("Starting HTTP server on {}", addr);
     server.run(addr);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_ipaddress_with_port() {
+        let addr = "127.0.0.1:9452";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_is_ipaddress_without_port() {
+        let addr = "127.0.0.1";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_ip_address_no_ip() {
+        let addr = "random string";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_err());
+    }
+}
