@@ -47,9 +47,7 @@ soon.
 ## Exposed Metrics
 
 This exporter was developed under FreeBSD 11.1 and currently exports all
-resources listed under the `RESOURCES` section of [`rctl(8)`] with the
-exception of `readbps`, `writebps`, `readiops`, and `writeiops` as these are
-listed as being difficult to measure properly. They may appear in the future.
+resources listed under the `RESOURCES` section of [`rctl(8)`].
 
 The `id` and `num` time series are calculated based on other information and do
 not come from [`rctl(8)`] directly. 
@@ -81,11 +79,15 @@ Metric                    | `rctl(8)` name    | Description
 `openfiles`               | `openfiles`       | file descriptor table size
 `pcpu_used`               | `pcpu`            | %CPU, in percents of a single CPU core
 `pseudoterminals`         | `pseudoterminals` | number of PTYs
+`readbps`                 | `readbps`         | filesystem reads, in bytes per second
+`readiops`                | `readiops`        | filesystem reads, in operations per second
 `shmsize_bytes`           | `shmsize`         | SysV shared memory size, in bytes
 `stacksize_bytes`         | `stacksize`       | stack size, in bytes
 `swapuse_bytes`           | `swapuse`         | swap space that may be reserved or used, in bytes
 `vmemoryuse_bytes`        | `vmemoryuse`      | address space limit, in bytes
 `wallclock_seconds_total` | `wallclock`       | wallclock time, in seconds
+`writebps`                | `writebps`        | filesystem writes, in bytes per second
+`writeiops`               | `writeiops`       | filesystem writes, in operations per second
 
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
