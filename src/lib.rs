@@ -38,17 +38,14 @@ type SeenJails = Vec<String>;
 /// Metrics structure containing the metrics that are being tracked.
 pub struct Metrics {
     // Prometheus time series
+    // These come from rctl
     build_info: IntGaugeVec,
     coredumpsize_bytes: IntGaugeVec,
+    cputime_seconds_total: IntCounterVec,
     datasize_bytes: IntGaugeVec,
     memorylocked_bytes: IntGaugeVec,
     memoryuse_bytes: IntGaugeVec,
     msgqsize_bytes: IntGaugeVec,
-    shmsize_bytes: IntGaugeVec,
-    stacksize_bytes: IntGaugeVec,
-    swapuse_bytes: IntGaugeVec,
-    vmemoryuse_bytes: IntGaugeVec,
-    pcpu_used: IntGaugeVec,
     maxproc: IntGaugeVec,
     msgqqueued: IntGaugeVec,
     nmsgq: IntGaugeVec,
@@ -57,9 +54,15 @@ pub struct Metrics {
     nshm: IntGaugeVec,
     nthr: IntGaugeVec,
     openfiles: IntGaugeVec,
+    pcpu_used: IntGaugeVec,
     pseudoterminals: IntGaugeVec,
-    cputime_seconds_total: IntCounterVec,
+    shmsize_bytes: IntGaugeVec,
+    stacksize_bytes: IntGaugeVec,
+    swapuse_bytes: IntGaugeVec,
+    vmemoryuse_bytes: IntGaugeVec,
     wallclock_seconds_total: IntCounterVec,
+
+    // Metrics this library generates
     jail_id: IntGaugeVec,
     jail_total: IntGauge,
 
