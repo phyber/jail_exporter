@@ -50,7 +50,9 @@ This exporter was developed under FreeBSD 11.1 and currently exports all
 resources listed under the `RESOURCES` section of [`rctl(8)`].
 
 The `id` and `num` time series are calculated based on other information and do
-not come from [`rctl(8)`] directly. 
+not come from [`rctl(8)`] directly. Metric names have their units appended
+where appropriate, based on the Prometheus best practice for [metric and label
+naming].
 
 All exported metrics are prefixed with `jail` and have a `name` label
 representing the name of the jail. As such, jail names are expected to be
@@ -92,6 +94,7 @@ Metric                    | `rctl(8)` name    | Description
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
 [Rust]: https://www.rust-lang.org/
+[metric and label naming]: https://prometheus.io/docs/practices/naming/
 [recording rules]: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
 [`jail_get(2)`]: https://www.freebsd.org/cgi/man.cgi?query=jail_get&sektion=2
 [`libjail-rs`]: https://github.com/fubarnetes/libjail-rs
