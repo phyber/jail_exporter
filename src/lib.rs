@@ -24,12 +24,20 @@ use prometheus::{
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+/// Metrics that use bookkeeping
+enum BookKept {
+    CpuTime(i64),
+    Wallclock(i64),
+}
+
 /// Book keeping for the jail counters.
 type CounterBookKeeper = HashMap<String, i64>;
 type Rusage = HashMap<rctl::Resource, usize>;
+
 /// Vector of String representing jails that have disappeared since the last
 /// scrape.
 type DeadJails = Vec<String>;
+
 /// Vector of String representing jails that we have seen during the current
 /// scrape.
 type SeenJails = Vec<String>;
@@ -265,6 +273,46 @@ impl Metrics {
         Default::default()
     }
 
+    /// Updates the book for the given metric and returns the amount the value
+    /// has increased by.
+    fn update_metric_book(&self, name: &str, resource: BookKept) -> i64 {
+        // Get the Book of Old Values and the metric.
+        let mut book;
+        let value;
+        match resource {
+            BookKept::CpuTime(v) => {
+                book = self.cputime_seconds_total_old.lock().unwrap();
+                value = v;
+            },
+            BookKept::Wallclock(v) => {
+                book = self.wallclock_seconds_total_old.lock().unwrap();
+                value = v;
+            },
+        };
+
+        // Get the old value for this jail, if there isn't one, use 0.
+        let old_value = match book.get(name).cloned() {
+            None    => 0,
+            Some(v) => v,
+        };
+
+        // Work out what our increase should be.
+        // If old_value < value, OS counter has continued to
+        // increment, otherwise it has reset.
+        let inc = if old_value <= value {
+            value - old_value
+        }
+        else {
+            value
+        };
+
+        // Update book keeping.
+        book.insert(name.to_string(), value);
+
+        // Return computed increase
+        inc
+    }
+
     /// Processes the Rusage setting the appripriate time series.
     fn process_rusage(&self, name: &str, metrics: &Rusage) {
         debug!("process_metrics_hash");
@@ -281,29 +329,10 @@ impl Metrics {
                         .set(value);
                 },
                 rctl::Resource::CpuTime => {
-                    // Get the Book of Old Values
-                    let mut book =
-                        self.cputime_seconds_total_old.lock().unwrap();
-
-                    // Get the old value for this jail, if there isn't one,
-                    // use 0.
-                    let old_value = match book.get(name).cloned() {
-                        Some(v) => v,
-                        None => 0,
-                    };
-
-                    // Work out what our increase should be.
-                    // If old_value < value, OS counter has continued to
-                    // increment, otherwise it has reset.
-                    let inc = if old_value <= value {
-                        value - old_value
-                    }
-                    else {
-                        value
-                    };
-
-                    // Update book keeping.
-                    book.insert(name.to_string(), value);
+                    let inc = self.update_metric_book(
+                        &name,
+                        BookKept::CpuTime(value)
+                    );
 
                     self.cputime_seconds_total
                         .with_label_values(labels)
@@ -372,29 +401,10 @@ impl Metrics {
                     self.vmemoryuse_bytes.with_label_values(labels).set(value);
                 },
                 rctl::Resource::Wallclock => {
-                    // Get the Book of Old Values
-                    let mut book =
-                        self.wallclock_seconds_total_old.lock().unwrap();
-
-                    // Get the old value for this jail, if there isn't one,
-                    // use 0.
-                    let old_value = match book.get(name).cloned() {
-                        Some(v) => v,
-                        None => 0,
-                    };
-
-                    // Work out what our increase should be.
-                    // If old_value < value, OS counter has continued to
-                    // increment, otherwise it has reset.
-                    let inc = if old_value <= value {
-                        value - old_value
-                    }
-                    else {
-                        value
-                    };
-
-                    // Update book keeping.
-                    book.insert(name.to_string(), value);
+                    let inc = self.update_metric_book(
+                        &name,
+                        BookKept::Wallclock(value)
+                    );
 
                     self.wallclock_seconds_total
                         .with_label_values(labels)
