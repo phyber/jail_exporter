@@ -276,7 +276,7 @@ impl Metrics {
     /// Updates the book for the given metric and returns the amount the value
     /// has increased by.
     fn update_metric_book(&self, name: &str, resource: BookKept) -> i64 {
-        // Get the Book of Old Values and the metric.
+        // Get the Book of Old Values and the current value.
         let mut book;
         let value;
         match resource {
@@ -321,7 +321,9 @@ impl Metrics {
         let labels: &[&str] = &[&name];
 
         for (key, value) in metrics {
+            // Convert the usize to an i64.
             let value = *value as i64;
+
             match key {
                 rctl::Resource::CoreDumpSize => {
                     self.coredumpsize_bytes
@@ -475,11 +477,8 @@ impl Metrics {
 
     // Loop over DeadJails removing old labels and killing old book keeping.
     fn reap(&self, dead: &DeadJails) {
-        let mut book = self.cputime_seconds_total_old.lock().unwrap();
-
         for name in dead {
             self.remove_jail_metrics(&name);
-            book.remove(name);
         }
     }
 
@@ -516,6 +515,17 @@ impl Metrics {
 
         // Reset metrics we generated.
         self.jail_id.remove_label_values(labels).ok();
+
+        // Kill the books for dead jails.
+        let books = [
+            &self.cputime_seconds_total_old,
+            &self.wallclock_seconds_total_old,
+        ];
+
+        for book in books.iter() {
+            let mut book = book.lock().unwrap();
+            book.remove(name);
+        }
     }
 
     /// Collect and export the rctl metrics.
