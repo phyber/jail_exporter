@@ -77,7 +77,7 @@ pub struct Metrics {
 impl Default for Metrics {
     // Descriptions of these metrics are taken from rctl(8) where possible.
     fn default() -> Self {
-        let metrics = Metrics{
+        let metrics = Metrics {
             coredumpsize_bytes: register_int_gauge_vec!(
                 "jail_coredumpsize_bytes",
                 "core dump size, in bytes",
@@ -232,7 +232,7 @@ impl Default for Metrics {
             build_info: register_int_gauge_vec!(
                 "jail_exporter_build_info",
                 "A metric with a constant '1' value labelled by version \
-                from which jail_exporter was built",
+                 from which jail_exporter was built",
                 &["version"]
             ).unwrap(),
 
@@ -248,13 +248,8 @@ impl Default for Metrics {
             ).unwrap(),
 
             // Book keeping
-            cputime_seconds_total_old: Mutex::new(
-                CounterBookKeeper::new()
-            ),
-
-            wallclock_seconds_total_old: Mutex::new(
-                CounterBookKeeper::new()
-            ),
+            cputime_seconds_total_old: Mutex::new(CounterBookKeeper::new()),
+            wallclock_seconds_total_old: Mutex::new(CounterBookKeeper::new()),
         };
 
         let build_info_labels = [env!("CARGO_PKG_VERSION")];
@@ -287,9 +282,8 @@ impl Metrics {
                 },
                 rctl::Resource::CpuTime => {
                     // Get the Book of Old Values
-                    let mut book = self.cputime_seconds_total_old
-                        .lock()
-                        .unwrap();
+                    let mut book =
+                        self.cputime_seconds_total_old.lock().unwrap();
 
                     // Get the old value for this jail, if there isn't one,
                     // use 0.
@@ -379,9 +373,8 @@ impl Metrics {
                 },
                 rctl::Resource::Wallclock => {
                     // Get the Book of Old Values
-                    let mut book = self.wallclock_seconds_total_old
-                        .lock()
-                        .unwrap();
+                    let mut book =
+                        self.wallclock_seconds_total_old.lock().unwrap();
 
                     // Get the old value for this jail, if there isn't one,
                     // use 0.
@@ -546,7 +539,7 @@ mod tests {
     // We have to register this here as the Prometheus library maintains a
     // global registry. Trying to Metrics::new() in each test will result
     // in errors as duplicate time series will be created.
-    lazy_static!{
+    lazy_static! {
         static ref TEST_METRICS: Metrics = Metrics::new();
     }
 
@@ -557,9 +550,8 @@ mod tests {
         let mut hash = Rusage::new();
 
         for name in names.iter() {
-            let series = TEST_METRICS
-                .cputime_seconds_total
-                .with_label_values(&[&name]);
+            let series =
+                TEST_METRICS.cputime_seconds_total.with_label_values(&[&name]);
 
             // Initial check, should be zero. We didn't set anything yet.
             assert_eq!(series.get(), 0);

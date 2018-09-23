@@ -22,13 +22,13 @@ use std::process::exit;
 use std::str;
 use std::str::FromStr;
 use warp::{
-    Filter,
     http::Response,
+    Filter,
 };
 
 // The Prometheus exporter.
 // lazy_static! uses unsafe code.
-lazy_static!{
+lazy_static! {
     static ref EXPORTER: jail_exporter::Metrics = jail_exporter::Metrics::new();
 }
 
@@ -125,9 +125,7 @@ fn main() {
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
     // into the route handler below.
-    let telemetry_path = matches
-        .value_of("WEB_TELEMETRY_PATH")
-        .unwrap();
+    let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH").unwrap();
     let telemetry_path = telemetry_path.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
@@ -149,7 +147,8 @@ fn main() {
             else {
                 Err(warp::reject::not_found())
             }
-        });
+        },
+    );
 
     // If the above evaluates to Ok, then we get the metrics.
     let telemetry = telemetry.and_then(metrics);
