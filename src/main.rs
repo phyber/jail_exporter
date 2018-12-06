@@ -3,24 +3,21 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
-
-extern crate env_logger;
-extern crate jail_exporter;
-extern crate rctl;
-extern crate warp;
-
-// Macro using crates.
-#[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str;
 use std::str::FromStr;
+use clap::{
+    crate_authors,
+    crate_description,
+    crate_name,
+    crate_version,
+};
+use lazy_static::lazy_static;
+use log::{
+    debug,
+    info,
+};
 use warp::{
     http::Response,
     Filter,

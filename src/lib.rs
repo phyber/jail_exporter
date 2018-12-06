@@ -3,26 +3,24 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
-
-extern crate env_logger;
-extern crate jail;
-extern crate rctl;
-
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate prometheus;
-
+use std::collections::HashMap;
+use std::sync::Mutex;
+use log::debug;
 use jail::RunningJail;
 use prometheus::{
+    __register_counter_vec,
+    __register_gauge,
+    __register_gauge_vec,
+    opts,
+    register_int_counter_vec,
+    register_int_gauge,
+    register_int_gauge_vec,
     Encoder,
     IntCounterVec,
     IntGauge,
     IntGaugeVec,
     TextEncoder,
 };
-use std::collections::HashMap;
-use std::sync::Mutex;
 
 /// Metrics that use bookkeeping
 enum BookKept {
@@ -548,8 +546,7 @@ impl Metrics {
 
 // Tests
 #[cfg(test)]
-#[macro_use]
-extern crate lazy_static;
+use lazy_static::lazy_static;
 
 #[cfg(test)]
 mod tests {
