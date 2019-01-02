@@ -41,8 +41,7 @@ time series that the exporter exports. If you wish to account for resource
 usage for jails that have disappeared, you may wish to make use of the
 Prometheus [recording rules] to track total resource usage across all jails.
 
-No port or `rc(8)` script is available yet, but work on a port will happen
-soon.
+No port is available yet, but it should happen soon.
 
 ## Exposed Metrics
 
