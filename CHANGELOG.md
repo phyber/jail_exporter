@@ -9,6 +9,7 @@
   - Update to [libjail] 0.0.6 and [rctl] 0.0.5.
   - Deal with errors if HTTP server can't bind to address.
   - Simplify metrics HTTP response handler.
+  - Provided more metadata in `Cargo.toml`.
 
 <!-- Links -->
 [actix-web]: https://actix.rs/
