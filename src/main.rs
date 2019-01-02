@@ -7,8 +7,8 @@ use actix_web::{
     http,
     server,
     App,
+    HttpResponse,
     Path,
-    Responder,
 };
 use clap::{
     crate_authors,
@@ -34,25 +34,23 @@ lazy_static! {
 
 // Returns a warp Reply containing the Prometheus Exporter output, or a
 // Rejection if things fail for some reason.
-fn metrics(_info: Path<()>) -> impl Responder {
+fn metrics(_info: Path<()>) -> HttpResponse {
     debug!("Processing metrics request");
 
     // Get exporter output
     let output = EXPORTER.export();
 
-    // Create a string from the exporter output, or return a server error if
-    // the exporter failed.
-    match str::from_utf8(&output) {
-        Ok(v) => String::from(v),
-        Err(e) => format!("{}", e),
-    }
+    // Send it out
+    HttpResponse::Ok()
+        .header(http::header::CONTENT_TYPE, "text/plain")
+        .body(output)
 }
 
 // Used as a validator for the argument parsing.
 fn is_ipaddress(s: &str) -> Result<(), String> {
     let res = SocketAddr::from_str(&s);
     match res {
-        Ok(_) => Ok(()),
+        Ok(_)  => Ok(()),
         Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
     }
 }
