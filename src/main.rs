@@ -155,15 +155,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_is_ipaddress_with_port() {
+    fn test_ipv4_with_port() {
         let addr = "127.0.0.1:9452";
         let res = is_ipaddress(&addr);
         assert!(res.is_ok());
     }
 
     #[test]
-    fn test_is_ipaddress_without_port() {
+    fn test_ipv6_with_port() {
+        let addr = "[::1]:9452";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_ipv4_without_port() {
         let addr = "127.0.0.1";
+        let res = is_ipaddress(&addr);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_ipv6_without_port() {
+        let addr = "[::1]";
         let res = is_ipaddress(&addr);
         assert!(res.is_err());
     }
