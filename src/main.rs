@@ -3,10 +3,13 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
-use std::net::SocketAddr;
-use std::process::exit;
-use std::str;
-use std::str::FromStr;
+use actix_web::{
+    http,
+    server,
+    App,
+    Path,
+    Responder,
+};
 use clap::{
     crate_authors,
     crate_description,
@@ -18,10 +21,10 @@ use log::{
     debug,
     info,
 };
-use warp::{
-    http::Response,
-    Filter,
-};
+use std::net::SocketAddr;
+use std::process::exit;
+use std::str;
+use std::str::FromStr;
 
 // The Prometheus exporter.
 // lazy_static! uses unsafe code.
@@ -31,7 +34,7 @@ lazy_static! {
 
 // Returns a warp Reply containing the Prometheus Exporter output, or a
 // Rejection if things fail for some reason.
-fn metrics(_: ()) -> Result<impl warp::Reply, warp::Rejection> {
+fn metrics(_info: Path<()>) -> impl Responder {
     debug!("Processing metrics request");
 
     // Get exporter output
@@ -40,8 +43,8 @@ fn metrics(_: ()) -> Result<impl warp::Reply, warp::Rejection> {
     // Create a string from the exporter output, or return a server error if
     // the exporter failed.
     match str::from_utf8(&output) {
-        Ok(v) => Ok(Response::builder().body(String::from(v))),
-        Err(_) => Err(warp::reject::server_error()),
+        Ok(v) => String::from(v),
+        Err(e) => format!("{}", e),
     }
 }
 
@@ -126,43 +129,23 @@ fn main() {
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
     // into the route handler below.
+    // Unwrap here should be safe since we provide clap with a default value.
     let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH").unwrap();
     let telemetry_path = telemetry_path.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
-    // Telemetry path handler.
-    // We cannot use the usual warp path handling, as it requires static &str
-    // with sizes known ahead of time. However, we can work around this as
-    // suggested by the author here:
-    //   https://github.com/seanmonstar/warp/issues/31
-    let telemetry = warp::get2()
-        .and(warp::path::param::<String>())
-        .and_then(move |param: String| {
-            // Turn the param into a path we can compare.
-            let mut get_path = "/".to_owned();
-            get_path.push_str(&param);
+    // Route handlers
+    let app = move || App::new()
+        .route(&telemetry_path, http::Method::GET, metrics);
 
-            if get_path == telemetry_path {
-                Ok(())
-            }
-            else {
-                Err(warp::reject::not_found())
-            }
-        },
-    );
-
-    // If the above evaluates to Ok, then we get the metrics.
-    let telemetry = telemetry.and_then(metrics);
-
-    // We only have the single telemetry route for now.
-    let routes = telemetry;
-
-    // Create a server to serve our routes.
-    let server = warp::serve(routes);
+    // Create the server
+    let server = server::new(app)
+        .bind(addr)
+        .unwrap();
 
     // Run it!
     info!("Starting HTTP server on {}", addr);
-    server.run(addr);
+    server.run();
 }
 
 #[cfg(test)]

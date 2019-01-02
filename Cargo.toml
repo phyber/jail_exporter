@@ -1,9 +1,19 @@
 [package]
 name = "jail_exporter"
 version = "0.7.1"
+description = "Prometheus exporter for FreeBSD jails."
 edition = "2018"
+license = "BSD-3-Clause"
+readme = "README.md"
 authors = [
     "David O'Rourke <david.orourke@gmail.com>",
+]
+keywords = [
+    "exporter",
+    "freebsd",
+    "jail",
+    "metrics",
+    "prometheus",
 ]
 
 [dependencies]
@@ -14,4 +24,7 @@ lazy_static = "1.1"
 log = "0.4"
 prometheus = "0.4"
 rctl = "0.0.5"
-warp = "0.1"
+
+[dependencies.actix-web]
+version = "0.7"
+default-features = false
