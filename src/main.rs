@@ -42,7 +42,7 @@ fn metrics(_info: Path<()>) -> HttpResponse {
 
     // Send it out
     HttpResponse::Ok()
-        .header(http::header::CONTENT_TYPE, "text/plain")
+        .header(http::header::CONTENT_TYPE, "text/plain; charset=utf-8")
         .body(output)
 }
 
