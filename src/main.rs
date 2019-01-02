@@ -139,9 +139,13 @@ fn main() {
         .route(&telemetry_path, http::Method::GET, metrics);
 
     // Create the server
-    let server = server::new(app)
-        .bind(addr)
-        .unwrap();
+    let server = match server::new(app).bind(addr) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Couldn't bind to {}: {}", addr, e);
+            exit(1);
+        },
+    };
 
     // Run it!
     info!("Starting HTTP server on {}", addr);
