@@ -68,6 +68,10 @@ fn main() {
             false
         },
         rctl::State::Enabled => true,
+        rctl::State::Jailed => {
+            eprintln!("RACCT/RCTL: Jail Exporter cannot run within a jail");
+            false
+        },
         rctl::State::NotPresent => {
             eprintln!(
                 "RACCT/RCTL support not present in kernel; see rctl(8) \
