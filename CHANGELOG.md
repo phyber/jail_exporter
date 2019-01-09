@@ -1,6 +1,6 @@
 # `jail_exporter`
 
-## Upcoming
+## v0.9.0
 
   - Implemented landing page at HTTP web root which simply links to the
     `--web.telemetry-path`. This makes viewing exporter output from a browser
