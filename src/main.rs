@@ -7,6 +7,7 @@ use actix_web::{
     http,
     server,
     App,
+    HttpRequest,
     HttpResponse,
     Path,
 };
@@ -16,20 +17,50 @@ use clap::{
     crate_name,
     crate_version,
 };
+use handlebars::Handlebars;
 use lazy_static::lazy_static;
 use log::{
     debug,
     info,
 };
+use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str;
 use std::str::FromStr;
 
+#[derive(Clone)]
+struct AppState {
+    index_page: String,
+}
+
+// Template for the index served at /. Useful for people connecting to the
+// exporter via their browser.
+const INDEX_TEMPLATE: &str = r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Jail Exporter</title>
+</head>
+<body>
+<h1>Jail Exporter</h1>
+<p><a href="{{telemetry_path}}">Metrics</a></p>
+</body>
+</html>
+"#;
+
 // The Prometheus exporter.
 // lazy_static! uses unsafe code.
 lazy_static! {
     static ref EXPORTER: jail_exporter::Metrics = jail_exporter::Metrics::new();
+}
+
+fn index(req: &HttpRequest<AppState>) -> HttpResponse {
+    let body = &(req.state().index_page);
+
+    HttpResponse::Ok()
+        .header(http::header::CONTENT_TYPE, "text/html; charset=utf-8")
+        .body(body)
 }
 
 // Returns a warp Reply containing the Prometheus Exporter output, or a
@@ -132,13 +163,38 @@ fn main() {
     let telemetry_path = telemetry_path.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
+    // Render the index page.
+    // Map of index page variables.
+    let mut data = BTreeMap::new();
+    data.insert("telemetry_path".to_string(), telemetry_path.to_string());
+
+    // Register the template.
+    let mut handlebars = Handlebars::new();
+    match handlebars.register_template_string("index", INDEX_TEMPLATE) {
+        Ok(())   => {},
+        Err(e) => {
+            eprintln!("Failed to register index template: {}", e);
+            exit(1);
+        },
+    };
+
+    // Render the template
+    let index_page = match handlebars.render("index", &data) {
+        Ok(i)  => i,
+        Err(e) => {
+            eprintln!("Failed to render index page template: {}", e);
+            exit(1);
+        },
+    };
+
     // Route handlers
-    let app = move || App::new()
+    let app = move || App::with_state(AppState{index_page: index_page.clone()})
+        .resource("/", |r| r.method(http::Method::GET).f(index))
         .route(&telemetry_path, http::Method::GET, metrics);
 
     // Create the server
     let server = match server::new(app).bind(addr) {
-        Ok(s) => s,
+        Ok(s)  => s,
         Err(e) => {
             eprintln!("Couldn't bind to {}: {}", addr, e);
             exit(1);
