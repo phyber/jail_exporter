@@ -178,7 +178,7 @@ fn main() {
     debug!("Registering index template with Handlebars");
     let mut handlebars = Handlebars::new();
     match handlebars.register_template_string("index", INDEX_TEMPLATE) {
-        Ok(())   => {},
+        Ok(()) => {},
         Err(e) => {
             eprintln!("Failed to register index template: {}", e);
             exit(1);
