@@ -3,6 +3,7 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
+#![forbid(unsafe_code)]
 use std::collections::HashMap;
 use std::sync::Mutex;
 use log::debug;

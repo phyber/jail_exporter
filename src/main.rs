@@ -3,6 +3,7 @@
 //
 // An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //
+#![forbid(unsafe_code)]
 use actix_web::{
     http,
     server,
