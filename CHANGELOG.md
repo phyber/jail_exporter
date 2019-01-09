@@ -1,5 +1,14 @@
 # `jail_exporter`
 
+## Upcoming
+
+  - Implemented landing page at HTTP web root which simply links to the
+    `--web.telemetry-path`. This makes viewing exporter output from a browser
+    a slightly more friendly experience.
+  - Declare `#![forbid(unsafe_code)]` as we aren't implementing any `unsafe`
+    blocks directly.
+  - Update to `env_logger` 0.6 and `lazy_static` 1.2.
+
 ## v0.8.0
 
   - Added `CHANGELOG.md`
