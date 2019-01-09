@@ -31,7 +31,6 @@ use std::str::FromStr;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
-#[derive(Clone)]
 struct AppState {
     index_page: String,
 }
