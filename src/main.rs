@@ -29,6 +29,8 @@ use std::process::exit;
 use std::str;
 use std::str::FromStr;
 
+// This AppState is used to pass the rendered index template to the index
+// function.
 #[derive(Clone)]
 struct AppState {
     index_page: String,
@@ -55,7 +57,11 @@ lazy_static! {
     static ref EXPORTER: jail_exporter::Metrics = jail_exporter::Metrics::new();
 }
 
+// Displays the index page. This is a page which simply links to the actual
+// telemetry path.
 fn index(req: &HttpRequest<AppState>) -> HttpResponse {
+    debug!("Displaying index page");
+
     let body = &(req.state().index_page);
 
     HttpResponse::Ok()
@@ -169,6 +175,7 @@ fn main() {
     data.insert("telemetry_path".to_string(), telemetry_path.to_string());
 
     // Register the template.
+    debug!("Registering index template with Handlebars");
     let mut handlebars = Handlebars::new();
     match handlebars.register_template_string("index", INDEX_TEMPLATE) {
         Ok(())   => {},
@@ -179,6 +186,7 @@ fn main() {
     };
 
     // Render the template
+    debug!("Rendering index template");
     let index_page = match handlebars.render("index", &data) {
         Ok(i)  => i,
         Err(e) => {
@@ -188,11 +196,13 @@ fn main() {
     };
 
     // Route handlers
+    debug!("Registering HTTP app routes");
     let app = move || App::with_state(AppState{index_page: index_page.clone()})
         .resource("/", |r| r.method(http::Method::GET).f(index))
         .route(&telemetry_path, http::Method::GET, metrics);
 
     // Create the server
+    debug!("Attempting to bind to: {}", addr);
     let server = match server::new(app).bind(addr) {
         Ok(s)  => s,
         Err(e) => {
