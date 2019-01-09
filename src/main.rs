@@ -197,9 +197,15 @@ fn main() {
 
     // Route handlers
     debug!("Registering HTTP app routes");
-    let app = move || App::with_state(AppState{index_page: index_page.clone()})
-        .resource("/", |r| r.method(http::Method::GET).f(index))
-        .route(&telemetry_path, http::Method::GET, metrics);
+    let app = move || {
+        let state = AppState{
+            index_page: index_page.clone(),
+        };
+
+        App::with_state(state)
+            .resource("/", |r| r.method(http::Method::GET).f(index))
+            .route(&telemetry_path, http::Method::GET, metrics)
+    };
 
     // Create the server
     debug!("Attempting to bind to: {}", addr);
