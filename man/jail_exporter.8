@@ -14,10 +14,11 @@
 .Op Fl Fl web.telemetry-path Ns = Ns Ar path
 .Sh DESCRIPTION
 .Nm jail_exporter
-is a Prometheus exporter for jail metrics. The metrics that are
-exported are listed in the RESOURCES section of rctl(8). The options are as
-follows:
-
+is a Prometheus exporter for jail metrics.
+The metrics that are exported are listed in the RESOURCES section of
+.Xr rctl 8
+.Ns .
+The options are as follows:
 .Bl -tag -width indent
 .It Fl h , Fl Fl help
 Prints help information
@@ -40,5 +41,60 @@ Specify a
 .Ar path
 under which to expose the metrics.
 Defaults to
-.Dq Cm /metrics Ns .
+.Dq Cm /metrics
+.Ns .
 .El
+.Sh USAGE
+.Nm
+must be run as
+.Dq root
+in order to access the required
+.Xr rctl 8
+APIs.
+It also requires that RACCT/RCTL are supported and enabled in the kernel.
+This can be done by setting
+.Va kern.racct.enabled Ns = Ns Qq Ar 1
+in
+.Pa /boot/loader.conf
+.Ns .
+After setting this, a reboot will be required to enable RACCT/RCTL.
+.Sh "ENVIRONMENT VARIABLES"
+.Nm
+can also take its configuration from environment variables.
+In the event that both command line options and environment variables are
+specified, the command line options will win.
+.Bl -tag -width JAIL_EXPORTER_WEB_LISTEN_ADDRESS
+.It Ev JAIL_EXPORTER_WEB_LISTEN_ADDRESS
+is equivalent to setting the
+.Fl Fl web.listen-address
+option.
+.It Ev JAIL_EXPORTER_WEB_TELEMETRY_PATH
+is equivalent to setting the
+.Fl Fl web.telemetry-path
+option.
+.El
+.Sh FILES
+.Bl -tag -width /usr/local/etc/rc.d/jail_exporter -compact
+.It Pa /usr/local/etc/rc.d/jail_exporter
+the rc.d script
+.It Pa /usr/local/sbin/jail_exporter
+the exporter daemon
+.El
+.Sh SEE ALSO
+.Xr loader.conf 5 ,
+.Xr jail 8 ,
+.Xr rctl 4 ,
+.Xr rctl 8
+.Sh HISTORY
+.Nm
+was started during the summer of 2018 on FreeBSD 11.1.
+.Sh BUGS
+Please report bugs, issues, and feature requests to
+.Lk https://github.com/phyber/jail_exporter/issues
+.Sh AUTHORS
+.Nm
+was developed by
+.An David O'Rourke
+with contributions from
+.An Fabian Freyer
+.Ns .
