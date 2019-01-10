@@ -274,11 +274,11 @@ impl Metrics {
 
     /// Updates the book for the given metric and returns the amount the value
     /// has increased by.
-    fn update_metric_book(&self, name: &str, resource: BookKept) -> i64 {
+    fn update_metric_book(&self, name: &str, resource: &BookKept) -> i64 {
         // Get the Book of Old Values and the current value.
         let mut book;
         let value;
-        match resource {
+        match *resource {
             BookKept::CpuTime(v) => {
                 book = self.cputime_seconds_total_old.lock().unwrap();
                 value = v;
@@ -332,7 +332,7 @@ impl Metrics {
                 rctl::Resource::CpuTime => {
                     let inc = self.update_metric_book(
                         &name,
-                        BookKept::CpuTime(value)
+                        &BookKept::CpuTime(value)
                     );
 
                     self.cputime_seconds_total
@@ -404,7 +404,7 @@ impl Metrics {
                 rctl::Resource::Wallclock => {
                     let inc = self.update_metric_book(
                         &name,
-                        BookKept::Wallclock(value)
+                        &BookKept::Wallclock(value)
                     );
 
                     self.wallclock_seconds_total

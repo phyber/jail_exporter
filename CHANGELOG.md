@@ -1,5 +1,10 @@
 # `jail_exporter`
 
+## Upcoming
+
+  - Change templating library from [handlebars] to [askama].
+  - Attempts at taking care of some [clippy] warnings.
+
 ## v0.9.0
 
   - Implemented landing page at HTTP web root which simply links to the
@@ -15,13 +20,16 @@
   - Updated to Rust 1.31 and 2018 edition.
   - Added FreeBSD `rc.d` script.
   - Switched from [warp] to [actix-web] for HTTP related functions.
-  - Update to [libjail] 0.0.6 and [rctl] 0.0.5.
+  - Update to [jail] 0.0.6 and [rctl] 0.0.5.
   - Deal with errors if HTTP server can't bind to address.
   - Simplify metrics HTTP response handler.
   - Provided more metadata in `Cargo.toml`.
 
 <!-- Links -->
-[actix-web]: https://actix.rs/
-[libjail]: https://github.com/fubarnetes/libjail-rs
-[rctl]: https://github.com/fubarnetes/rctl
-[warp]: https://github.com/seanmonstar/warp
+[actix-web]: https://crates.io/crates/actix-web
+[askama]: https://crates.io/crates/askama
+[clippy]: https://github.com/rust-lang/rust-clippy
+[handlebars]: https://crates.io/crates/handlebars
+[jail]: https://crates.io/crates/jail
+[rctl]: https://crates.io/crates/rctl
+[warp]: https://crates.io/crates/warp
