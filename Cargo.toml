@@ -17,6 +17,7 @@ keywords = [
 ]
 
 [dependencies]
+askama = "0.7"
 clap = "2.32"
 env_logger = "0.6"
 jail = "0.0.6"
@@ -29,7 +30,5 @@ rctl = "0.0.5"
 version = "0.7"
 default-features = false
 
-[dependencies.handlebars]
-version = "1.1"
-default-features = false
-features = ["no_dir_source"]
+[build-dependencies]
+askama = "0.7"

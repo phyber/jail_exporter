@@ -12,13 +12,13 @@ use actix_web::{
     HttpResponse,
     Path,
 };
+use askama::Template;
 use clap::{
     crate_authors,
     crate_description,
     crate_name,
     crate_version,
 };
-use handlebars::Handlebars;
 use lazy_static::lazy_static;
 use log::{
     debug,
@@ -38,18 +38,13 @@ struct AppState {
 
 // Template for the index served at /. Useful for people connecting to the
 // exporter via their browser.
-const INDEX_TEMPLATE: &str = r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Jail Exporter</title>
-</head>
-<body>
-<h1>Jail Exporter</h1>
-<p><a href="{{telemetry_path}}">Metrics</a></p>
-</body>
-</html>
-"#;
+// Escaping is disabled since we're passing a path and don't want the / to be
+// escaped.
+#[derive(Template)]
+#[template(path = "index.html", escape = "none")]
+struct IndexTemplate<'a> {
+    telemetry_path: &'a str,
+}
 
 // The Prometheus exporter.
 // lazy_static! uses unsafe code.
@@ -174,20 +169,13 @@ fn main() {
     let mut data = BTreeMap::new();
     data.insert("telemetry_path".to_string(), telemetry_path.to_string());
 
-    // Register the template.
-    debug!("Registering index template with Handlebars");
-    let mut handlebars = Handlebars::new();
-    match handlebars.register_template_string("index", INDEX_TEMPLATE) {
-        Ok(()) => {},
-        Err(e) => {
-            eprintln!("Failed to register index template: {}", e);
-            exit(1);
-        },
-    };
-
     // Render the template
     debug!("Rendering index template");
-    let index_page = match handlebars.render("index", &data) {
+    let index_template = IndexTemplate{
+        telemetry_path: &telemetry_path,
+    };
+
+    let index_page = match index_template.render() {
         Ok(i)  => i,
         Err(e) => {
             eprintln!("Failed to render index page template: {}", e);
