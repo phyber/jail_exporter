@@ -23,13 +23,22 @@ just fine.
 
 ## Configuration
 
-All configuration is via the command line, the arguments you may use are shown
-in the following table:
+Configuration can be performed either via command line arguments or environment
+variables.
+
+### Command Line Arguments
 
 Argument             | Default          | Purpose
 ---------------------|------------------|--------
 `web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
 `web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
+
+### Environment variables
+
+Variable                           | Equivalent Argument
+-----------------------------------|--------------------
+`JAIL_EXPORTER_WEB_LISTEN_ADDRESS` | `web.listen-address`
+`JAIL_EXPORTER_WEB_TELEMETRY_PATH` | `web.telemetry-path`
 
 ## Running
 
