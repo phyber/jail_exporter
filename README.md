@@ -3,8 +3,8 @@
 Jail Exporter is a [Prometheus] exporter for [FreeBSD] jail metrics as reported
 by [`rctl(8)`].
 
-The exporter is written in [Rust] and uses [`libjail-rs`] and [`librctl-rs`] to
-obtain metrics.
+The exporter is written in [Rust] and uses the [jail] and [rctl] crates to
+discover jails and obtain metrics.
 
 ## Building
 
@@ -102,11 +102,10 @@ Metric                    | `rctl(8)` name    | Description
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
 [Rust]: https://www.rust-lang.org/
+[jail]: https://crates.io/crates/jail
 [metric and label naming]: https://prometheus.io/docs/practices/naming/
+[rctl]: https://crates.io/crates/rctl
 [recording rules]: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
-[`jail_get(2)`]: https://www.freebsd.org/cgi/man.cgi?query=jail_get&sektion=2
-[`libjail-rs`]: https://github.com/fubarnetes/libjail-rs
-[`librctl-rs`]: https://github.com/fubarnetes/rctl
 [`make(1)`]: https://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
