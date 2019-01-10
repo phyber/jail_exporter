@@ -2,6 +2,8 @@
 
 ## Upcoming
 
+  - Move exporter into the `AppState` struct, removing the requirement for
+    [lazy_static] in the release binaries.
   - Change templating library from [handlebars] to [askama].
   - Attempts at taking care of some [clippy] warnings.
 
@@ -31,5 +33,6 @@
 [clippy]: https://github.com/rust-lang/rust-clippy
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
+[lazy_static]: https://crates.io/crates/lazy_static
 [rctl]: https://crates.io/crates/rctl
 [warp]: https://crates.io/crates/warp
