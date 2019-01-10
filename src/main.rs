@@ -10,7 +10,6 @@ use actix_web::{
     App,
     HttpRequest,
     HttpResponse,
-    Path,
 };
 use askama::Template;
 use clap::{
@@ -19,7 +18,6 @@ use clap::{
     crate_name,
     crate_version,
 };
-use lazy_static::lazy_static;
 use log::{
     debug,
     info,
@@ -33,6 +31,7 @@ use std::str::FromStr;
 // This AppState is used to pass the rendered index template to the index
 // function.
 struct AppState {
+    exporter:   jail_exporter::Metrics,
     index_page: String,
 }
 
@@ -44,12 +43,6 @@ struct AppState {
 #[template(path = "index.html", escape = "none")]
 struct IndexTemplate<'a> {
     telemetry_path: &'a str,
-}
-
-// The Prometheus exporter.
-// lazy_static! uses unsafe code.
-lazy_static! {
-    static ref EXPORTER: jail_exporter::Metrics = jail_exporter::Metrics::new();
 }
 
 // Displays the index page. This is a page which simply links to the actual
@@ -66,11 +59,12 @@ fn index(req: &HttpRequest<AppState>) -> HttpResponse {
 
 // Returns a warp Reply containing the Prometheus Exporter output, or a
 // Rejection if things fail for some reason.
-fn metrics(_info: Path<()>) -> HttpResponse {
+fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
     debug!("Processing metrics request");
 
     // Get exporter output
-    let output = EXPORTER.export();
+    let exporter = &(req.state().exporter);
+    let output = exporter.export();
 
     // Send it out
     HttpResponse::Ok()
@@ -187,12 +181,15 @@ fn main() {
     debug!("Registering HTTP app routes");
     let app = move || {
         let state = AppState{
+            exporter:   jail_exporter::Metrics::new(),
             index_page: index_page.clone(),
         };
 
         App::with_state(state)
             .resource("/", |r| r.method(http::Method::GET).f(index))
-            .route(&telemetry_path, http::Method::GET, metrics)
+            .resource(&telemetry_path,
+                      |r| r.method(http::Method::GET).f(metrics)
+                      )
     };
 
     // Create the server

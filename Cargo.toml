@@ -21,7 +21,6 @@ askama = "0.7"
 clap = "2.32"
 env_logger = "0.6"
 jail = "0.0.6"
-lazy_static = "1.2"
 log = "0.4"
 prometheus = "0.4"
 rctl = "0.0.5"
@@ -32,3 +31,6 @@ default-features = false
 
 [build-dependencies]
 askama = "0.7"
+
+[dev-dependencies]
+lazy_static = "1.2"
