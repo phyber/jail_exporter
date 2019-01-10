@@ -22,7 +22,6 @@ use log::{
     debug,
     info,
 };
-use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str;
@@ -157,11 +156,6 @@ fn main() {
     let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH").unwrap();
     let telemetry_path = telemetry_path.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
-
-    // Render the index page.
-    // Map of index page variables.
-    let mut data = BTreeMap::new();
-    data.insert("telemetry_path".to_string(), telemetry_path.to_string());
 
     // Render the template
     debug!("Rendering index template");
