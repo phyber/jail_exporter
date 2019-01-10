@@ -3,7 +3,7 @@
 .Os
 .Sh NAME
 .Nm jail_exporter
-.Nd Prometheus exporter for jail metrics.
+.Nd Prometheus exporter for jail metrics
 .Sh SYNOPSIS
 .Nm
 .Op Fl hV
@@ -16,8 +16,7 @@
 .Nm jail_exporter
 is a Prometheus exporter for jail metrics.
 The metrics that are exported are listed in the RESOURCES section of
-.Xr rctl 8
-.Ns .
+.Xr rctl 8 .
 The options are as follows:
 .Bl -tag -width indent
 .It Fl h , Fl Fl help
@@ -29,20 +28,17 @@ Specify an
 .Ar addr:port
 on which to expose the metrics and web interface.
 Defaults to
-.Dq Cm 127.0.0.1:9452
-.Ns .
+.Dq Cm 127.0.0.1:9452 .
 If specifying an IPv6
 .Ar addr:port
-the address portion should be enclosed within square brackets. Eg:
-.Dq Cm [::1]:9452
-.Ns .
+.No the address portion should be enclosed within square brackets. Eg:
+.Dq Cm [::1]:9452 .
 .It Fl Fl web.telemetry-path= Ns Ar path
 Specify a
 .Ar path
 under which to expose the metrics.
 Defaults to
-.Dq Cm /metrics
-.Ns .
+.Dq Cm /metrics .
 .El
 .Sh USAGE
 .Nm
@@ -55,8 +51,7 @@ It also requires that RACCT/RCTL are supported and enabled in the kernel.
 This can be done by setting
 .Va kern.racct.enabled Ns = Ns Qq Ar 1
 in
-.Pa /boot/loader.conf
-.Ns .
+.Pa /boot/loader.conf .
 After setting this, a reboot will be required to enable RACCT/RCTL.
 .Sh "ENVIRONMENT VARIABLES"
 .Nm
@@ -81,20 +76,20 @@ the rc.d script
 the exporter daemon
 .El
 .Sh SEE ALSO
+.Xr rctl 4 ,
 .Xr loader.conf 5 ,
 .Xr jail 8 ,
-.Xr rctl 4 ,
 .Xr rctl 8
 .Sh HISTORY
 .Nm
-was started during the summer of 2018 on FreeBSD 11.1.
-.Sh BUGS
-Please report bugs, issues, and feature requests to
-.Lk https://github.com/phyber/jail_exporter/issues
+was started during the summer of 2018 on
+.Fx 11.1 .
 .Sh AUTHORS
 .Nm
 was developed by
 .An David O'Rourke
 with contributions from
-.An Fabian Freyer
-.Ns .
+.An Fabian Freyer .
+.Sh BUGS
+Please report bugs, issues, and feature requests to
+.Lk https://github.com/phyber/jail_exporter/issues
