@@ -2,6 +2,7 @@
 
 ## Upcoming
 
+  - Created a `jail_exporter(8)` man page.
   - Move exporter into the `AppState` struct, removing the requirement for
     [lazy_static] in the release binaries.
   - Change templating library from [handlebars] to [askama].
