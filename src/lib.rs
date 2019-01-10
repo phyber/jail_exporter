@@ -455,13 +455,13 @@ impl Metrics {
 
         // Get a list of dead jails based on what we've seen, and reap them.
         // Performed in two steps due to Mutex locking issues.
-        let dead = self.dead_jails(&seen);
-        self.reap(&dead);
+        let dead = self.dead_jails(seen);
+        self.reap(dead);
     }
 
     // Loop over jail names from the previous run, as determined by book
     // keeping, and create a vector of jail names that no longer exist.
-    fn dead_jails(&self, seen: &SeenJails) -> DeadJails {
+    fn dead_jails(&self, seen: SeenJails) -> DeadJails {
         let mut dead = DeadJails::new();
         let book = self.cputime_seconds_total_old.lock().unwrap();
 
@@ -475,7 +475,7 @@ impl Metrics {
     }
 
     // Loop over DeadJails removing old labels and killing old book keeping.
-    fn reap(&self, dead: &DeadJails) {
+    fn reap(&self, dead: DeadJails) {
         for name in dead {
             self.remove_jail_metrics(&name);
         }
