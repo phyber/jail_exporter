@@ -61,14 +61,16 @@ and two additional metrics:
 .It Va id
 The ID of the named jail
 .It Va num
-The current number of jails running.
+The current number of jails running. Lacks a
+.Dq name
+label as it is just a simple gauge representing the number of running jails.
 .El
 .Pp
 All metrics are prefixed with the string
 .Dq jail_
 and in all cases except for the
-.Dq id
-metric possess a
+.Dq num
+metric (as mentioned above) possess a
 .Dq name
 label containing the name of the jail.
 An example of a metric output by the exporter would be:
