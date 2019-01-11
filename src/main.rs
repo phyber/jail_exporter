@@ -16,6 +16,7 @@ use clap::{
     crate_description,
     crate_name,
     crate_version,
+    ArgMatches,
 };
 use log::{
     debug,
@@ -79,12 +80,11 @@ fn is_ipaddress(s: &str) -> Result<(), String> {
     }
 }
 
-fn main() {
-    env_logger::init();
-
-    // First, check if RACCT/RCTL is available.
+// Checks for the availability of RACCT/RCTL in the kernel.
+fn is_racct_rctl_available() -> bool {
     debug!("Checking RACCT/RCTL status");
-    let racct_rctl_available = match rctl::State::check() {
+
+    match rctl::State::check() {
         rctl::State::Disabled => {
             eprintln!(
                 "RACCT/RCTL present, but disabled; enable using \
@@ -104,15 +104,14 @@ fn main() {
             );
             false
         },
-    };
-
-    // If it's not available, exit.
-    if !racct_rctl_available {
-        exit(1);
     }
+}
 
+// Parses the command line arguments and returns the matches.
+fn parse_args<'a>() -> ArgMatches<'a> {
     debug!("Parsing command line arguments");
-    let matches = clap::App::new(crate_name!())
+
+    clap::App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
@@ -137,7 +136,19 @@ fn main() {
                 .takes_value(true)
                 .default_value("/metrics"),
         )
-        .get_matches();
+        .get_matches()
+}
+
+fn main() {
+    env_logger::init();
+
+    // First, check if RACCT/RCTL is available and if it's not, exit.
+    if !is_racct_rctl_available() {
+        exit(1);
+    }
+
+    // Parse the commandline arguments.
+    let matches = parse_args();
 
     // This should always be fine, we've already validated it during arg
     // parsing.
