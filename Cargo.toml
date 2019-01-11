@@ -18,7 +18,6 @@ keywords = [
 
 [dependencies]
 askama = "0.7"
-clap = "2.32"
 env_logger = "0.6"
 jail = "0.0.6"
 log = "0.4"
@@ -29,6 +28,12 @@ rctl = "0.0.5"
 version = "0.7"
 default-features = false
 
+[dependencies.clap]
+version = "2.32"
+default-features = false
+features = ["vec_map"]
+
+# Used by build.rs
 [build-dependencies]
 askama = "0.7"
 
