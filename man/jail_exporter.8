@@ -15,8 +15,6 @@
 .Sh DESCRIPTION
 .Nm jail_exporter
 is a Prometheus exporter for jail metrics.
-The metrics that are exported are listed in the RESOURCES section of
-.Xr rctl 8 .
 The options are as follows:
 .Bl -tag -width indent
 .It Fl h , Fl Fl help
@@ -47,12 +45,38 @@ must be run as
 in order to access the required
 .Xr rctl 8
 APIs.
-It also requires that RACCT/RCTL are supported and enabled in the kernel.
-This can be done by setting
+Although
+.Fx
+ships with RACCT/RCTL support in the kernel, it is disabled by default.
+It can be enabled by setting
 .Va kern.racct.enabled Ns = Ns Qq Ar 1
 in
 .Pa /boot/loader.conf .
 After setting this, a reboot will be required to enable RACCT/RCTL.
+.Sh METRICS
+The metrics that are exported are those listed in the RESOURCES section of
+.Xr rctl 8 ,
+and two additional metrics:
+.Bl -tag -width num
+.It Va id
+The ID of the named jail
+.It Va num
+The current number of jails running.
+.El
+.Pp
+All metrics are prefixed with the string
+.Dq jail_
+and in all cases except for the
+.Dq id
+metric possess a
+.Dq name
+label containing the name of the jail.
+An example of a metric output by the exporter would be:
+.Bd -literal -offset indent
+# HELP jail_cputime_seconds_total CPU time, in seconds
+# TYPE jail_cputime_seconds_total counter
+jail_cputime_seconds_total{name="test"} 300
+.Ed
 .Sh "ENVIRONMENT VARIABLES"
 .Nm
 can also take its configuration from environment variables.
