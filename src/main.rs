@@ -7,7 +7,6 @@
 use actix_web::{
     http,
     server,
-    App,
     HttpRequest,
     HttpResponse,
 };
@@ -179,7 +178,7 @@ fn main() {
             index_page: index_page.clone(),
         };
 
-        App::with_state(state)
+        actix_web::App::with_state(state)
             .resource("/", |r| r.method(http::Method::GET).f(index))
             .resource(&telemetry_path,
                       |r| r.method(http::Method::GET).f(metrics)
