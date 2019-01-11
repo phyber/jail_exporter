@@ -204,6 +204,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use indoc::indoc;
 
     #[test]
     fn test_ipv4_with_port() {
@@ -238,5 +239,29 @@ mod tests {
         let addr = "random string";
         let res = is_ipaddress(&addr);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_render_index_page() {
+        let path = "/a1b2c3";
+        let template = IndexTemplate{
+            telemetry_path: &path,
+        };
+
+        let rendered = template.render().unwrap();
+        let ok = indoc!(
+            r#"
+            <!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Jail Exporter</title>
+                </head>
+                <body>
+                    <h1>Jail Exporter</h1>
+                    <p><a href="/a1b2c3">Metrics</a></p>
+                </body>
+            </html>"#);
+        assert_eq!(rendered, ok);
     }
 }
