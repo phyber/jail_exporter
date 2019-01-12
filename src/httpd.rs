@@ -120,10 +120,6 @@ mod tests {
     #[test]
     fn test_render_index_page() {
         let path = "/a1b2c3";
-        let template = IndexTemplate{
-            telemetry_path: &path,
-        };
-
         let rendered = render_index_page(&path);
         let ok = indoc!(
             r#"

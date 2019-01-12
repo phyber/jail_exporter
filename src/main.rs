@@ -16,7 +16,6 @@ use log::{
 };
 use std::net::SocketAddr;
 use std::process::exit;
-use std::str;
 use std::str::FromStr;
 
 mod httpd;
