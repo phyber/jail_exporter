@@ -2,11 +2,13 @@
 
 ## Upcoming
 
-  - Created a `jail_exporter(8)` man page.
+  - Attempts at taking care of some [clippy] warnings.
+  - Change templating library from [handlebars] to [askama].
   - Move exporter into the `AppState` struct, removing the requirement for
     [lazy_static] in the release binaries.
-  - Change templating library from [handlebars] to [askama].
-  - Attempts at taking care of some [clippy] warnings.
+  - Created a `jail_exporter(8)` man page.
+  - Move some helper code out of `main` into their own functions.
+  - Moved HTTP related code out to `httpd` module, simplifying `main` function.
 
 ## v0.9.0
 
