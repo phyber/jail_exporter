@@ -63,21 +63,25 @@ fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
         .body(output)
 }
 
-// Run the HTTP server at the given addr, serving telemetry on telemetry_path.
-pub fn run(addr: &SocketAddr, telemetry_path: String) {
+fn render_index_page(telemetry_path: &str) -> String {
     // Render the template
     debug!("Rendering index template");
     let index_template = IndexTemplate{
         telemetry_path: &telemetry_path,
     };
 
-    let index_page = match index_template.render() {
+    match index_template.render() {
         Ok(i)  => i,
         Err(e) => {
             eprintln!("Failed to render index page template: {}", e);
             exit(1);
         },
-    };
+    }
+}
+
+// Run the HTTP server at the given addr, serving telemetry on telemetry_path.
+pub fn run(addr: &SocketAddr, telemetry_path: String) {
+    let index_page = render_index_page(&telemetry_path);
 
     // Route handlers
     debug!("Registering HTTP app routes");
@@ -121,7 +125,7 @@ mod tests {
             telemetry_path: &path,
         };
 
-        let rendered = template.render().unwrap();
+        let rendered = render_index_page(&path);
         let ok = indoc!(
             r#"
             <!DOCTYPE html>
