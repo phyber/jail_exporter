@@ -1,13 +1,11 @@
 //
 // jail_exporter
 //
-// An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
+// This library deals with gathering the metrics and exporting them.
 //
 #![forbid(unsafe_code)]
-use std::collections::HashMap;
-use std::sync::Mutex;
-use log::debug;
 use jail::RunningJail;
+use log::debug;
 use prometheus::{
     __register_counter_vec,
     __register_gauge,
@@ -22,6 +20,8 @@ use prometheus::{
     IntGaugeVec,
     TextEncoder,
 };
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 /// Metrics that use bookkeeping
 enum BookKept {
@@ -547,12 +547,10 @@ impl Metrics {
 
 // Tests
 #[cfg(test)]
-use lazy_static::lazy_static;
-
-#[cfg(test)]
 mod tests {
     // We need some of the main functions.
     use super::*;
+    use lazy_static::lazy_static;
 
     // We have to register this here as the Prometheus library maintains a
     // global registry. Trying to Metrics::new() in each test will result
