@@ -1,7 +1,7 @@
 //
 // jail_exporter
 //
-// An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
+// This module deals with httpd related tasks.
 //
 #![forbid(unsafe_code)]
 use actix_web::{
@@ -17,7 +17,6 @@ use log::{
 };
 use std::net::SocketAddr;
 use std::process::exit;
-use std::str;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
