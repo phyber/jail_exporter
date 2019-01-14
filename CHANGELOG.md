@@ -9,6 +9,10 @@
   - Created a `jail_exporter(8)` man page.
   - Move some helper code out of `main` into their own functions.
   - Moved HTTP related code out to `httpd` module, simplifying `main` function.
+  - `jail_exporter::Metrics` is now `#[derive(Clone)]`
+  - Fixed a bug where Metrics would attempt initialization once per Actix Web
+    thread.
+  - Added Actix Web Logger middleware to HTTP server.
 
 ## v0.9.0
 
