@@ -10,6 +10,7 @@ use actix_web::{
     HttpRequest,
     HttpResponse,
 };
+use actix_web::middleware::Logger;
 use askama::Template;
 use log::{
     debug,
@@ -92,6 +93,7 @@ pub fn run(addr: &SocketAddr, telemetry_path: String) {
         };
 
         actix_web::App::with_state(state)
+            .middleware(Logger::default())
             .resource("/", |r| r.method(http::Method::GET).f(index))
             .resource(&telemetry_path,
                       |r| r.method(http::Method::GET).f(metrics)
