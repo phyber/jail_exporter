@@ -21,7 +21,10 @@ use prometheus::{
     TextEncoder,
 };
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{
+    Arc,
+    Mutex,
+};
 
 /// Metrics that use bookkeeping
 enum BookKept {
@@ -42,6 +45,7 @@ type DeadJails = Vec<String>;
 type SeenJails = Vec<String>;
 
 /// Metrics structure containing the metrics that are being tracked.
+#[derive(Clone)]
 pub struct Metrics {
     // Prometheus time series
     // These come from rctl
@@ -77,8 +81,8 @@ pub struct Metrics {
     jail_total: IntGauge,
 
     // Counter bookkeeping
-    cputime_seconds_total_old: Mutex<CounterBookKeeper>,
-    wallclock_seconds_total_old: Mutex<CounterBookKeeper>,
+    cputime_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
+    wallclock_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
 }
 
 impl Default for Metrics {
@@ -255,8 +259,12 @@ impl Default for Metrics {
             ).unwrap(),
 
             // Book keeping
-            cputime_seconds_total_old: Mutex::new(CounterBookKeeper::new()),
-            wallclock_seconds_total_old: Mutex::new(CounterBookKeeper::new()),
+            cputime_seconds_total_old: Arc::new(Mutex::new(
+                    CounterBookKeeper::new()
+                    )),
+            wallclock_seconds_total_old: Arc::new(Mutex::new(
+                    CounterBookKeeper::new()
+                    )),
         };
 
         let build_info_labels = [env!("CARGO_PKG_VERSION")];
