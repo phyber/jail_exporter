@@ -81,12 +81,13 @@ fn render_index_page(telemetry_path: &str) -> String {
 // Run the HTTP server at the given addr, serving telemetry on telemetry_path.
 pub fn run(addr: &SocketAddr, telemetry_path: String) {
     let index_page = render_index_page(&telemetry_path);
+    let exporter = jail_exporter::Metrics::new();
 
     // Route handlers
     debug!("Registering HTTP app routes");
     let app = move || {
         let state = AppState{
-            exporter:   jail_exporter::Metrics::new(),
+            exporter:   exporter.clone(),
             index_page: index_page.clone(),
         };
 
