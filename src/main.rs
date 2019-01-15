@@ -34,9 +34,7 @@ fn is_ipaddress(s: &str) -> Result<(), String> {
 fn is_running_as_root() -> bool {
     debug!("Ensuring that we're running as root");
 
-    let uid = users::get_effective_uid();
-
-    match uid {
+    match users::get_effective_uid() {
         0 => true,
         _ => {
             eprintln!("Error: jail_exporter must be run as root");
