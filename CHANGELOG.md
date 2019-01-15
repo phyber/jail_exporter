@@ -13,6 +13,8 @@
   - Fixed a bug where Metrics would attempt initialization once per Actix Web
     thread.
   - Added Actix Web Logger middleware to HTTP server.
+  - `jail_exporter` now attempts to ensure that it's running as `root` before
+    starting.
 
 ## v0.9.0
 

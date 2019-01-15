@@ -17,6 +17,7 @@ use log::{
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str::FromStr;
+use users;
 
 mod httpd;
 
@@ -29,6 +30,21 @@ fn is_ipaddress(s: &str) -> Result<(), String> {
     }
 }
 
+// Checks that we're running as root.
+fn is_running_as_root() -> bool {
+    debug!("Ensuring that we're running as root");
+
+    let uid = users::get_effective_uid();
+
+    match uid {
+        0 => true,
+        _ => {
+            eprintln!("Error: jail_exporter must be run as root");
+            false
+        },
+    }
+}
+
 // Checks for the availability of RACCT/RCTL in the kernel.
 fn is_racct_rctl_available() -> bool {
     debug!("Checking RACCT/RCTL status");
@@ -36,19 +52,20 @@ fn is_racct_rctl_available() -> bool {
     match rctl::State::check() {
         rctl::State::Disabled => {
             eprintln!(
-                "RACCT/RCTL present, but disabled; enable using \
+                "Error: RACCT/RCTL present, but disabled; enable using \
                  kern.racct.enable=1 tunable"
             );
             false
         },
         rctl::State::Enabled => true,
         rctl::State::Jailed => {
-            eprintln!("RACCT/RCTL: Jail Exporter cannot run within a jail");
+            eprintln!("Error: RACCT/RCTL: Jail Exporter cannot run within a \
+                       jail");
             false
         },
         rctl::State::NotPresent => {
             eprintln!(
-                "RACCT/RCTL support not present in kernel; see rctl(8) \
+                "Error: RACCT/RCTL support not present in kernel; see rctl(8) \
                  for details"
             );
             false
@@ -91,7 +108,12 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 fn main() {
     env_logger::init();
 
-    // First, check if RACCT/RCTL is available and if it's not, exit.
+    // Check that we're running as root.
+    if !is_running_as_root() {
+        exit(1);
+    }
+
+    // Check if RACCT/RCTL is available and if it's not, exit.
     if !is_racct_rctl_available() {
         exit(1);
     }

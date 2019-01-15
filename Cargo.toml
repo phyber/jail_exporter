@@ -33,6 +33,10 @@ version = "2.32"
 default-features = false
 features = ["vec_map"]
 
+[dependencies.users]
+version = "0.8"
+default-features = false
+
 # Used by build.rs
 [build-dependencies]
 askama = "0.7"
