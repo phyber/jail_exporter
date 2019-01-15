@@ -15,6 +15,7 @@
   - Added Actix Web Logger middleware to HTTP server.
   - `jail_exporter` now attempts to ensure that it's running as `root` before
     starting.
+  - Updated to version 0.5 of the [prometheus] crate.
 
 ## v0.9.0
 
@@ -43,5 +44,6 @@
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
 [lazy_static]: https://crates.io/crates/lazy_static
+[prometheus]: https://crates.io/crates/prometheus
 [rctl]: https://crates.io/crates/rctl
 [warp]: https://crates.io/crates/warp

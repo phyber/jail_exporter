@@ -21,7 +21,7 @@ askama = "0.7"
 env_logger = "0.6"
 jail = "0.0.6"
 log = "0.4"
-prometheus = "0.4"
+prometheus = "0.5"
 rctl = "0.0.5"
 
 [dependencies.actix-web]
