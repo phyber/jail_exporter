@@ -74,12 +74,13 @@ unique.
 Descriptions of metrics are taken from the [`rctl(8)`] man page where
 applicable.
 
+### `rctl(8)` Metrics
+
 Metric                    | `rctl(8)` name    | Description
 --------------------------|-------------------|------------
 `coredumpsize_bytes`      | `coredumpsize`    | core dump size, in bytes
 `cputime_seconds_total`   | `cputime`         | CPU time, in seconds
 `datasize_bytes`          | `datasize`        | data size, in bytes
-`id`                      | N/A               | ID of the named jail
 `maxproc`                 | `maxproc`         | number of processes
 `memorylocked_bytes`      | `memorylocked`    | locked memory, in bytes
 `memoryuse_bytes`         | `memoryuse`       | resident set size, in bytes
@@ -90,7 +91,6 @@ Metric                    | `rctl(8)` name    | Description
 `nsemop`                  | `nsemop`          | number of SysV semaphores modified in a single semop(2) call
 `nshm`                    | `nshm`            | number of SysV shared memory segments
 `nthr`                    | `nthr`            | number of threads
-`num`                     | N/A               | Current number of running jails
 `openfiles`               | `openfiles`       | file descriptor table size
 `pcpu_used`               | `pcpu`            | %CPU, in percents of a single CPU core
 `pseudoterminals`         | `pseudoterminals` | number of PTYs
@@ -103,6 +103,13 @@ Metric                    | `rctl(8)` name    | Description
 `wallclock_seconds_total` | `wallclock`       | wallclock time, in seconds
 `writebps`                | `writebps`        | filesystem writes, in bytes per second
 `writeiops`               | `writeiops`       | filesystem writes, in operations per second
+
+### Non-`rctl(8)` Metrics
+
+Metric                    | Description
+--------------------------|------------
+`id`                      | ID of the named jail
+`num`                     | Current number of running jails
 
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
