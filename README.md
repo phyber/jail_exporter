@@ -43,12 +43,17 @@ Variable                           | Equivalent Argument
 ## Running
 
 The exporter needs to run as `root` in order to have enough permission to
-execute the [`rctl_get_racct(2)`] calls.
+execute the [`rctl_get_racct(2)`] calls.  If it is not run as `root`, it will
+complain and exit.
 
 As jails may come and go during the lifetime of the exporter, so to will the
 time series that the exporter exports. If you wish to account for resource
 usage for jails that have disappeared, you may wish to make use of the
 Prometheus [recording rules] to track total resource usage across all jails.
+
+The exporter will not daemonize itself, instead, it is recommended to use a
+tool such as [`daemon(8)`].  See the included [`rc.d/jail_exporter`] for an
+example of this.
 
 No port is available yet, but it should happen soon.
 
@@ -106,6 +111,8 @@ Metric                    | `rctl(8)` name    | Description
 [metric and label naming]: https://prometheus.io/docs/practices/naming/
 [rctl]: https://crates.io/crates/rctl
 [recording rules]: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
+[`daemon(8)`]: https://www.freebsd.org/cgi/man.cgi?query=daemon&sektion=8
 [`make(1)`]: https://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
+[`rc.d/jail_exporter`]: rc.d/jail_exporter
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
