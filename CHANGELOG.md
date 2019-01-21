@@ -16,6 +16,8 @@
   - `jail_exporter` now attempts to ensure that it's running as `root` before
     starting.
   - Updated to version 0.5 of the [prometheus] crate.
+  - Now using a builder pattern for the HTTP server instead of multiple
+    arguments to a run function.
 
 ## v0.9.0
 

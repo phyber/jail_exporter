@@ -136,7 +136,11 @@ fn main() {
     let telemetry_path = telemetry_path.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
-    httpd::run(&addr, telemetry_path);
+    // Configure and run the http server.
+    httpd::Server::new()
+        .bind_address(addr)
+        .telemetry_path(telemetry_path)
+        .run();
 }
 
 #[cfg(test)]
