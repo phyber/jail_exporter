@@ -19,6 +19,8 @@
   - Now using a builder pattern for the HTTP server instead of multiple
     arguments to a run function.
   - Added a validator for the `web.telemetry-path` setting.
+  - Moved to using [failure] crate and removed explicit `exit` calls on error
+    conditions by using `Result` return on `main` function.
 
 ## v0.9.0
 
@@ -44,6 +46,7 @@
 [actix-web]: https://crates.io/crates/actix-web
 [askama]: https://crates.io/crates/askama
 [clippy]: https://github.com/rust-lang/rust-clippy
+[failure]: https://crates.io/crates/failure
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
 [lazy_static]: https://crates.io/crates/lazy_static
