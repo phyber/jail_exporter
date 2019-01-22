@@ -71,6 +71,30 @@ fn is_racct_rctl_available() -> bool {
     }
 }
 
+// Checks that the telemetry_path is valid.
+// This check is extremely basic, and there may still be invalid paths that
+// could be passed.
+fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
+    debug!("Ensuring that web.telemetry-path is valid");
+
+    // Ensure s isn't empty.
+    if s.is_empty() {
+        return Err("path must not be empty".to_owned());
+    }
+
+    // Ensure that s starts with /
+    if !s.starts_with("/") {
+        return  Err("path must start with /".to_owned());
+    }
+
+    // Ensure that s isn't literally /
+    if s == "/" {
+        return Err("path must not be /".to_owned())
+    }
+
+    Ok(())
+}
+
 // Parses the command line arguments and returns the matches.
 fn parse_args<'a>() -> ArgMatches<'a> {
     debug!("Parsing command line arguments");
@@ -98,7 +122,8 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .value_name("PATH")
                 .help("Path under which to expose metrics.")
                 .takes_value(true)
-                .default_value("/metrics"),
+                .default_value("/metrics")
+                .validator(|v| is_valid_telemetry_path(&v)),
         )
         .get_matches()
 }
@@ -180,5 +205,33 @@ mod tests {
         let addr = "random string";
         let res = is_ipaddress(&addr);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_is_valid_telemetry_path_slash() {
+        let s = "/";
+        let res = is_valid_telemetry_path(&s);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_is_valid_telemetry_path_empty() {
+        let s = "";
+        let res = is_valid_telemetry_path(&s);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_is_valid_telemetry_path_relative() {
+        let s = "metrics";
+        let res = is_valid_telemetry_path(&s);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_is_valid_telemetry_path_valid() {
+        let s = "/metrics";
+        let res = is_valid_telemetry_path(&s);
+        assert!(res.is_ok());
     }
 }

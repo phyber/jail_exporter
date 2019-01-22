@@ -18,6 +18,7 @@
   - Updated to version 0.5 of the [prometheus] crate.
   - Now using a builder pattern for the HTTP server instead of multiple
     arguments to a run function.
+  - Added a validator for the `web.telemetry-path` setting.
 
 ## v0.9.0
 
