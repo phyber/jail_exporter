@@ -11,15 +11,34 @@ use clap::{
     crate_version,
     ArgMatches,
 };
+use failure::Fail;
 use log::{
     debug,
 };
+use std::fmt;
 use std::net::SocketAddr;
 use std::process::exit;
 use std::str::FromStr;
 use users;
 
 mod httpd;
+
+#[derive(Fail)]
+enum Error {
+    #[fail(display = "jail_exporter must be run as root")]
+    NotRunningAsRoot,
+
+    #[fail(display = "{}", _0)]
+    RctlUnavailable(String),
+}
+
+// Implements basic output, allowing the above display strings to be used when
+// main exits due to an Error.
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
 
 // Used as a validator for the argument parsing.
 fn is_ipaddress(s: &str) -> Result<(), String> {
@@ -33,42 +52,37 @@ fn is_ipaddress(s: &str) -> Result<(), String> {
 }
 
 // Checks that we're running as root.
-fn is_running_as_root() -> bool {
+fn is_running_as_root() -> Result<(), Error> {
     debug!("Ensuring that we're running as root");
 
     match users::get_effective_uid() {
-        0 => true,
-        _ => {
-            eprintln!("Error: jail_exporter must be run as root");
-            false
-        },
+        0 => Ok(()),
+        _ => Err(Error::NotRunningAsRoot),
     }
 }
 
 // Checks for the availability of RACCT/RCTL in the kernel.
-fn is_racct_rctl_available() -> bool {
+fn is_racct_rctl_available() -> Result<(), Error> {
     debug!("Checking RACCT/RCTL status");
 
     match rctl::State::check() {
         rctl::State::Disabled => {
-            eprintln!(
-                "Error: RACCT/RCTL present, but disabled; enable using \
-                 kern.racct.enable=1 tunable"
-            );
-            false
+            Err(Error::RctlUnavailable(
+                "RACCT/RCTL present, but disabled; enable using \
+                 kern.racct.enable=1 tunable".to_owned()
+            ))
         },
-        rctl::State::Enabled => true,
+        rctl::State::Enabled => Ok(()),
         rctl::State::Jailed => {
-            eprintln!("Error: RACCT/RCTL: Jail Exporter cannot run within a \
-                       jail");
-            false
+            Err(Error::RctlUnavailable(
+                "RACCT/RCTL: Jail Exporter cannot run within a jail".to_owned()
+            ))
         },
         rctl::State::NotPresent => {
-            eprintln!(
-                "Error: RACCT/RCTL support not present in kernel; see rctl(8) \
-                 for details"
-            );
-            false
+            Err(Error::RctlUnavailable(
+                "RACCT/RCTL support not present in kernel; see rctl(8) \
+                 for details".to_owned()
+            ))
         },
     }
 }
@@ -131,18 +145,14 @@ fn parse_args<'a>() -> ArgMatches<'a> {
         .get_matches()
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     env_logger::init();
 
     // Check that we're running as root.
-    if !is_running_as_root() {
-        exit(1);
-    }
+    is_running_as_root()?;
 
     // Check if RACCT/RCTL is available and if it's not, exit.
-    if !is_racct_rctl_available() {
-        exit(1);
-    }
+    is_racct_rctl_available()?;
 
     // Parse the commandline arguments.
     let matches = parse_args();
@@ -185,6 +195,8 @@ fn main() {
         .bind_address(bind_address)
         .telemetry_path(telemetry_path)
         .run();
+
+    Ok(())
 }
 
 #[cfg(test)]
