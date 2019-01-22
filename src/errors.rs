@@ -1,7 +1,7 @@
 //
 // jail_exporter
 //
-// An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
+// This module implements errors used in the rest of the crate.
 //
 #![forbid(unsafe_code)]
 use failure::Fail;
@@ -21,7 +21,7 @@ pub enum Error {
     #[fail(display = "jail_exporter must be run as root")]
     NotRunningAsRoot,
 
-    #[fail(display = "{}", _0)]
+    #[fail(display = "RACCT/RCTL: {}", _0)]
     RctlUnavailable(String),
 
     #[fail(display = "Failed to render template: {}", _0)]

@@ -50,7 +50,7 @@ fn is_racct_rctl_available() -> Result<(), Error> {
     match rctl::State::check() {
         rctl::State::Disabled => {
             Err(Error::RctlUnavailable(
-                "RACCT/RCTL present, but disabled; enable using \
+                "Present, but disabled; enable using \
                  kern.racct.enable=1 tunable".to_owned()
             ))
         },
@@ -60,12 +60,12 @@ fn is_racct_rctl_available() -> Result<(), Error> {
             // within a jail, for situations where a user has jails within
             // jails. It is just untested at the moment.
             Err(Error::RctlUnavailable(
-                "RACCT/RCTL: Jail Exporter cannot run within a jail".to_owned()
+                "Jail Exporter cannot run within a jail".to_owned()
             ))
         },
         rctl::State::NotPresent => {
             Err(Error::RctlUnavailable(
-                "RACCT/RCTL support not present in kernel; see rctl(8) \
+                "Support not present in kernel; see rctl(8) \
                  for details".to_owned()
             ))
         },
