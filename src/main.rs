@@ -11,39 +11,16 @@ use clap::{
     crate_version,
     ArgMatches,
 };
-use failure::Fail;
 use log::{
     debug,
 };
-use std::fmt;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use users;
 
+mod errors;
+use errors::Error;
 mod httpd;
-
-#[derive(Fail)]
-enum Error {
-    #[fail(display = "{} was not parsable.", _0)]
-    ArgNotParsable(String),
-
-    #[fail(display = "{} was not set.", _0)]
-    ArgNotSet(String),
-
-    #[fail(display = "jail_exporter must be run as root")]
-    NotRunningAsRoot,
-
-    #[fail(display = "{}", _0)]
-    RctlUnavailable(String),
-}
-
-// Implements basic output, allowing the above display strings to be used when
-// main exits due to an Error.
-impl fmt::Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
 
 // Used as a validator for the argument parsing.
 fn is_ipaddress(s: &str) -> Result<(), String> {
@@ -195,7 +172,7 @@ fn main() -> Result<(), Error> {
     httpd::Server::new()
         .bind_address(bind_address)
         .telemetry_path(telemetry_path)
-        .run();
+        .run()?;
 
     Ok(())
 }

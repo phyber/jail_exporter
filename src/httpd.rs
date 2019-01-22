@@ -12,12 +12,12 @@ use actix_web::{
 };
 use actix_web::middleware::Logger;
 use askama::Template;
+use crate::errors::Error;
 use log::{
     debug,
     info,
 };
 use std::net::SocketAddr;
-use std::process::exit;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
@@ -78,9 +78,9 @@ impl Server {
     }
 
     // Run the HTTP server.
-    pub fn run(&self) {
+    pub fn run(&self) -> Result<(), Error> {
         let exporter       = jail_exporter::Metrics::new();
-        let index_page     = render_index_page(&self.telemetry_path);
+        let index_page     = render_index_page(&self.telemetry_path)?;
         let telemetry_path = self.telemetry_path.clone();
 
         // Route handlers
@@ -110,16 +110,19 @@ impl Server {
         // Create the server
         debug!("Attempting to bind to: {}", self.bind_address);
         let server = match server::new(app).bind(self.bind_address) {
-            Ok(s)  => s,
+            Ok(s)  => Ok(s),
             Err(e) => {
-                eprintln!("Couldn't bind to {}: {}", self.bind_address, e);
-                exit(1);
+                Err(Error::BindAddress(
+                    format!("{}: {}", self.bind_address, e)
+                ))
             },
-        };
+        }?;
 
         // Run it!
         info!("Starting HTTP server on {}", self.bind_address);
-        server.run()
+        server.run();
+
+        Ok(())
     }
 }
 
@@ -150,7 +153,7 @@ fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
         .body(output)
 }
 
-fn render_index_page(telemetry_path: &str) -> String {
+fn render_index_page(telemetry_path: &str) -> Result<String, Error> {
     // Render the template
     debug!("Rendering index template");
     let index_template = IndexTemplate{
@@ -158,10 +161,11 @@ fn render_index_page(telemetry_path: &str) -> String {
     };
 
     match index_template.render() {
-        Ok(i)  => i,
+        Ok(i)  => Ok(i),
         Err(e) => {
-            eprintln!("Failed to render index page template: {}", e);
-            exit(1);
+            Err(Error::RenderTemplate(
+                format!("index: {}", e)
+            ))
         },
     }
 }
@@ -174,7 +178,7 @@ mod tests {
     #[test]
     fn test_render_index_page() {
         let path = "/a1b2c3";
-        let rendered = render_index_page(&path);
+        let rendered = render_index_page(&path).unwrap();
         let ok = indoc!(
             r#"
             <!DOCTYPE html>
