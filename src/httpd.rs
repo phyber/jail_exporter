@@ -62,11 +62,17 @@ impl Server {
     }
 
     // Sets the bind_address of the server.
-    pub fn bind_address(&mut self, bind_address: SocketAddr) -> &mut Self {
+    pub fn bind_address(&mut self, bind_address: String)
+    -> Result<&mut Self, Error> {
         debug!("Setting server bind_address to: {}", bind_address);
 
-        self.bind_address = bind_address;
-        self
+        self.bind_address = match bind_address.parse() {
+            Ok(ba) => Ok(ba),
+            Err(e) => Err(
+                Error::SocketAddr(format!("{}: {}", bind_address, e))
+            ),
+        }?;
+        Ok(self)
     }
 
     // Sets the telemetry path for the metrics.

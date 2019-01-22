@@ -9,9 +9,6 @@ use std::fmt;
 
 #[derive(Fail)]
 pub enum Error {
-    #[fail(display = "{} was not parsable.", _0)]
-    ArgNotParsable(String),
-
     #[fail(display = "{} was not set.", _0)]
     ArgNotSet(String),
 
@@ -26,6 +23,9 @@ pub enum Error {
 
     #[fail(display = "Failed to render template: {}", _0)]
     RenderTemplate(String),
+
+    #[fail(display = "Could not parse SocketAddr: {}", _0)]
+    SocketAddr(String),
 }
 
 // Implements basic output, allowing the above display strings to be used when

@@ -147,14 +147,7 @@ fn main() -> Result<(), Error> {
     // CLI arguments passed.
     let bind_address = match matches.value_of("WEB_LISTEN_ADDRESS") {
         None    => Err(Error::ArgNotSet("web.listen-address".to_owned())),
-        Some(s) => match s.parse() {
-            Ok(a)  => Ok(a),
-            Err(e) => {
-                Err(Error::ArgNotParsable(
-                    format!("web.listen-address: {}", e)
-                ))
-            },
-        },
+        Some(s) => Ok(s.to_owned()),
     }?;
     debug!("web.listen-address: {}", bind_address);
 
@@ -170,7 +163,7 @@ fn main() -> Result<(), Error> {
 
     // Configure and run the http server.
     httpd::Server::new()
-        .bind_address(bind_address)
+        .bind_address(bind_address)?
         .telemetry_path(telemetry_path)
         .run()?;
 
