@@ -17,7 +17,6 @@ use log::{
 };
 use std::fmt;
 use std::net::SocketAddr;
-use std::process::exit;
 use std::str::FromStr;
 use users;
 
@@ -25,6 +24,12 @@ mod httpd;
 
 #[derive(Fail)]
 enum Error {
+    #[fail(display = "{} was not parsable.", _0)]
+    ArgNotParsable(String),
+
+    #[fail(display = "{} was not set.", _0)]
+    ArgNotSet(String),
+
     #[fail(display = "jail_exporter must be run as root")]
     NotRunningAsRoot,
 
@@ -161,20 +166,16 @@ fn main() -> Result<(), Error> {
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
     let bind_address = match matches.value_of("WEB_LISTEN_ADDRESS") {
-        Some(s) => {
-            match s.parse() {
-                Ok(a)  => a,
-                Err(e) => {
-                    eprintln!("Could not parse web.listen-address: {}", e);
-                    exit(1);
-                },
-            }
+        None    => Err(Error::ArgNotSet("web.listen-address".to_owned())),
+        Some(s) => match s.parse() {
+            Ok(a)  => Ok(a),
+            Err(e) => {
+                Err(Error::ArgNotParsable(
+                    format!("web.listen-address: {}", e)
+                ))
+            },
         },
-        None => {
-            eprintln!("Error: web.listen-address was not set.");
-            exit(1);
-        },
-    };
+    }?;
     debug!("web.listen-address: {}", bind_address);
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
@@ -182,12 +183,9 @@ fn main() -> Result<(), Error> {
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
     let telemetry_path = match matches.value_of("WEB_TELEMETRY_PATH") {
-        Some(s) => s.to_owned(),
-        None    => {
-            eprintln!("Error: web.telemetry-path was not set.");
-            exit(1);
-        }
-    };
+        None    => Err(Error::ArgNotSet("web.telemetry-path".to_owned())),
+        Some(s) => Ok(s.to_owned()),
+    }?;
     debug!("web.telemetry-path: {}", telemetry_path);
 
     // Configure and run the http server.
