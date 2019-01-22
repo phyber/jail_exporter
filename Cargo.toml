@@ -1,6 +1,6 @@
 [package]
 name = "jail_exporter"
-version = "0.9.0"
+version = "0.9.5"
 description = "Prometheus exporter for FreeBSD jails."
 edition = "2018"
 license = "BSD-3-Clause"

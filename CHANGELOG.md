@@ -1,6 +1,6 @@
 # `jail_exporter`
 
-## Upcoming
+## v0.9.5
 
   - Attempts at taking care of some [clippy] warnings.
   - Change templating library from [handlebars] to [askama].
