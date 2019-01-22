@@ -84,7 +84,7 @@ fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
     }
 
     // Ensure that s starts with /
-    if !s.starts_with("/") {
+    if !s.starts_with('/') {
         return  Err("path must start with /".to_owned());
     }
 
