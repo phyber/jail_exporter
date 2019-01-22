@@ -147,26 +147,42 @@ fn main() {
     // Parse the commandline arguments.
     let matches = parse_args();
 
-    // This should always be fine, we've already validated it during arg
-    // parsing.
-    // However, we keep the expect as a last resort.
-    let addr: SocketAddr = matches
-        .value_of("WEB_LISTEN_ADDRESS")
-        .unwrap()
-        .parse()
-        .expect("unable to parse socket address");
-    debug!("web.listen-address: {}", addr);
+    // Get the bind_address for the httpd::Server below.
+    // We shouldn't hit the error conditions here after the validation of the
+    // CLI arguments passed.
+    let bind_address = match matches.value_of("WEB_LISTEN_ADDRESS") {
+        Some(s) => {
+            match s.parse() {
+                Ok(a)  => a,
+                Err(e) => {
+                    eprintln!("Could not parse web.listen-address: {}", e);
+                    exit(1);
+                },
+            }
+        },
+        None => {
+            eprintln!("Error: web.listen-address was not set.");
+            exit(1);
+        },
+    };
+    debug!("web.listen-address: {}", bind_address);
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
-    // into the route handler below.
-    // Unwrap here should be safe since we provide clap with a default value.
-    let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH").unwrap();
-    let telemetry_path = telemetry_path.to_owned();
+    // into the httpd::Server below.
+    // We shouldn't hit the error conditions here after the validation of the
+    // CLI arguments passed.
+    let telemetry_path = match matches.value_of("WEB_TELEMETRY_PATH") {
+        Some(s) => s.to_owned(),
+        None    => {
+            eprintln!("Error: web.telemetry-path was not set.");
+            exit(1);
+        }
+    };
     debug!("web.telemetry-path: {}", telemetry_path);
 
     // Configure and run the http server.
     httpd::Server::new()
-        .bind_address(addr)
+        .bind_address(bind_address)
         .telemetry_path(telemetry_path)
         .run();
 }
