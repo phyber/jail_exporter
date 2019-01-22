@@ -23,6 +23,8 @@ mod httpd;
 
 // Used as a validator for the argument parsing.
 fn is_ipaddress(s: &str) -> Result<(), String> {
+    debug!("Ensuring that web.listen-address is valid");
+
     let res = SocketAddr::from_str(&s);
     match res {
         Ok(_)  => Ok(()),
@@ -173,35 +175,35 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ipv4_with_port() {
+    fn test_is_ipaddress_ipv4_with_port() {
         let addr = "127.0.0.1:9452";
         let res = is_ipaddress(&addr);
         assert!(res.is_ok());
     }
 
     #[test]
-    fn test_ipv6_with_port() {
+    fn test_is_ipaddress_ipv6_with_port() {
         let addr = "[::1]:9452";
         let res = is_ipaddress(&addr);
         assert!(res.is_ok());
     }
 
     #[test]
-    fn test_ipv4_without_port() {
+    fn test_is_ipaddress_ipv4_without_port() {
         let addr = "127.0.0.1";
         let res = is_ipaddress(&addr);
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_ipv6_without_port() {
+    fn test_is_ipaddress_ipv6_without_port() {
         let addr = "[::1]";
         let res = is_ipaddress(&addr);
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_ip_address_no_ip() {
+    fn test_is_ipaddress_no_ip() {
         let addr = "random string";
         let res = is_ipaddress(&addr);
         assert!(res.is_err());
