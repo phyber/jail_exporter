@@ -79,6 +79,9 @@ fn is_racct_rctl_available() -> Result<(), Error> {
         },
         rctl::State::Enabled => Ok(()),
         rctl::State::Jailed => {
+            // This isn't strictly true. Jail exporter should be able to run
+            // within a jail, for situations where a user has jails within
+            // jails. It is just untested at the moment.
             Err(Error::RctlUnavailable(
                 "RACCT/RCTL: Jail Exporter cannot run within a jail".to_owned()
             ))
