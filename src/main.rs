@@ -105,6 +105,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
+        .set_term_width(80)
         .arg(
             clap::Arg::with_name("WEB_LISTEN_ADDRESS")
                 .env("JAIL_EXPORTER_WEB_LISTEN_ADDRESS")
