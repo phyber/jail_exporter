@@ -11,9 +11,7 @@ use clap::{
     crate_version,
     ArgMatches,
 };
-use log::{
-    debug,
-};
+use log::debug;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use users;
@@ -90,7 +88,7 @@ fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
 
     // Ensure that s isn't literally /
     if s == "/" {
-        return Err("path must not be /".to_owned())
+        return Err("path must not be /".to_owned());
     }
 
     Ok(())
