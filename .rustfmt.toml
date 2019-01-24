@@ -1,6 +1,8 @@
 control_brace_style = "ClosingNextLine"
+edition = "2018"
 imports_layout = "Vertical"
 match_block_trailing_comma = true
 max_width = 80
+struct_field_align_threshold = 20
 use_small_heuristics = "Off"
 wrap_comments = true
