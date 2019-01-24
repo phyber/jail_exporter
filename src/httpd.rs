@@ -4,6 +4,7 @@
 // This module deals with httpd related tasks.
 //
 #![forbid(unsafe_code)]
+use crate::errors::Error;
 use actix_web::{
     http,
     server,
@@ -12,7 +13,6 @@ use actix_web::{
 };
 use actix_web::middleware::Logger;
 use askama::Template;
-use crate::errors::Error;
 use log::{
     debug,
     info,
@@ -62,15 +62,17 @@ impl Server {
     }
 
     // Sets the bind_address of the server.
-    pub fn bind_address(&mut self, bind_address: String)
-    -> Result<&mut Self, Error> {
+    pub fn bind_address(
+        &mut self,
+        bind_address: String,
+    ) -> Result<&mut Self, Error> {
         debug!("Setting server bind_address to: {}", bind_address);
 
         self.bind_address = match bind_address.parse() {
             Ok(ba) => Ok(ba),
-            Err(e) => Err(
-                Error::SocketAddr(format!("{}: {}", bind_address, e))
-            ),
+            Err(e) => {
+                Err(Error::SocketAddr(format!("{}: {}", bind_address, e)))
+            },
         }?;
         Ok(self)
     }
@@ -85,6 +87,7 @@ impl Server {
 
     // Run the HTTP server.
     pub fn run(&self) -> Result<(), Error> {
+        let bind_address   = self.bind_address;
         let exporter       = jail_exporter::Metrics::new();
         let index_page     = render_index_page(&self.telemetry_path)?;
         let telemetry_path = self.telemetry_path.clone();
@@ -94,7 +97,7 @@ impl Server {
         let app = move || {
             // This state is shared between threads and allows us to pass
             // arbitrary items to request handlers.
-            let state = AppState{
+            let state = AppState {
                 exporter:   exporter.clone(),
                 index_page: index_page.clone(),
             };
@@ -108,24 +111,22 @@ impl Server {
                 .resource("/", |r| r.method(http::Method::GET).f(index))
 
                 // Path serving up the metrics.
-                .resource(&telemetry_path,
-                          |r| r.method(http::Method::GET).f(metrics)
-                          )
+                .resource(&telemetry_path, |r| {
+                    r.method(http::Method::GET).f(metrics)
+                })
         };
 
         // Create the server
-        debug!("Attempting to bind to: {}", self.bind_address);
-        let server = match server::new(app).bind(self.bind_address) {
+        debug!("Attempting to bind to: {}", bind_address);
+        let server = match server::new(app).bind(bind_address) {
             Ok(s)  => Ok(s),
             Err(e) => {
-                Err(Error::BindAddress(
-                    format!("{}: {}", self.bind_address, e)
-                ))
+                Err(Error::BindAddress(format!("{}: {}", bind_address, e)))
             },
         }?;
 
         // Run it!
-        info!("Starting HTTP server on {}", self.bind_address);
+        info!("Starting HTTP server on {}", bind_address);
         server.run();
 
         Ok(())
@@ -162,17 +163,13 @@ fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
 fn render_index_page(telemetry_path: &str) -> Result<String, Error> {
     // Render the template
     debug!("Rendering index template");
-    let index_template = IndexTemplate{
+    let index_template = IndexTemplate {
         telemetry_path: &telemetry_path,
     };
 
     match index_template.render() {
         Ok(i)  => Ok(i),
-        Err(e) => {
-            Err(Error::RenderTemplate(
-                format!("index: {}", e)
-            ))
-        },
+        Err(e) => Err(Error::RenderTemplate(format!("index: {}", e))),
     }
 }
 
@@ -197,7 +194,8 @@ mod tests {
                     <h1>Jail Exporter</h1>
                     <p><a href="/a1b2c3">Metrics</a></p>
                 </body>
-            </html>"#);
+            </html>"#
+        );
         assert_eq!(rendered, ok);
     }
 }
