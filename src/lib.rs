@@ -47,7 +47,7 @@ type DeadJails = Vec<String>;
 /// scrape.
 type SeenJails = Vec<String>;
 
-/// Metrics structure containing the metrics that are being tracked.
+/// Metrics structure containing the time series that are being tracked.
 #[derive(Clone)]
 pub struct Metrics {
     // Prometheus time series

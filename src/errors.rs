@@ -7,32 +7,44 @@
 use failure::Fail;
 use std::fmt;
 
+/// An enum for error types encountered by the jail_exporter.
+///
+/// Implements the `Fail` trait of the `failure` crate.
 #[derive(Fail)]
 pub enum Error {
+    /// Raised when a required argument was not set.
+    /// Should not be reachable.
     #[fail(display = "{} was not set.", _0)]
     ArgNotSet(String),
 
+    /// Raised within the `httpd` module if an error is countered while binding
+    /// to the given `web.listen-address`.
     #[fail(display = "failed to bind to '{}'", _0)]
     BindAddress(String),
 
+    /// Raised if there are errors originating within the `jail` crate.
     #[fail(display = "could not get jail name")]
     JailError(#[fail(cause)] jail::JailError),
 
+    /// Raised if the jail_exporter is not running as root.
     #[fail(display = "jail_exporter must be run as root")]
     NotRunningAsRoot,
 
+    /// Raised if there are errors originating within the `prometheus` crate.
     #[fail(display = "error within Prometheus library")]
     PrometheusError(#[fail(cause)] prometheus::Error),
 
+    /// Raised if there are issues with RACCT/RCTL support.
     #[fail(display = "RACCT/RCTL: {}", _0)]
     RctlUnavailable(String),
 
+    /// Raised if an `askama` template fails to render.
     #[fail(display = "Failed to render template: {}", _0)]
     RenderTemplate(String),
 
+    /// Raised if the given `web.listen-address` could not be parsed.
     #[fail(display = "Could not parse SocketAddr: {}", _0)]
     SocketAddr(String),
-
 }
 
 // Implements basic output, allowing the above display strings to be used when
