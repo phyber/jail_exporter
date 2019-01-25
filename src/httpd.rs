@@ -11,6 +11,7 @@ use actix_web::{
     HttpRequest,
     HttpResponse,
 };
+use actix_web::http::header::CONTENT_TYPE;
 use actix_web::middleware::Logger;
 use askama::Template;
 use log::{
@@ -141,7 +142,7 @@ fn index(req: &HttpRequest<AppState>) -> HttpResponse {
     let body = &(req.state().index_page);
 
     HttpResponse::Ok()
-        .header(http::header::CONTENT_TYPE, "text/html; charset=utf-8")
+        .header(CONTENT_TYPE, "text/html; charset=utf-8")
         .body(body)
 }
 
@@ -152,12 +153,21 @@ fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
 
     // Get exporter output
     let exporter = &(req.state().exporter);
-    let output = exporter.export();
 
-    // Send it out
-    HttpResponse::Ok()
-        .header(http::header::CONTENT_TYPE, "text/plain; charset=utf-8")
-        .body(output)
+    // Exporter could fail.
+    let output = exporter.export();
+    match output {
+        Ok(o) => {
+            HttpResponse::Ok()
+                .header(CONTENT_TYPE, "text/plain; charset=utf-8")
+                .body(o)
+        },
+        Err(e) => {
+            HttpResponse::InternalServerError()
+                .header(CONTENT_TYPE, "text/plain; charset=utf-8")
+                .body(format!("{}", e))
+        },
+    }
 }
 
 fn render_index_page(telemetry_path: &str) -> Result<String, Error> {

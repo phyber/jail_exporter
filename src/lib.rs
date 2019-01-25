@@ -26,6 +26,9 @@ use std::sync::{
     Mutex,
 };
 
+mod errors;
+use errors::Error;
+
 /// Metrics that use bookkeeping
 enum BookKept {
     CpuTime(i64),
@@ -429,7 +432,7 @@ impl Metrics {
         }
     }
 
-    fn get_jail_metrics(&self) {
+    fn get_jail_metrics(&self) -> Result<(), Error> {
         debug!("get_jail_metrics");
 
         // Set jail_total to zero before gathering.
@@ -440,19 +443,13 @@ impl Metrics {
 
         // Loop over jails.
         for jail in RunningJail::all() {
-            let name = jail.name().expect("Could not get jail name");
-            let rusage = match jail.racct_statistics() {
-                Ok(stats) => stats,
-                Err(err) => {
-                    err.to_string();
-                    break;
-                },
-            };
+            let name = jail.name()?;
+            let rusage = jail.racct_statistics()?;
 
             debug!("JID: {}, Name: {:?}", jail.jid, name);
 
             // Add to our vec of seen jails.
-            seen.push(name.to_string());
+            seen.push(name.to_owned());
 
             // Process rusage for the named jail, setting time series.
             self.process_rusage(&name, &rusage);
@@ -465,6 +462,8 @@ impl Metrics {
         // Performed in two steps due to Mutex locking issues.
         let dead = self.dead_jails(seen);
         self.reap(dead);
+
+        Ok(())
     }
 
     // Loop over jail names from the previous run, as determined by book
@@ -536,9 +535,9 @@ impl Metrics {
     }
 
     /// Collect and export the rctl metrics.
-    pub fn export(&self) -> Vec<u8> {
+    pub fn export(&self) -> Result<Vec<u8>, Error> {
         // Collect metrics
-        self.get_jail_metrics();
+        self.get_jail_metrics()?;
 
         // Gather them
         let metric_families = prometheus::gather();
@@ -546,10 +545,10 @@ impl Metrics {
         // Collect them in a buffer
         let mut buffer = vec![];
         let encoder = TextEncoder::new();
-        encoder.encode(&metric_families, &mut buffer).unwrap();
+        encoder.encode(&metric_families, &mut buffer)?;
 
         // Return the exported metrics
-        buffer
+        Ok(buffer)
     }
 }
 

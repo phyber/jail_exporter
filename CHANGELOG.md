@@ -1,5 +1,10 @@
 # `jail_exporter`
 
+## UPCOMING
+
+  - Improvements to error handling in `lib.rs` which should allow an "Internal
+    Server Error" to be generated in `httpd.rs` the event of any issues.
+
 ## v0.9.5
 
   - Attempts at taking care of some [clippy] warnings.
