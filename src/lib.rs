@@ -91,7 +91,7 @@ pub struct Metrics {
 impl Default for Metrics {
     // Descriptions of these metrics are taken from rctl(8) where possible.
     fn default() -> Self {
-        let metrics = Metrics {
+        let metrics = Self {
             coredumpsize_bytes: register_int_gauge_vec!(
                 "jail_coredumpsize_bytes",
                 "core dump size, in bytes",
