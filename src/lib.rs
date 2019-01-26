@@ -1,9 +1,8 @@
-//
-// jail_exporter
-//
-// This library deals with gathering the metrics and exporting them.
-//
+//! jail_exporter library
+//!
+//! This lib handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 use jail::RunningJail;
 use log::debug;
 use prometheus::{
@@ -279,8 +278,42 @@ impl Default for Metrics {
 /// Metrics implementation
 impl Metrics {
     /// Return a new Metrics instance.
+    ///
+    /// This will create the initial time series and return a metrics struct.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let metrics = jail_exporter::Metrics::new();
+    /// ```
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Collect and export the rctl metrics.
+    ///
+    /// This will return a `Vec<u8>` representing the Prometheus metrics
+    /// text format.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let output = metrics.export();
+    /// ```
+    pub fn export(&self) -> Result<Vec<u8>, Error> {
+        // Collect metrics
+        self.get_jail_metrics()?;
+
+        // Gather them
+        let metric_families = prometheus::gather();
+
+        // Collect them in a buffer
+        let mut buffer = vec![];
+        let encoder = TextEncoder::new();
+        encoder.encode(&metric_families, &mut buffer)?;
+
+        // Return the exported metrics
+        Ok(buffer)
     }
 
     /// Updates the book for the given metric and returns the amount the value
@@ -532,23 +565,6 @@ impl Metrics {
             let mut book = book.lock().unwrap();
             book.remove(name);
         }
-    }
-
-    /// Collect and export the rctl metrics.
-    pub fn export(&self) -> Result<Vec<u8>, Error> {
-        // Collect metrics
-        self.get_jail_metrics()?;
-
-        // Gather them
-        let metric_families = prometheus::gather();
-
-        // Collect them in a buffer
-        let mut buffer = vec![];
-        let encoder = TextEncoder::new();
-        encoder.encode(&metric_families, &mut buffer)?;
-
-        // Return the exported metrics
-        Ok(buffer)
     }
 }
 

@@ -1,9 +1,10 @@
-//
-// jail_exporter
-//
-// An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
-//
+//!
+//! jail_exporter
+//!
+//! An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
+//!
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 use clap::{
     crate_authors,
     crate_description,
