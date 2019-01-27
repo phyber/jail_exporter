@@ -23,7 +23,7 @@ use std::net::SocketAddr;
 // This AppState is used to pass the rendered index template to the index
 // function.
 struct AppState {
-    exporter:   jail_exporter::Metrics,
+    exporter:   jail_exporter::Exporter,
     index_page: String,
 }
 
@@ -89,7 +89,7 @@ impl Server {
     // Run the HTTP server.
     pub fn run(&self) -> Result<(), Error> {
         let bind_address   = self.bind_address;
-        let exporter       = jail_exporter::Metrics::new();
+        let exporter       = jail_exporter::Exporter::new();
         let index_page     = render_index_page(&self.telemetry_path)?;
         let telemetry_path = self.telemetry_path.clone();
 

@@ -46,9 +46,9 @@ type DeadJails = Vec<String>;
 /// scrape.
 type SeenJails = Vec<String>;
 
-/// Metrics structure containing the time series that are being tracked.
+/// Exporter structure containing the time series that are being tracked.
 #[derive(Clone)]
-pub struct Metrics {
+pub struct Exporter {
     // Prometheus time series
     // These come from rctl
     coredumpsize_bytes: IntGaugeVec,
@@ -87,7 +87,7 @@ pub struct Metrics {
     wallclock_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
 }
 
-impl Default for Metrics {
+impl Default for Exporter {
     // Descriptions of these metrics are taken from rctl(8) where possible.
     fn default() -> Self {
         let metrics = Self {
@@ -271,20 +271,21 @@ impl Default for Metrics {
 
         let build_info_labels = [env!("CARGO_PKG_VERSION")];
         metrics.build_info.with_label_values(&build_info_labels).set(1);
+
         metrics
     }
 }
 
-/// Metrics implementation
-impl Metrics {
-    /// Return a new Metrics instance.
+/// Exporter implementation
+impl Exporter {
+    /// Return a new Exporter instance.
     ///
     /// This will create the initial time series and return a metrics struct.
     ///
     /// # Example
     ///
     /// ```
-    /// let metrics = jail_exporter::Metrics::new();
+    /// let exporter = jail_exporter::Exporter::new();
     /// ```
     pub fn new() -> Self {
         Default::default()
@@ -298,7 +299,7 @@ impl Metrics {
     /// # Example
     ///
     /// ```
-    /// let output = metrics.export();
+    /// let output = exporter.export();
     /// ```
     pub fn export(&self) -> Result<Vec<u8>, Error> {
         // Collect metrics
@@ -577,7 +578,7 @@ mod tests {
     // global registry. Trying to Metrics::new() in each test will result
     // in errors as duplicate time series will be created.
     lazy_static! {
-        static ref TEST_METRICS: Metrics = Metrics::new();
+        static ref TEST_EXPORTER: Exporter = Exporter::new();
     }
 
     #[test]
@@ -588,34 +589,34 @@ mod tests {
 
         for name in names.iter() {
             let series =
-                TEST_METRICS.cputime_seconds_total.with_label_values(&[&name]);
+                TEST_EXPORTER.cputime_seconds_total.with_label_values(&[&name]);
 
             // Initial check, should be zero. We didn't set anything yet.
             assert_eq!(series.get(), 0);
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::CpuTime, 1000);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::CpuTime, 1020);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::CpuTime, 10);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::CpuTime, 50);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::CpuTime, 50);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
@@ -627,7 +628,7 @@ mod tests {
         let mut hash = Rusage::new();
 
         for name in names.iter() {
-            let series = TEST_METRICS
+            let series = TEST_EXPORTER
                 .wallclock_seconds_total
                 .with_label_values(&[&name]);
 
@@ -636,27 +637,27 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::Wallclock, 1000);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::Wallclock, 1020);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::Wallclock, 10);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::Wallclock, 50);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::Wallclock, 50);
-            TEST_METRICS.process_rusage(&name, &hash);
+            TEST_EXPORTER.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
