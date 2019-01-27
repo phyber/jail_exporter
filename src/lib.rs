@@ -320,16 +320,14 @@ impl Metrics {
     /// has increased by.
     fn update_metric_book(&self, name: &str, resource: &BookKept) -> i64 {
         // Get the Book of Old Values and the current value.
-        let mut book;
-        let value;
-        match *resource {
+        let (mut book, value) = match *resource {
             BookKept::CpuTime(v) => {
-                book = self.cputime_seconds_total_old.lock().unwrap();
-                value = v;
+                let book = self.cputime_seconds_total_old.lock().unwrap();
+                (book, v)
             },
             BookKept::Wallclock(v) => {
-                book = self.wallclock_seconds_total_old.lock().unwrap();
-                value = v;
+                let book = self.wallclock_seconds_total_old.lock().unwrap();
+                (book, v)
             },
         };
 
@@ -340,8 +338,8 @@ impl Metrics {
         };
 
         // Work out what our increase should be.
-        // If old_value < value, OS counter has continued to
-        // increment, otherwise it has reset.
+        // If old_value <= value, OS counter has continued to increment,
+        // otherwise it has reset.
         let inc = if old_value <= value {
             value - old_value
         }
@@ -350,7 +348,7 @@ impl Metrics {
         };
 
         // Update book keeping.
-        book.insert(name.to_string(), value);
+        book.insert(name.to_owned(), value);
 
         // Return computed increase
         inc
@@ -507,7 +505,7 @@ impl Metrics {
 
         for name in book.keys() {
             if !seen.contains(&name) {
-                dead.push(name.to_string());
+                dead.push(name.to_owned());
             }
         }
 
