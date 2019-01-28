@@ -64,9 +64,9 @@ impl Server {
 
     // Sets the bind_address of the server.
     pub fn bind_address(
-        &mut self,
+        mut self,
         bind_address: String,
-    ) -> Result<&mut Self, Error> {
+    ) -> Result<Self, Error> {
         debug!("Setting server bind_address to: {}", bind_address);
 
         self.bind_address = match bind_address.parse() {
@@ -79,7 +79,7 @@ impl Server {
     }
 
     // Sets the telemetry path for the metrics.
-    pub fn telemetry_path(&mut self, telemetry_path: String) -> &mut Self {
+    pub fn telemetry_path(mut self, telemetry_path: String) -> Self {
         debug!("Setting server telemetry_path to: {}", telemetry_path);
 
         self.telemetry_path = telemetry_path;
@@ -87,7 +87,7 @@ impl Server {
     }
 
     // Run the HTTP server.
-    pub fn run(&self) -> Result<(), Error> {
+    pub fn run(self) -> Result<(), Error> {
         let bind_address   = self.bind_address;
         let exporter       = jail_exporter::Exporter::new();
         let index_page     = render_index_page(&self.telemetry_path)?;
