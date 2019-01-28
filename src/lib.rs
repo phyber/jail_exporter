@@ -299,6 +299,7 @@ impl Exporter {
     /// # Example
     ///
     /// ```
+    /// # let exporter = jail_exporter::Exporter::new();
     /// let output = exporter.export();
     /// ```
     pub fn export(&self) -> Result<Vec<u8>, Error> {
