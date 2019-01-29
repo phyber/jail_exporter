@@ -18,7 +18,6 @@ use log::{
     debug,
     info,
 };
-use std::net::SocketAddr;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
@@ -40,14 +39,14 @@ struct IndexTemplate<'a> {
 // Used for the httpd builder
 #[derive(Debug)]
 pub struct Server {
-    bind_address:   SocketAddr,
+    bind_address:   String,
     telemetry_path: String,
 }
 
 impl Default for Server {
     fn default() -> Self {
         Self {
-            bind_address:   "127.0.0.1:9452".parse().unwrap(),
+            bind_address:   "127.0.0.1:9452".into(),
             telemetry_path: "/metrics".into(),
         }
     }
@@ -57,25 +56,15 @@ impl Default for Server {
 impl Server {
     // Returns a new server instance.
     pub fn new() -> Self {
-        Self {
-            ..Default::default()
-        }
+        Default::default()
     }
 
     // Sets the bind_address of the server.
-    pub fn bind_address(
-        mut self,
-        bind_address: String,
-    ) -> Result<Self, Error> {
+    pub fn bind_address(mut self, bind_address: String) -> Self {
         debug!("Setting server bind_address to: {}", bind_address);
 
-        self.bind_address = match bind_address.parse() {
-            Ok(ba) => Ok(ba),
-            Err(e) => {
-                Err(Error::SocketAddr(format!("{}: {}", bind_address, e)))
-            },
-        }?;
-        Ok(self)
+        self.bind_address = bind_address;
+        self
     }
 
     // Sets the telemetry path for the metrics.
@@ -119,7 +108,7 @@ impl Server {
 
         // Create the server
         debug!("Attempting to bind to: {}", bind_address);
-        let server = match server::new(app).bind(bind_address) {
+        let server = match server::new(app).bind(&bind_address) {
             Ok(s)  => Ok(s),
             Err(e) => {
                 Err(Error::BindAddress(format!("{}: {}", bind_address, e)))

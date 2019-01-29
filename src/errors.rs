@@ -19,7 +19,7 @@ pub enum Error {
 
     /// Raised within the `httpd` module if an error is countered while binding
     /// to the given `web.listen-address`.
-    #[fail(display = "failed to bind to '{}'", _0)]
+    #[fail(display = "failed to bind to {}", _0)]
     BindAddress(String),
 
     /// Raised if there are errors originating within the `jail` crate.
@@ -41,10 +41,6 @@ pub enum Error {
     /// Raised if an `askama` template fails to render.
     #[fail(display = "Failed to render template: {}", _0)]
     RenderTemplate(String),
-
-    /// Raised if the given `web.listen-address` could not be parsed.
-    #[fail(display = "Could not parse SocketAddr: {}", _0)]
-    SocketAddr(String),
 }
 
 // Implements basic output, allowing the above display strings to be used when

@@ -162,7 +162,7 @@ fn main() -> Result<(), Error> {
 
     // Configure and run the http server.
     httpd::Server::new()
-        .bind_address(bind_address)?
+        .bind_address(bind_address)
         .telemetry_path(telemetry_path)
         .run()?;
 
