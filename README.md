@@ -24,7 +24,9 @@ just fine.
 ## Configuration
 
 Configuration can be performed either via command line arguments or environment
-variables.
+variables.  If both an environment variable and a command line argument are
+provided for the same option, the configuration will be taken from the command
+line argument.
 
 ### Command Line Arguments
 
@@ -47,7 +49,7 @@ execute the [`rctl_get_racct(2)`] calls.  If it is not run as `root`, it will
 complain and exit.
 
 As jails may come and go during the lifetime of the exporter, so to will the
-time series that the exporter exports. If you wish to account for resource
+time series that the exporter exports.  If you wish to account for resource
 usage for jails that have disappeared, you may wish to make use of the
 Prometheus [recording rules] to track total resource usage across all jails.
 
