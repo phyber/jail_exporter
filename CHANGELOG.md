@@ -4,6 +4,8 @@
 
   - Improvements to error handling in `lib.rs` which should allow an "Internal
     Server Error" to be generated in `httpd.rs` the event of any issues.
+  - Minor documentation improvements.
+  - Simplify handling of `bind_address` in `httpd` module.
 
 ## v0.9.5
 
