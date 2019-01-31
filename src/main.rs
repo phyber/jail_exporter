@@ -21,16 +21,6 @@ mod errors;
 use errors::Error;
 mod httpd;
 
-// Checks that we're running as root.
-fn is_running_as_root() -> Result<(), Error> {
-    debug!("Ensuring that we're running as root");
-
-    match users::get_effective_uid() {
-        0 => Ok(()),
-        _ => Err(Error::NotRunningAsRoot),
-    }
-}
-
 // Checks for the availability of RACCT/RCTL in the kernel.
 fn is_racct_rctl_available() -> Result<(), Error> {
     debug!("Checking RACCT/RCTL status");
@@ -60,12 +50,21 @@ fn is_racct_rctl_available() -> Result<(), Error> {
     }
 }
 
+// Checks that we're running as root.
+fn is_running_as_root() -> Result<(), Error> {
+    debug!("Ensuring that we're running as root");
+
+    match users::get_effective_uid() {
+        0 => Ok(()),
+        _ => Err(Error::NotRunningAsRoot),
+    }
+}
+
 // Used as a validator for the argument parsing.
 fn is_valid_socket_addr(s: &str) -> Result<(), String> {
     debug!("Ensuring that web.listen-address is valid");
 
-    let res = SocketAddr::from_str(&s);
-    match res {
+    match SocketAddr::from_str(&s) {
         Ok(_)  => Ok(()),
         Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
     }
@@ -84,7 +83,7 @@ fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
 
     // Ensure that s starts with /
     if !s.starts_with('/') {
-        return  Err("path must start with /".to_owned());
+        return Err("path must start with /".to_owned());
     }
 
     // Ensure that s isn't literally /
