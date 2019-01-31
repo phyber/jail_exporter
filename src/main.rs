@@ -21,17 +21,6 @@ mod errors;
 use errors::Error;
 mod httpd;
 
-// Used as a validator for the argument parsing.
-fn is_ipaddress(s: &str) -> Result<(), String> {
-    debug!("Ensuring that web.listen-address is valid");
-
-    let res = SocketAddr::from_str(&s);
-    match res {
-        Ok(_)  => Ok(()),
-        Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
-    }
-}
-
 // Checks that we're running as root.
 fn is_running_as_root() -> Result<(), Error> {
     debug!("Ensuring that we're running as root");
@@ -68,6 +57,17 @@ fn is_racct_rctl_available() -> Result<(), Error> {
                  for details".to_owned()
             ))
         },
+    }
+}
+
+// Used as a validator for the argument parsing.
+fn is_valid_socket_addr(s: &str) -> Result<(), String> {
+    debug!("Ensuring that web.listen-address is valid");
+
+    let res = SocketAddr::from_str(&s);
+    match res {
+        Ok(_)  => Ok(()),
+        Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
     }
 }
 
@@ -113,7 +113,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Address on which to expose metrics and web interface.")
                 .takes_value(true)
                 .default_value("127.0.0.1:9452")
-                .validator(|v| is_ipaddress(&v)),
+                .validator(|v| is_valid_socket_addr(&v))
         )
         .arg(
             clap::Arg::with_name("WEB_TELEMETRY_PATH")
@@ -124,7 +124,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .help("Path under which to expose metrics.")
                 .takes_value(true)
                 .default_value("/metrics")
-                .validator(|v| is_valid_telemetry_path(&v)),
+                .validator(|v| is_valid_telemetry_path(&v))
         )
         .get_matches()
 }
@@ -174,37 +174,37 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_is_ipaddress_ipv4_with_port() {
+    fn test_is_valid_socket_addr_ipv4_with_port() {
         let addr = "127.0.0.1:9452";
-        let res = is_ipaddress(&addr);
+        let res = is_valid_socket_addr(&addr);
         assert!(res.is_ok());
     }
 
     #[test]
-    fn test_is_ipaddress_ipv6_with_port() {
+    fn test_is_valid_socket_addr_ipv6_with_port() {
         let addr = "[::1]:9452";
-        let res = is_ipaddress(&addr);
+        let res = is_valid_socket_addr(&addr);
         assert!(res.is_ok());
     }
 
     #[test]
-    fn test_is_ipaddress_ipv4_without_port() {
+    fn test_is_valid_socket_addr_ipv4_without_port() {
         let addr = "127.0.0.1";
-        let res = is_ipaddress(&addr);
+        let res = is_valid_socket_addr(&addr);
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_ipaddress_ipv6_without_port() {
+    fn test_is_valid_socket_addr_ipv6_without_port() {
         let addr = "[::1]";
-        let res = is_ipaddress(&addr);
+        let res = is_valid_socket_addr(&addr);
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_ipaddress_no_ip() {
+    fn test_is_valid_socket_addr_no_ip() {
         let addr = "random string";
-        let res = is_ipaddress(&addr);
+        let res = is_valid_socket_addr(&addr);
         assert!(res.is_err());
     }
 
