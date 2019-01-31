@@ -1,11 +1,13 @@
 # `jail_exporter`
 
-## UPCOMING
+## v0.9.6
 
   - Improvements to error handling in `lib.rs` which should allow an "Internal
     Server Error" to be generated in `httpd.rs` the event of any issues.
   - Minor documentation improvements.
   - Simplify handling of `bind_address` in `httpd` module.
+  - Noted in `README.md` that minimum version of Rust is now 1.32.
+  - Add `Cargo.lock` to repository.
 
 ## v0.9.5
 
