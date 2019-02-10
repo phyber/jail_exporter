@@ -1,5 +1,12 @@
 # `jail_exporter`
 
+## UPCOMING
+
+  - Additional testing around HTTP handling.
+  - Minor style clean up.
+  - Version bumps in `Cargo.lock`.
+  - Fixing of some incorrect comments.
+
 ## v0.9.6
 
   - Improvements to error handling in `lib.rs` which should allow an "Internal
