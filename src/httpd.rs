@@ -135,17 +135,16 @@ fn index(req: &HttpRequest<AppState>) -> HttpResponse {
         .body(body)
 }
 
-// Returns a warp Reply containing the Prometheus Exporter output, or a
-// Rejection if things fail for some reason.
+// Returns a HttpResponse containing the Prometheus Exporter output, or an
+// InternalServerError if things fail for some reason.
 fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
     debug!("Processing metrics request");
 
-    // Get exporter output
+    // Get the exporter from the state
     let exporter = &(req.state().exporter);
 
     // Exporter could fail.
-    let output = exporter.export();
-    match output {
+    match exporter.export() {
         Ok(o) => {
             HttpResponse::Ok()
                 .header(CONTENT_TYPE, "text/plain; charset=utf-8")
@@ -159,9 +158,10 @@ fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
     }
 }
 
+// Renders the index page template.
 fn render_index_page(telemetry_path: &str) -> Result<String, Error> {
-    // Render the template
     debug!("Rendering index template");
+
     let index_template = IndexTemplate {
         telemetry_path: &telemetry_path,
     };
