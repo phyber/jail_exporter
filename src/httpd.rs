@@ -175,7 +175,40 @@ fn render_index_page(telemetry_path: &str) -> Result<String, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use actix_web::{
+        http,
+        test,
+        HttpMessage,
+    };
     use indoc::indoc;
+    use std::str;
+
+    #[test]
+    fn test_index_ok() {
+        let exporter = jail_exporter::Exporter::new();
+
+        let mut server = test::TestServer::build_with_state(move || {
+            AppState {
+                exporter:   exporter.clone(),
+                index_page: "Test Body".into(),
+            }
+        })
+        .start(|app| {
+            app.resource("/", |r| r.method(http::Method::GET).f(index));
+        });
+
+        let request = server.client(http::Method::GET, "/").finish().unwrap();
+        let response = server.execute(request.send()).unwrap();
+        assert_eq!(response.status(), http::StatusCode::OK);
+
+        let headers = response.headers();
+        let content_type = headers.get(CONTENT_TYPE).unwrap();
+        assert_eq!(content_type, "text/html; charset=utf-8");
+
+        let bytes = server.execute(response.body()).unwrap();
+        let body = str::from_utf8(&bytes).unwrap();
+        assert_eq!(body, "Test Body");
+    }
 
     #[test]
     fn test_render_index_page() {
