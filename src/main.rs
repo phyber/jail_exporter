@@ -177,6 +177,22 @@ fn main() -> Result<(), Error> {
 mod tests {
     use super::*;
     use std::env;
+    use std::panic;
+
+    // Wraps setting and unsetting of environment variables
+    fn env_test<T>(key: &str, var: &str, test: T)
+    -> ()
+    where T: FnOnce() -> () + panic::UnwindSafe {
+        env::set_var(key, var);
+
+        let result = panic::catch_unwind(|| {
+            test()
+        });
+
+        env::remove_var(key);
+
+        assert!(result.is_ok())
+    }
 
     #[test]
     fn test_default_web_listen_address() {
@@ -208,6 +224,36 @@ mod tests {
     }
 
     #[test]
+    fn test_cli_override_env_web_listen_address() {
+        env_test("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
+            let argv = vec![
+                "jail_exporter",
+                "--web.listen-address=127.0.1.3:9452",
+            ];
+
+            let matches = create_app().get_matches_from(argv);
+            let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+
+            assert_eq!(listen_address, Some("127.0.1.3:9452"));
+        });
+    }
+
+    #[test]
+    fn test_cli_override_env_web_telemetry_path() {
+        env_test("JAIL_EXPORTER_WEB_TELEMETRY_PATH", "/envvar", || {
+            let argv = vec![
+                "jail_exporter",
+                "--web.telemetry-path=/clioverride",
+            ];
+
+            let matches = create_app().get_matches_from(argv);
+            let listen_address = matches.value_of("WEB_TELEMETRY_PATH");
+
+            assert_eq!(listen_address, Some("/clioverride"));
+        });
+    }
+
+    #[test]
     fn test_cli_set_web_telemetry_path() {
         let argv = vec![
             "jail_exporter",
@@ -222,24 +268,22 @@ mod tests {
 
     #[test]
     fn test_env_set_web_listen_address() {
-        let setting = "127.0.1.2:9452";
-        env::set_var("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", setting);
+        env_test("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
+            let matches = parse_args();
+            let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
 
-        let matches = parse_args();
-        let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
-
-        assert_eq!(listen_address, Some(setting));
+            assert_eq!(listen_address, Some("127.0.1.2:9452"));
+        });
     }
 
     #[test]
     fn test_env_set_web_telemetry_path() {
-        let setting = "/test";
-        env::set_var("JAIL_EXPORTER_WEB_TELEMETRY_PATH", setting);
+        env_test("JAIL_EXPORTER_WEB_TELEMETRY_PATH", "/test", || {
+            let matches = parse_args();
+            let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
 
-        let matches = parse_args();
-        let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
-
-        assert_eq!(telemetry_path, Some(setting));
+            assert_eq!(telemetry_path, Some("/test"));
+        });
     }
 
     #[test]
