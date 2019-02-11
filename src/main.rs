@@ -288,64 +288,55 @@ mod tests {
 
     #[test]
     fn test_is_valid_socket_addr_ipv4_with_port() {
-        let addr = "127.0.0.1:9452";
-        let res = is_valid_socket_addr(&addr);
+        let res = is_valid_socket_addr("127.0.0.1:9452");
         assert!(res.is_ok());
     }
 
     #[test]
     fn test_is_valid_socket_addr_ipv6_with_port() {
-        let addr = "[::1]:9452";
-        let res = is_valid_socket_addr(&addr);
+        let res = is_valid_socket_addr("[::1]:9452");
         assert!(res.is_ok());
     }
 
     #[test]
     fn test_is_valid_socket_addr_ipv4_without_port() {
-        let addr = "127.0.0.1";
-        let res = is_valid_socket_addr(&addr);
+        let res = is_valid_socket_addr("127.0.0.1");
         assert!(res.is_err());
     }
 
     #[test]
     fn test_is_valid_socket_addr_ipv6_without_port() {
-        let addr = "[::1]";
-        let res = is_valid_socket_addr(&addr);
+        let res = is_valid_socket_addr("[::1]");
         assert!(res.is_err());
     }
 
     #[test]
     fn test_is_valid_socket_addr_no_ip() {
-        let addr = "random string";
-        let res = is_valid_socket_addr(&addr);
+        let res = is_valid_socket_addr("random string");
         assert!(res.is_err());
     }
 
     #[test]
     fn test_is_valid_telemetry_path_slash() {
-        let s = "/";
-        let res = is_valid_telemetry_path(&s);
+        let res = is_valid_telemetry_path("/");
         assert!(res.is_err());
     }
 
     #[test]
     fn test_is_valid_telemetry_path_empty() {
-        let s = "";
-        let res = is_valid_telemetry_path(&s);
+        let res = is_valid_telemetry_path("");
         assert!(res.is_err());
     }
 
     #[test]
     fn test_is_valid_telemetry_path_relative() {
-        let s = "metrics";
-        let res = is_valid_telemetry_path(&s);
+        let res = is_valid_telemetry_path("metrics");
         assert!(res.is_err());
     }
 
     #[test]
     fn test_is_valid_telemetry_path_valid() {
-        let s = "/metrics";
-        let res = is_valid_telemetry_path(&s);
+        let res = is_valid_telemetry_path("/metrics");
         assert!(res.is_ok());
     }
 }
