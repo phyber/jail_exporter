@@ -171,6 +171,45 @@ fn main() -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
+
+    #[test]
+    fn test_default_web_listen_address() {
+        let matches = parse_args();
+        let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+
+        assert_eq!(listen_address, Some("127.0.0.1:9452"));
+    }
+
+    #[test]
+    fn test_default_web_telemetry_path() {
+        let matches = parse_args();
+        let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
+
+        assert_eq!(telemetry_path, Some("/metrics"));
+    }
+
+    #[test]
+    fn test_env_set_web_listen_address() {
+        let setting = "127.0.1.2:9452";
+        env::set_var("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", setting);
+
+        let matches = parse_args();
+        let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+
+        assert_eq!(listen_address, Some(setting));
+    }
+
+    #[test]
+    fn test_env_set_web_telemetry_path() {
+        let setting = "/test";
+        env::set_var("JAIL_EXPORTER_WEB_TELEMETRY_PATH", setting);
+
+        let matches = parse_args();
+        let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
+
+        assert_eq!(telemetry_path, Some(setting));
+    }
 
     #[test]
     fn test_is_valid_socket_addr_ipv4_with_port() {

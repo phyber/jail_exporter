@@ -2,6 +2,7 @@
 
 ## UPCOMING
 
+  - Additional testing around CLI argument environment variables.
   - Additional testing around HTTP handling.
   - Minor style clean up.
   - Version bumps in `Cargo.lock`.
