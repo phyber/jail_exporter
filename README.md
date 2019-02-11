@@ -108,10 +108,11 @@ Metric                    | `rctl(8)` name    | Description
 
 ### Non-`rctl(8)` Metrics
 
-Metric                    | Description
---------------------------|------------
-`id`                      | ID of the named jail
-`num`                     | Current number of running jails
+Metric                | Description
+----------------------|------------
+`exporter_build_info` | `version` label contains running exporter version, value set to `1`
+`id`                  | ID of the named jail
+`num`                 | Current number of running jails
 
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
