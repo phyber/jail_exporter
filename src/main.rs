@@ -10,7 +10,6 @@ use clap::{
     crate_description,
     crate_name,
     crate_version,
-    ArgMatches,
 };
 use log::debug;
 use std::net::SocketAddr;
@@ -94,9 +93,9 @@ fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
     Ok(())
 }
 
-// Parses the command line arguments and returns the matches.
-fn parse_args<'a>() -> ArgMatches<'a> {
-    debug!("Parsing command line arguments");
+// Create a clap app
+fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
+    debug!("Creating clap app");
 
     clap::App::new(crate_name!())
         .version(crate_version!())
@@ -125,7 +124,13 @@ fn parse_args<'a>() -> ArgMatches<'a> {
                 .default_value("/metrics")
                 .validator(|v| is_valid_telemetry_path(&v))
         )
-        .get_matches()
+}
+
+// Parses the command line arguments and returns the matches.
+fn parse_args<'a>() -> clap::ArgMatches<'a> {
+    debug!("Parsing command line arguments");
+
+    create_app().get_matches()
 }
 
 fn main() -> Result<(), Error> {
