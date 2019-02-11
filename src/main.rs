@@ -195,6 +195,32 @@ mod tests {
     }
 
     #[test]
+    fn test_cli_set_web_listen_address() {
+        let argv = vec![
+            "jail_exporter",
+            "--web.listen-address=127.0.1.2:9452",
+        ];
+
+        let matches = create_app().get_matches_from(argv);
+        let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+
+        assert_eq!(listen_address, Some("127.0.1.2:9452"));
+    }
+
+    #[test]
+    fn test_cli_set_web_telemetry_path() {
+        let argv = vec![
+            "jail_exporter",
+            "--web.telemetry-path=/test",
+        ];
+
+        let matches = create_app().get_matches_from(argv);
+        let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
+
+        assert_eq!(telemetry_path, Some("/test"));
+    }
+
+    #[test]
     fn test_env_set_web_listen_address() {
         let setting = "127.0.1.2:9452";
         env::set_var("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", setting);
