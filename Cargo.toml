@@ -17,7 +17,7 @@ keywords = [
 ]
 
 [dependencies]
-askama = "0.7"
+askama = "0.8"
 env_logger = "0.6"
 failure = "0.1"
 jail = "0.0.6"
@@ -37,10 +37,6 @@ features = ["vec_map"]
 [dependencies.users]
 version = "0.8"
 default-features = false
-
-# Used by build.rs
-[build-dependencies]
-askama = "0.7"
 
 # Used by cargo test
 [dev-dependencies]
