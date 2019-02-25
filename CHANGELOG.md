@@ -7,6 +7,7 @@
   - Minor style clean up.
   - Version bumps in `Cargo.lock`.
   - Fixing of some incorrect comments.
+  - Updated to [askama] 0.8.
 
 ## v0.9.6
 

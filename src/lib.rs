@@ -589,8 +589,9 @@ mod tests {
         let mut hash = Rusage::new();
 
         for name in names.iter() {
-            let series =
-                TEST_EXPORTER.cputime_seconds_total.with_label_values(&[&name]);
+            let series = TEST_EXPORTER
+                .cputime_seconds_total
+                .with_label_values(&[&name]);
 
             // Initial check, should be zero. We didn't set anything yet.
             assert_eq!(series.get(), 0);
