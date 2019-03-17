@@ -8,6 +8,8 @@
   - Version bumps in `Cargo.lock`.
   - Fixing of some incorrect comments.
   - Updated to [askama] 0.8.
+  - Updated to [users] 0.9.1.
+  - Add testing for `is_running_as_root()` function.
 
 ## v0.9.6
 
@@ -70,4 +72,5 @@
 [lazy_static]: https://crates.io/crates/lazy_static
 [prometheus]: https://crates.io/crates/prometheus
 [rctl]: https://crates.io/crates/rctl
+[users]: https://crates/io/crates/users
 [warp]: https://crates.io/crates/warp

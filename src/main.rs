@@ -14,7 +14,10 @@ use clap::{
 use log::debug;
 use std::net::SocketAddr;
 use std::str::FromStr;
-use users;
+use users::{
+    Users,
+    UsersCache,
+};
 
 mod errors;
 use errors::Error;
@@ -50,10 +53,10 @@ fn is_racct_rctl_available() -> Result<(), Error> {
 }
 
 // Checks that we're running as root.
-fn is_running_as_root() -> Result<(), Error> {
+fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), Error> {
     debug!("Ensuring that we're running as root");
 
-    match users::get_effective_uid() {
+    match users.get_effective_uid() {
         0 => Ok(()),
         _ => Err(Error::NotRunningAsRoot),
     }
@@ -137,7 +140,7 @@ fn main() -> Result<(), Error> {
     env_logger::init();
 
     // Check that we're running as root.
-    is_running_as_root()?;
+    is_running_as_root(&mut UsersCache::new())?;
 
     // Check if RACCT/RCTL is available and if it's not, exit.
     is_racct_rctl_available()?;
@@ -284,6 +287,46 @@ mod tests {
 
             assert_eq!(telemetry_path, Some("/test"));
         });
+    }
+
+    #[test]
+    fn test_is_running_as_root() {
+        use users::mock::{
+            Group,
+            MockUsers,
+            User,
+        };
+        use users::os::unix::UserExt;
+
+        let mut users = MockUsers::with_current_uid(0);
+        let user = User::new(0, "root", 0).with_home_dir("/root");
+        users.add_user(user);
+        users.add_group(Group::new(0, "root"));
+
+        let is_root = is_running_as_root(&mut users);
+        let ok = ();
+
+        assert!(is_root.is_ok(), ok);
+    }
+
+    #[test]
+    fn is_running_as_non_root() {
+        use users::mock::{
+            Group,
+            MockUsers,
+            User,
+        };
+        use users::os::unix::UserExt;
+
+        let mut users = MockUsers::with_current_uid(10000);
+        let user = User::new(10000, "ferris", 10000).with_home_dir("/ferris");
+        users.add_user(user);
+        users.add_group(Group::new(10000, "ferris"));
+
+        let is_root = is_running_as_root(&mut users);
+        let err = Error::NotRunningAsRoot;
+
+        assert!(is_root.is_err(), err);
     }
 
     #[test]

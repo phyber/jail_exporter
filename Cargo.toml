@@ -35,10 +35,16 @@ default-features = false
 features = ["vec_map"]
 
 [dependencies.users]
-version = "0.8"
+version = "0.9"
 default-features = false
+features = ["cache"]
 
 # Used by cargo test
 [dev-dependencies]
 indoc = "0.3"
 lazy_static = "1.2"
+
+[dev-dependencies.users]
+version = "0.9"
+default-features = false
+features = ["mock"]
