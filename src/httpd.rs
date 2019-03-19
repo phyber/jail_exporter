@@ -13,27 +13,19 @@ use actix_web::{
 };
 use actix_web::http::header::CONTENT_TYPE;
 use actix_web::middleware::Logger;
-use askama::Template;
 use log::{
     debug,
     info,
 };
+
+mod templates;
+use templates::render_index_page;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
 struct AppState {
     exporter:   jail_exporter::Exporter,
     index_page: String,
-}
-
-// Template for the index served at /. Useful for people connecting to the
-// exporter via their browser.
-// Escaping is disabled since we're passing a path and don't want the / to be
-// escaped.
-#[derive(Template)]
-#[template(path = "index.html", escape = "none")]
-struct IndexTemplate<'a> {
-    telemetry_path: &'a str,
 }
 
 // Used for the httpd builder
@@ -158,20 +150,6 @@ fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
     }
 }
 
-// Renders the index page template.
-fn render_index_page(telemetry_path: &str) -> Result<String, Error> {
-    debug!("Rendering index template");
-
-    let index_template = IndexTemplate {
-        telemetry_path: &telemetry_path,
-    };
-
-    match index_template.render() {
-        Ok(i)  => Ok(i),
-        Err(e) => Err(Error::RenderTemplate(format!("index: {}", e))),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -180,7 +158,6 @@ mod tests {
         test,
         HttpMessage,
     };
-    use indoc::indoc;
     use std::str;
 
     #[test]
@@ -208,26 +185,5 @@ mod tests {
         let bytes = server.execute(response.body()).unwrap();
         let body = str::from_utf8(&bytes).unwrap();
         assert_eq!(body, "Test Body");
-    }
-
-    #[test]
-    fn test_render_index_page() {
-        let path = "/a1b2c3";
-        let rendered = render_index_page(&path).unwrap();
-        let ok = indoc!(
-            r#"
-            <!DOCTYPE html>
-            <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Jail Exporter</title>
-                </head>
-                <body>
-                    <h1>Jail Exporter</h1>
-                    <p><a href="/a1b2c3">Metrics</a></p>
-                </body>
-            </html>"#
-        );
-        assert_eq!(rendered, ok);
     }
 }
