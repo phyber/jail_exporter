@@ -10,6 +10,9 @@
   - Updated to [askama] 0.8.
   - Updated to [users] 0.9.1.
   - Add testing for `is_running_as_root()` function.
+  - Break out various parts of `httpd` module into sub-modules.
+    - `handlers`: Route handlers used by the server.
+    - `templates`: Renders templates used elsewhere.
 
 ## v0.9.6
 
