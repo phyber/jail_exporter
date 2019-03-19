@@ -21,7 +21,9 @@ struct IndexTemplate<'a> {
 }
 
 // Renders the index page template.
-pub fn render_index_page(telemetry_path: &str) -> Result<String, Error> {
+pub(in crate::httpd)
+fn render_index_page(telemetry_path: &str)
+-> Result<String, Error> {
     debug!("Rendering index template");
 
     let index_template = IndexTemplate {
