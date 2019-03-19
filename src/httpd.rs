@@ -25,7 +25,7 @@ use templates::render_index_page;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
-pub(crate) struct AppState {
+pub(self) struct AppState {
     exporter:   jail_exporter::Exporter,
     index_page: String,
 }

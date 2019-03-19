@@ -15,7 +15,7 @@ use super::AppState;
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
-pub(crate) fn index(req: &HttpRequest<AppState>) -> HttpResponse {
+pub(in crate::httpd) fn index(req: &HttpRequest<AppState>) -> HttpResponse {
     debug!("Displaying index page");
 
     let body = &(req.state().index_page);
@@ -27,7 +27,7 @@ pub(crate) fn index(req: &HttpRequest<AppState>) -> HttpResponse {
 
 // Returns a HttpResponse containing the Prometheus Exporter output, or an
 // InternalServerError if things fail for some reason.
-pub(crate) fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
+pub(in crate::httpd) fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
     debug!("Processing metrics request");
 
     // Get the exporter from the state
