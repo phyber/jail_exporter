@@ -1,6 +1,6 @@
 # `jail_exporter`
 
-## UPCOMING
+## v0.9.7
 
   - Additional testing around CLI argument environment variables.
   - Additional testing around HTTP handling.
