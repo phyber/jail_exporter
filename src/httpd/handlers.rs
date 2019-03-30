@@ -56,6 +56,7 @@ mod tests {
         test,
         HttpMessage,
     };
+    use pretty_assertions::assert_eq;
     use std::str;
 
     #[test]

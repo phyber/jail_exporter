@@ -40,6 +40,7 @@ fn render_index_page(telemetry_path: &str)
 mod tests {
     use super::*;
     use indoc::indoc;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_render_index_page() {

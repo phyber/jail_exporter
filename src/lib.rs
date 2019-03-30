@@ -574,6 +574,7 @@ mod tests {
     // We need some of the main functions.
     use super::*;
     use lazy_static::lazy_static;
+    use pretty_assertions::assert_eq;
 
     // We have to register this here as the Prometheus library maintains a
     // global registry. Trying to Metrics::new() in each test will result
