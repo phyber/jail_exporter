@@ -1,5 +1,9 @@
 # `jail_exporter`
 
+## UPCOMING
+
+  - Added [pretty-assertions] for tests.
+
 ## v0.9.7
 
   - Additional testing around CLI argument environment variables.
@@ -13,7 +17,6 @@
   - Break out various parts of `httpd` module into sub-modules.
     - `handlers`: Route handlers used by the server.
     - `templates`: Renders templates used elsewhere.
-  - Added [pretty-assertions] for tests.
 
 ## v0.9.6
 
