@@ -13,6 +13,7 @@
   - Break out various parts of `httpd` module into sub-modules.
     - `handlers`: Route handlers used by the server.
     - `templates`: Renders templates used elsewhere.
+  - Added [pretty-assertions] for tests.
 
 ## v0.9.6
 
@@ -73,6 +74,7 @@
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
 [lazy_static]: https://crates.io/crates/lazy_static
+[pretty-assertions]: https://crates.io/crates/pretty-assertions
 [prometheus]: https://crates.io/crates/prometheus
 [rctl]: https://crates.io/crates/rctl
 [users]: https://crates/io/crates/users
