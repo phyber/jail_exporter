@@ -31,5 +31,5 @@ task:
     cargo_cache:
         folder: ${CARGO_HOME}/registry
     test_script: |
-        . ${HOME}/.cargo/env
+        . ${CARGO_HOME}/env
         cargo test
