@@ -1,5 +1,9 @@
 # Jail Exporter
 
+[![Build Status]](https://cirrus-ci.com/github/phyber/jail_exporter)
+
+## Description
+
 Jail Exporter is a [Prometheus] exporter for [FreeBSD] jail metrics as reported
 by [`rctl(8)`].
 
@@ -114,6 +118,7 @@ Metric                | Description
 `id`                  | ID of the named jail
 `num`                 | Current number of running jails
 
+[Build Status]: https://api.cirrus-ci.com/github/phyber/jail_exporter.svg
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
 [Rust]: https://www.rust-lang.org/
