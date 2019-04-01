@@ -8,24 +8,18 @@ task:
     env:
         CARGO_HOME: '${HOME}/.cargo'
         CIRRUS_SHELL: '/bin/sh'
-    env_script: |
-        # Show the working environment
-        env
+    pkg_prepare_script: |
+        pkg_repos_dir="/usr/local/etc/pkg/repos"
+        mkdir -p "${pkg_repos_dir}"
+        cat > "${pkg_repos_dir}/FreeBSD.conf" <<EOF
+        FreeBSD: {
+            url: "pkg+http://pkg.freebsd.org/${ABI}/latest"
+        }
+        EOF
     install_script: |
-        # Ensure latest curl
         pkg install -y \
-            curl
-
-        # The curl command is an expansion of: curl -sSf
-        # The sh command reads input from stdin (-s)
-        # The --verbose and -y are passed to the rustup script and enable
-        # verbose mode and disable confirmation prompts.
-        curl \
-            --silent \
-            --show-error \
-            --fail \
-            https://sh.rustup.rs \
-        | sh -s -- --verbose -y
+            curl \
+            rust
     before_cache_script: |
         rm -rf ${CARGO_HOME}/registry/index
     cargo_cache:
