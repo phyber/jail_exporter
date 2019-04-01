@@ -6,9 +6,20 @@ task:
             image: 'freebsd-12-0-release-amd64'
             image: 'freebsd-11-2-release-amd64'
     install_script: |
+        # Ensure latest curl
         pkg install -y \
-            curl \
-            rust
+            curl
+
+        # The curl command is an expansion of: curl -sSf
+        # The sh command reads input from stdin (-s)
+        # The --verbose and -y are passed to the rustup script and enable
+        # verbose mode and disable confirmation prompts.
+        curl \
+            --silent \
+            --show-error \
+            --fail \
+            https://sh.rustup.rs \
+        | sh -s -- --verbose -y
     before_cache_script: |
         rm -rf ${CARGO_HOME}/registry/index
     cargo_cache:
