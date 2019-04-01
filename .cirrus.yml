@@ -6,10 +6,9 @@ task:
             image: 'freebsd-12-0-release-amd64'
             image: 'freebsd-11-2-release-amd64'
     install_script: |
-        pkg install -y curl
-        curl https://sh.rustup.sh -sSf \
-            | sh -s -- -y
-        . ${HOME}/.cargo/env
+        pkg install -y \
+            curl \
+            rust
     before_cache_script: |
         rm -rf ${CARGO_HOME}/registry/index
     cargo_cache:
