@@ -11,7 +11,7 @@ task:
     pkg_prepare_script: |
         pkg_repos_dir="/usr/local/etc/pkg/repos"
         mkdir -p "${pkg_repos_dir}"
-        cat > "${pkg_repos_dir}/FreeBSD.conf" <<EOF
+        cat > "${pkg_repos_dir}/FreeBSD.conf" <<'EOF'
         FreeBSD: {
             url: "pkg+http://pkg.freebsd.org/${ABI}/latest"
         }
