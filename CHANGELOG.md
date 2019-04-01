@@ -3,6 +3,7 @@
 ## UPCOMING
 
   - Added [pretty-assertions] for tests.
+  - Use [Cirrus CI] to run `cargo test` on push.
 
 ## v0.9.7
 
@@ -82,3 +83,4 @@
 [rctl]: https://crates.io/crates/rctl
 [users]: https://crates/io/crates/users
 [warp]: https://crates.io/crates/warp
+[Cirrus CI]: https://cirrus-ci.org/
