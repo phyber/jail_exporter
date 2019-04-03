@@ -46,6 +46,9 @@ type DeadJails = Vec<String>;
 /// scrape.
 type SeenJails = Vec<String>;
 
+/// Vector of u8 representing gathered metrics.
+type ExportedMetrics = Vec<u8>;
+
 /// Exporter structure containing the time series that are being tracked.
 #[derive(Clone)]
 pub struct Exporter {
@@ -302,7 +305,7 @@ impl Exporter {
     /// # let exporter = jail_exporter::Exporter::new();
     /// let output = exporter.export();
     /// ```
-    pub fn export(&self) -> Result<Vec<u8>, Error> {
+    pub fn export(&self) -> Result<ExportedMetrics, Error> {
         // Collect metrics
         self.get_jail_metrics()?;
 
