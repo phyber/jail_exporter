@@ -24,6 +24,4 @@ task:
     cargo_cache:
         fingerprint_script: 'cat Cargo.lock'
         folder: '${CARGO_HOME}/registry'
-    test_script: |
-        . ${CARGO_HOME}/env
-        cargo test
+    test_script: 'cargo test'
