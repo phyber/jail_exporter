@@ -20,10 +20,10 @@ task:
         pkg install -y \
             curl \
             rust
-    before_cache_script: |
-        rm -rf ${CARGO_HOME}/registry/index
+    before_cache_script: 'rm -rf ${CARGO_HOME}/registry/index'
     cargo_cache:
-        folder: ${CARGO_HOME}/registry
+        fingerprint_script: 'cat Cargo.lock'
+        folder: '${CARGO_HOME}/registry'
     test_script: |
         . ${CARGO_HOME}/env
         cargo test
