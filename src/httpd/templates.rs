@@ -43,7 +43,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_render_index_page() {
+    fn render_index_page_ok() {
         let path = "/a1b2c3";
         let rendered = render_index_page(&path).unwrap();
         let ok = indoc!(

@@ -60,7 +60,7 @@ mod tests {
     use std::str;
 
     #[test]
-    fn test_index_ok() {
+    fn index_ok() {
         let exporter = jail_exporter::Exporter::new();
 
         let mut server = test::TestServer::build_with_state(move || {

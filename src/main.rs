@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn test_default_web_listen_address() {
+    fn default_web_listen_address() {
         let matches = parse_args();
         let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
 
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn test_default_web_telemetry_path() {
+    fn default_web_telemetry_path() {
         let matches = parse_args();
         let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
 
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cli_set_web_listen_address() {
+    fn cli_set_web_listen_address() {
         let argv = vec![
             "jail_exporter",
             "--web.listen-address=127.0.1.2:9452",
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cli_override_env_web_listen_address() {
+    fn cli_override_env_web_listen_address() {
         env_test("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
             let argv = vec![
                 "jail_exporter",
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cli_override_env_web_telemetry_path() {
+    fn cli_override_env_web_telemetry_path() {
         env_test("JAIL_EXPORTER_WEB_TELEMETRY_PATH", "/envvar", || {
             let argv = vec![
                 "jail_exporter",
@@ -258,7 +258,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cli_set_web_telemetry_path() {
+    fn cli_set_web_telemetry_path() {
         let argv = vec![
             "jail_exporter",
             "--web.telemetry-path=/test",
@@ -271,7 +271,7 @@ mod tests {
     }
 
     #[test]
-    fn test_env_set_web_listen_address() {
+    fn env_set_web_listen_address() {
         env_test("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
             let matches = parse_args();
             let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
@@ -281,7 +281,7 @@ mod tests {
     }
 
     #[test]
-    fn test_env_set_web_telemetry_path() {
+    fn env_set_web_telemetry_path() {
         env_test("JAIL_EXPORTER_WEB_TELEMETRY_PATH", "/test", || {
             let matches = parse_args();
             let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
@@ -291,7 +291,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_running_as_root() {
+    fn is_running_as_root_ok() {
         use users::mock::{
             Group,
             MockUsers,
@@ -331,55 +331,55 @@ mod tests {
     }
 
     #[test]
-    fn test_is_valid_socket_addr_ipv4_with_port() {
+    fn is_valid_socket_addr_ipv4_with_port() {
         let res = is_valid_socket_addr("127.0.0.1:9452");
         assert!(res.is_ok());
     }
 
     #[test]
-    fn test_is_valid_socket_addr_ipv6_with_port() {
+    fn is_valid_socket_addr_ipv6_with_port() {
         let res = is_valid_socket_addr("[::1]:9452");
         assert!(res.is_ok());
     }
 
     #[test]
-    fn test_is_valid_socket_addr_ipv4_without_port() {
+    fn is_valid_socket_addr_ipv4_without_port() {
         let res = is_valid_socket_addr("127.0.0.1");
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_valid_socket_addr_ipv6_without_port() {
+    fn is_valid_socket_addr_ipv6_without_port() {
         let res = is_valid_socket_addr("[::1]");
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_valid_socket_addr_no_ip() {
+    fn is_valid_socket_addr_no_ip() {
         let res = is_valid_socket_addr("random string");
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_valid_telemetry_path_slash() {
+    fn is_valid_telemetry_path_slash() {
         let res = is_valid_telemetry_path("/");
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_valid_telemetry_path_empty() {
+    fn is_valid_telemetry_path_empty() {
         let res = is_valid_telemetry_path("");
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_valid_telemetry_path_relative() {
+    fn is_valid_telemetry_path_relative() {
         let res = is_valid_telemetry_path("metrics");
         assert!(res.is_err());
     }
 
     #[test]
-    fn test_is_valid_telemetry_path_valid() {
+    fn is_valid_telemetry_path_valid() {
         let res = is_valid_telemetry_path("/metrics");
         assert!(res.is_ok());
     }
