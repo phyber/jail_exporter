@@ -22,7 +22,7 @@ env_logger = "0.6"
 failure = "0.1"
 jail = "0.0.6"
 log = "0.4"
-prometheus = "0.5"
+prometheus = "0.6"
 rctl = "0.0.5"
 
 [dependencies.actix-web]
