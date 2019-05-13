@@ -63,7 +63,7 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), Error> {
 }
 
 // Used as a validator for the argument parsing.
-fn is_valid_socket_addr(s: &str) -> Result<(), String> {
+fn is_valid_socket_addr(s: String) -> Result<(), String> {
     debug!("Ensuring that web.listen-address is valid");
 
     match SocketAddr::from_str(&s) {
@@ -75,7 +75,7 @@ fn is_valid_socket_addr(s: &str) -> Result<(), String> {
 // Checks that the telemetry_path is valid.
 // This check is extremely basic, and there may still be invalid paths that
 // could be passed.
-fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
+fn is_valid_telemetry_path(s: String) -> Result<(), String> {
     debug!("Ensuring that web.telemetry-path is valid");
 
     // Ensure s isn't empty.
@@ -114,7 +114,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .help("Address on which to expose metrics and web interface.")
                 .takes_value(true)
                 .default_value("127.0.0.1:9452")
-                .validator(|v| is_valid_socket_addr(&v))
+                .validator(is_valid_socket_addr)
         )
         .arg(
             clap::Arg::with_name("WEB_TELEMETRY_PATH")
@@ -125,7 +125,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .help("Path under which to expose metrics.")
                 .takes_value(true)
                 .default_value("/metrics")
-                .validator(|v| is_valid_telemetry_path(&v))
+                .validator(is_valid_telemetry_path)
         )
 }
 
@@ -332,55 +332,55 @@ mod tests {
 
     #[test]
     fn is_valid_socket_addr_ipv4_with_port() {
-        let res = is_valid_socket_addr("127.0.0.1:9452");
+        let res = is_valid_socket_addr("127.0.0.1:9452".into());
         assert!(res.is_ok());
     }
 
     #[test]
     fn is_valid_socket_addr_ipv6_with_port() {
-        let res = is_valid_socket_addr("[::1]:9452");
+        let res = is_valid_socket_addr("[::1]:9452".into());
         assert!(res.is_ok());
     }
 
     #[test]
     fn is_valid_socket_addr_ipv4_without_port() {
-        let res = is_valid_socket_addr("127.0.0.1");
+        let res = is_valid_socket_addr("127.0.0.1".into());
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_socket_addr_ipv6_without_port() {
-        let res = is_valid_socket_addr("[::1]");
+        let res = is_valid_socket_addr("[::1]".into());
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_socket_addr_no_ip() {
-        let res = is_valid_socket_addr("random string");
+        let res = is_valid_socket_addr("random string".into());
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_slash() {
-        let res = is_valid_telemetry_path("/");
+        let res = is_valid_telemetry_path("/".into());
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_empty() {
-        let res = is_valid_telemetry_path("");
+        let res = is_valid_telemetry_path("".into());
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_relative() {
-        let res = is_valid_telemetry_path("metrics");
+        let res = is_valid_telemetry_path("metrics".into());
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_valid() {
-        let res = is_valid_telemetry_path("/metrics");
+        let res = is_valid_telemetry_path("/metrics".into());
         assert!(res.is_ok());
     }
 }
