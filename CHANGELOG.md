@@ -4,6 +4,11 @@
 
   - Added [pretty-assertions] for tests.
   - Use [Cirrus CI] to run `cargo test` on push.
+  - Update [prometheus] crate to 0.6.0.
+  - Move to using a local metrics registry, which makes testing much more
+    reliable.
+  - Implement local macros for registering metrics with local registry.
+  - Simplify `dead_jails` method in `Exporter` and add test.
 
 ## v0.9.7
 
