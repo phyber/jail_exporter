@@ -95,6 +95,9 @@ impl Default for Exporter {
         // pass it to the macros.
         let registry = Registry::new();
 
+        // Convenience variable
+        let labels: &[&str] = &["name"];
+
         let metrics = Self {
             registry: registry.clone(),
 
@@ -102,175 +105,175 @@ impl Default for Exporter {
                 registry,
                 "jail_coredumpsize_bytes",
                 "core dump size, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             cputime_seconds_total: register_int_counter_vec!(
                 registry,
                 "jail_cputime_seconds_total",
                 "CPU time, in seconds",
-                &["name"]
+                labels
             ).unwrap(),
 
             datasize_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_datasize_bytes",
                 "data size, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             maxproc: register_int_gauge_vec!(
                 registry,
                 "jail_maxproc",
                 "number of processes",
-                &["name"]
+                labels
             ).unwrap(),
 
             memorylocked_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_memorylocked_bytes",
                 "locked memory, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             memoryuse_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_memoryuse_bytes",
                 "resident set size, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             msgqqueued: register_int_gauge_vec!(
                 registry,
                 "jail_msgqqueued",
                 "number of queued SysV messages",
-                &["name"]
+                labels
             ).unwrap(),
 
             msgqsize_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_msgqsize_bytes",
                 "SysV message queue size, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             nmsgq: register_int_gauge_vec!(
                 registry,
                 "jail_nmsgq",
                 "number of SysV message queues",
-                &["name"]
+                labels
             ).unwrap(),
 
             nsem: register_int_gauge_vec!(
                 registry,
                 "jail_nsem",
                 "number of SysV semaphores",
-                &["name"]
+                labels
             ).unwrap(),
 
             nsemop: register_int_gauge_vec!(
                 registry,
                 "jail_nsemop",
                 "number of SysV semaphores modified in a single semop(2) call",
-                &["name"]
+                labels
             ).unwrap(),
 
             nshm: register_int_gauge_vec!(
                 registry,
                 "jail_nshm",
                 "number of SysV shared memory segments",
-                &["name"]
+                labels
             ).unwrap(),
 
             nthr: register_int_gauge_vec!(
                 registry,
                 "jail_nthr",
                 "number of threads",
-                &["name"]
+                labels
             ).unwrap(),
 
             openfiles: register_int_gauge_vec!(
                 registry,
                 "jail_openfiles",
                 "file descriptor table size",
-                &["name"]
+                labels
             ).unwrap(),
 
             pcpu_used: register_int_gauge_vec!(
                 registry,
                 "jail_pcpu_used",
                 "%CPU, in percents of a single CPU core",
-                &["name"]
+                labels
             ).unwrap(),
 
             pseudoterminals: register_int_gauge_vec!(
                 registry,
                 "jail_pseudoterminals",
                 "number of PTYs",
-                &["name"]
+                labels
             ).unwrap(),
 
             readbps: register_int_gauge_vec!(
                 registry,
                 "jail_readbps",
                 "filesystem reads, in bytes per second",
-                &["name"]
+                labels
             ).unwrap(),
 
             readiops: register_int_gauge_vec!(
                 registry,
                 "jail_readiops",
                 "filesystem reads, in operations per second",
-                &["name"]
+                labels
             ).unwrap(),
 
             shmsize_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_shmsize_bytes",
                 "SysV shared memory size, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             stacksize_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_stacksize_bytes",
                 "stack size, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             swapuse_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_swapuse_bytes",
                 "swap space that may be reserved or used, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             vmemoryuse_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_vmemoryuse_bytes",
                 "address space limit, in bytes",
-                &["name"]
+                labels
             ).unwrap(),
 
             wallclock_seconds_total: register_int_counter_vec!(
                 registry,
                 "jail_wallclock_seconds_total",
                 "wallclock time, in seconds",
-                &["name"]
+                labels
             ).unwrap(),
 
             writebps: register_int_gauge_vec!(
                 registry,
                 "jail_writebps",
                 "filesystem writes, in bytes per second",
-                &["name"]
+                labels
             ).unwrap(),
 
             writeiops: register_int_gauge_vec!(
                 registry,
                 "jail_writeiops",
                 "filesystem writes, in operations per second",
-                &["name"]
+                labels
             ).unwrap(),
 
             // Metrics created by the exporter
@@ -286,7 +289,7 @@ impl Default for Exporter {
                 registry,
                 "jail_id",
                 "ID of the named jail.",
-                &["name"]
+                labels
             ).unwrap(),
 
             jail_total: register_int_gauge!(
@@ -656,10 +659,6 @@ mod tests {
 
         // Create some metrics for test_{a,b,c}.
         for name in names.iter() {
-            let series = exporter
-                .cputime_seconds_total
-                .with_label_values(&[&name]);
-
             hash.insert(rctl::Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
         }
