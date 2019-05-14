@@ -505,16 +505,13 @@ impl Exporter {
     // Loop over jail names from the previous run, as determined by book
     // keeping, and create a vector of jail names that no longer exist.
     fn dead_jails(&self, seen: SeenJails) -> DeadJails {
-        let mut dead = DeadJails::new();
         let book = self.cputime_seconds_total_old.lock().unwrap();
 
-        for name in book.keys() {
-            if !seen.contains(&name) {
-                dead.push(name.to_owned());
-            }
-        }
-
-        dead
+        book
+            .keys()
+            .filter(|n| !seen.contains(&n))
+            .map(|n| n.to_owned())
+            .collect()
     }
 
     // Loop over DeadJails removing old labels and killing old book keeping.
