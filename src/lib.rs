@@ -6,17 +6,11 @@
 use jail::RunningJail;
 use log::debug;
 use prometheus::{
-    __register_counter_vec,
-    __register_gauge,
-    __register_gauge_vec,
-    opts,
-    register_int_counter_vec,
-    register_int_gauge,
-    register_int_gauge_vec,
     Encoder,
     IntCounterVec,
     IntGauge,
     IntGaugeVec,
+    Registry,
     TextEncoder,
 };
 use std::collections::HashMap;
@@ -27,6 +21,7 @@ use std::sync::{
 
 mod errors;
 use errors::Error;
+mod macros;
 
 /// Metrics that use bookkeeping
 enum BookKept {
@@ -52,6 +47,9 @@ type ExportedMetrics = Vec<u8>;
 /// Exporter structure containing the time series that are being tracked.
 #[derive(Clone)]
 pub struct Exporter {
+    // Exporter Registry
+    registry: Registry,
+
     // Prometheus time series
     // These come from rctl
     coredumpsize_bytes: IntGaugeVec,
@@ -93,152 +91,183 @@ pub struct Exporter {
 impl Default for Exporter {
     // Descriptions of these metrics are taken from rctl(8) where possible.
     fn default() -> Self {
+        // We want to set this as a field in the returned struct, as well as
+        // pass it to the macros.
+        let registry = Registry::new();
+
         let metrics = Self {
+            registry: registry.clone(),
+
             coredumpsize_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_coredumpsize_bytes",
                 "core dump size, in bytes",
                 &["name"]
             ).unwrap(),
 
             cputime_seconds_total: register_int_counter_vec!(
+                registry,
                 "jail_cputime_seconds_total",
                 "CPU time, in seconds",
                 &["name"]
             ).unwrap(),
 
             datasize_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_datasize_bytes",
                 "data size, in bytes",
                 &["name"]
             ).unwrap(),
 
             maxproc: register_int_gauge_vec!(
+                registry,
                 "jail_maxproc",
                 "number of processes",
                 &["name"]
             ).unwrap(),
 
             memorylocked_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_memorylocked_bytes",
                 "locked memory, in bytes",
                 &["name"]
             ).unwrap(),
 
             memoryuse_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_memoryuse_bytes",
                 "resident set size, in bytes",
                 &["name"]
             ).unwrap(),
 
             msgqqueued: register_int_gauge_vec!(
+                registry,
                 "jail_msgqqueued",
                 "number of queued SysV messages",
                 &["name"]
             ).unwrap(),
 
             msgqsize_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_msgqsize_bytes",
                 "SysV message queue size, in bytes",
                 &["name"]
             ).unwrap(),
 
             nmsgq: register_int_gauge_vec!(
+                registry,
                 "jail_nmsgq",
                 "number of SysV message queues",
                 &["name"]
             ).unwrap(),
 
             nsem: register_int_gauge_vec!(
+                registry,
                 "jail_nsem",
                 "number of SysV semaphores",
                 &["name"]
             ).unwrap(),
 
             nsemop: register_int_gauge_vec!(
+                registry,
                 "jail_nsemop",
                 "number of SysV semaphores modified in a single semop(2) call",
                 &["name"]
             ).unwrap(),
 
             nshm: register_int_gauge_vec!(
+                registry,
                 "jail_nshm",
                 "number of SysV shared memory segments",
                 &["name"]
             ).unwrap(),
 
             nthr: register_int_gauge_vec!(
+                registry,
                 "jail_nthr",
                 "number of threads",
                 &["name"]
             ).unwrap(),
 
             openfiles: register_int_gauge_vec!(
+                registry,
                 "jail_openfiles",
                 "file descriptor table size",
                 &["name"]
             ).unwrap(),
 
             pcpu_used: register_int_gauge_vec!(
+                registry,
                 "jail_pcpu_used",
                 "%CPU, in percents of a single CPU core",
                 &["name"]
             ).unwrap(),
 
             pseudoterminals: register_int_gauge_vec!(
+                registry,
                 "jail_pseudoterminals",
                 "number of PTYs",
                 &["name"]
             ).unwrap(),
 
             readbps: register_int_gauge_vec!(
+                registry,
                 "jail_readbps",
                 "filesystem reads, in bytes per second",
                 &["name"]
             ).unwrap(),
 
             readiops: register_int_gauge_vec!(
+                registry,
                 "jail_readiops",
                 "filesystem reads, in operations per second",
                 &["name"]
             ).unwrap(),
 
             shmsize_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_shmsize_bytes",
                 "SysV shared memory size, in bytes",
                 &["name"]
             ).unwrap(),
 
             stacksize_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_stacksize_bytes",
                 "stack size, in bytes",
                 &["name"]
             ).unwrap(),
 
             swapuse_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_swapuse_bytes",
                 "swap space that may be reserved or used, in bytes",
                 &["name"]
             ).unwrap(),
 
             vmemoryuse_bytes: register_int_gauge_vec!(
+                registry,
                 "jail_vmemoryuse_bytes",
                 "address space limit, in bytes",
                 &["name"]
             ).unwrap(),
 
             wallclock_seconds_total: register_int_counter_vec!(
+                registry,
                 "jail_wallclock_seconds_total",
                 "wallclock time, in seconds",
                 &["name"]
             ).unwrap(),
 
             writebps: register_int_gauge_vec!(
+                registry,
                 "jail_writebps",
                 "filesystem writes, in bytes per second",
                 &["name"]
             ).unwrap(),
 
             writeiops: register_int_gauge_vec!(
+                registry,
                 "jail_writeiops",
                 "filesystem writes, in operations per second",
                 &["name"]
@@ -246,6 +275,7 @@ impl Default for Exporter {
 
             // Metrics created by the exporter
             build_info: register_int_gauge_vec!(
+                registry,
                 "jail_exporter_build_info",
                 "A metric with a constant '1' value labelled by version \
                  from which jail_exporter was built",
@@ -253,12 +283,14 @@ impl Default for Exporter {
             ).unwrap(),
 
             jail_id: register_int_gauge_vec!(
+                registry,
                 "jail_id",
                 "ID of the named jail.",
                 &["name"]
             ).unwrap(),
 
             jail_total: register_int_gauge!(
+                registry,
                 "jail_num",
                 "Current number of running jails."
             ).unwrap(),
@@ -310,7 +342,7 @@ impl Exporter {
         self.get_jail_metrics()?;
 
         // Gather them
-        let metric_families = prometheus::gather();
+        let metric_families = self.registry.gather();
 
         // Collect them in a buffer
         let mut buffer = vec![];
@@ -573,24 +605,16 @@ impl Exporter {
 mod tests {
     // We need some of the main functions.
     use super::*;
-    use lazy_static::lazy_static;
     use pretty_assertions::assert_eq;
-
-    // We have to register this here as the Prometheus library maintains a
-    // global registry. Trying to Metrics::new() in each test will result
-    // in errors as duplicate time series will be created.
-    lazy_static! {
-        static ref TEST_EXPORTER: Exporter = Exporter::new();
-    }
 
     #[test]
     fn cputime_counter_increase() {
         let names = ["test", "test2"];
-
         let mut hash = Rusage::new();
+        let exporter = Exporter::new();
 
         for name in names.iter() {
-            let series = TEST_EXPORTER
+            let series = exporter
                 .cputime_seconds_total
                 .with_label_values(&[&name]);
 
@@ -599,39 +623,69 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::CpuTime, 1000);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::CpuTime, 1020);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::CpuTime, 10);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::CpuTime, 50);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::CpuTime, 50);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
 
     #[test]
+    fn deadjails_ok() {
+        let names = ["test_a", "test_b", "test_c"];
+        let mut hash = Rusage::new();
+        let exporter = Exporter::new();
+
+        // Create some metrics for test_{a,b,c}.
+        for name in names.iter() {
+            let series = exporter
+                .cputime_seconds_total
+                .with_label_values(&[&name]);
+
+            hash.insert(rctl::Resource::CpuTime, 1000);
+            exporter.process_rusage(&name, &hash);
+        }
+
+        // Now, create a seen array containing only a and c.
+        let mut seen = SeenJails::new();
+        seen.push("test_a".into());
+        seen.push("test_c".into());
+
+        // Workout which jails are dead, it should be b.
+        let dead = exporter.dead_jails(seen);
+        let ok: DeadJails = vec![
+            "test_b".into(),
+        ];
+
+        assert_eq!(ok, dead);
+    }
+
+    #[test]
     fn wallclock_counter_increase() {
         let names = ["test", "test2"];
-
         let mut hash = Rusage::new();
+        let exporter = Exporter::new();
 
         for name in names.iter() {
-            let series = TEST_EXPORTER
+            let series = exporter
                 .wallclock_seconds_total
                 .with_label_values(&[&name]);
 
@@ -640,27 +694,27 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(rctl::Resource::Wallclock, 1000);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(rctl::Resource::Wallclock, 1020);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::Wallclock, 10);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1030);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::Wallclock, 50);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::Wallclock, 50);
-            TEST_EXPORTER.process_rusage(&name, &hash);
+            exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1070);
         }
     }
