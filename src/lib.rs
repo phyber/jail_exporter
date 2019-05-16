@@ -652,7 +652,7 @@ mod tests {
     }
 
     #[test]
-    fn deadjails_ok() {
+    fn dead_jails_ok() {
         let names = ["test_a", "test_b", "test_c"];
         let mut hash = Rusage::new();
         let exporter = Exporter::new();
@@ -675,6 +675,43 @@ mod tests {
         ];
 
         assert_eq!(ok, dead);
+    }
+
+    #[test]
+    fn reap_ok() {
+        let names = ["test_a", "test_b", "test_c"];
+        let mut hash = Rusage::new();
+        let exporter = Exporter::new();
+
+        // Create some metrics for test_{a,b,c}.
+        for name in names.iter() {
+            hash.insert(rctl::Resource::CpuTime, 1000);
+            exporter.process_rusage(&name, &hash);
+        }
+
+        // Now, create a seen array containing only a and c.
+        let mut seen = SeenJails::new();
+        seen.push("test_a".into());
+        seen.push("test_c".into());
+
+        let dead_jail = "test_b";
+        let series = exporter
+            .cputime_seconds_total
+            .with_label_values(&[dead_jail]);
+
+        assert_eq!(series.get(), 1000);
+
+        // Workout which jails are dead, it should be b.
+        let dead = exporter.dead_jails(seen);
+        exporter.reap(dead);
+
+        // We need a new handle on this. Using the old one will present the old
+        // value.
+        let series = exporter
+            .cputime_seconds_total
+            .with_label_values(&[dead_jail]);
+
+        assert_eq!(series.get(), 0);
     }
 
     #[test]
