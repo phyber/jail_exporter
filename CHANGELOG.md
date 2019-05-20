@@ -9,6 +9,9 @@
     reliable.
   - Implement local macros for registering metrics with local registry.
   - Simplify `dead_jails` method in `Exporter` and add test.
+  - Add test for `reap` method in `Exporter`.
+  - Add locking around environment tests to fix race conditions.
+  - Improve CLI testing by passing our own argv in a few cases.
 
 ## v0.9.7
 

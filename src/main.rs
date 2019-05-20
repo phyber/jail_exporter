@@ -179,14 +179,24 @@ fn main() -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lazy_static::lazy_static;
     use pretty_assertions::assert_eq;
     use std::env;
     use std::panic;
+    use std::sync::Mutex;
+
+    lazy_static! {
+        // Used during env_tests
+        static ref LOCK: Mutex<i8> = Mutex::new(0);
+    }
 
     // Wraps setting and unsetting of environment variables
-    fn env_test<T>(key: &str, var: &str, test: T)
-    -> ()
+    fn env_test<T>(key: &str, var: &str, test: T) -> ()
     where T: FnOnce() -> () + panic::UnwindSafe {
+        // This ensures that only one test can be manipulating the environment
+        // at a time.
+        let _locked = LOCK.lock().unwrap();
+
         env::set_var(key, var);
 
         let result = panic::catch_unwind(|| {
@@ -200,7 +210,8 @@ mod tests {
 
     #[test]
     fn default_web_listen_address() {
-        let matches = parse_args();
+        let argv = vec!["jail_exporter"];
+        let matches = create_app().get_matches_from(argv);
         let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
 
         assert_eq!(listen_address, Some("127.0.0.1:9452"));
@@ -208,7 +219,8 @@ mod tests {
 
     #[test]
     fn default_web_telemetry_path() {
-        let matches = parse_args();
+        let argv = vec!["jail_exporter"];
+        let matches = create_app().get_matches_from(argv);
         let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
 
         assert_eq!(telemetry_path, Some("/metrics"));
@@ -273,7 +285,8 @@ mod tests {
     #[test]
     fn env_set_web_listen_address() {
         env_test("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
-            let matches = parse_args();
+            let argv = vec!["jail_exporter"];
+            let matches = create_app().get_matches_from(argv);
             let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
 
             assert_eq!(listen_address, Some("127.0.1.2:9452"));
@@ -283,7 +296,8 @@ mod tests {
     #[test]
     fn env_set_web_telemetry_path() {
         env_test("JAIL_EXPORTER_WEB_TELEMETRY_PATH", "/test", || {
-            let matches = parse_args();
+            let argv = vec!["jail_exporter"];
+            let matches = create_app().get_matches_from(argv);
             let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
 
             assert_eq!(telemetry_path, Some("/test"));
