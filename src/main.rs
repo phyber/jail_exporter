@@ -318,10 +318,10 @@ mod tests {
         users.add_user(user);
         users.add_group(Group::new(0, "root"));
 
-        let is_root = is_running_as_root(&mut users);
+        let is_root = is_running_as_root(&mut users).unwrap();
         let ok = ();
 
-        assert!(is_root.is_ok(), ok);
+        assert_eq!(is_root, ok);
     }
 
     #[test]
@@ -339,9 +339,8 @@ mod tests {
         users.add_group(Group::new(10000, "ferris"));
 
         let is_root = is_running_as_root(&mut users);
-        let err = Error::NotRunningAsRoot;
 
-        assert!(is_root.is_err(), err);
+        assert!(is_root.is_err());
     }
 
     #[test]
