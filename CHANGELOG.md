@@ -12,6 +12,7 @@
   - Add test for `reap` method in `Exporter`.
   - Add locking around environment tests to fix race conditions.
   - Improve CLI testing by passing our own argv in a few cases.
+  - Use [mime] crate for ContentTypes in HTTP handlers.
 
 ## v0.9.7
 
@@ -86,6 +87,7 @@
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
 [lazy_static]: https://crates.io/crates/lazy_static
+[mime]: https://crates.io/crates/mime
 [pretty-assertions]: https://crates.io/crates/pretty-assertions
 [prometheus]: https://crates.io/crates/prometheus
 [rctl]: https://crates.io/crates/rctl
