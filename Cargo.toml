@@ -35,7 +35,7 @@ features = ["vec_map"]
 
 [dependencies.prometheus]
 version = "0.6"
-#default-features = false
+default-features = false
 
 [dependencies.users]
 version = "0.9"
