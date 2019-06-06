@@ -639,6 +639,7 @@ dependencies = [
  "jail 0.0.7-alpha.0 (git+https://github.com/fubarnetes/libjail-rs.git?branch=dev)",
  "lazy_static 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mime 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "pretty_assertions 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prometheus 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rctl 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",

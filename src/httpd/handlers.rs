@@ -10,6 +10,10 @@ use actix_web::{
 };
 use actix_web::http::header::CONTENT_TYPE;
 use log::debug;
+use mime::{
+    TEXT_HTML_UTF_8,
+    TEXT_PLAIN_UTF_8,
+};
 
 use super::AppState;
 
@@ -21,7 +25,7 @@ pub(in crate::httpd) fn index(req: &HttpRequest<AppState>) -> HttpResponse {
     let body = &(req.state().index_page);
 
     HttpResponse::Ok()
-        .header(CONTENT_TYPE, "text/html; charset=utf-8")
+        .header(CONTENT_TYPE, TEXT_HTML_UTF_8)
         .body(body)
 }
 
@@ -37,12 +41,12 @@ pub(in crate::httpd) fn metrics(req: &HttpRequest<AppState>) -> HttpResponse {
     match exporter.export() {
         Ok(o) => {
             HttpResponse::Ok()
-                .header(CONTENT_TYPE, "text/plain; charset=utf-8")
+                .header(CONTENT_TYPE, TEXT_PLAIN_UTF_8)
                 .body(o)
         },
         Err(e) => {
             HttpResponse::InternalServerError()
-                .header(CONTENT_TYPE, "text/plain; charset=utf-8")
+                .header(CONTENT_TYPE, TEXT_PLAIN_UTF_8)
                 .body(format!("{}", e))
         },
     }
@@ -78,8 +82,12 @@ mod tests {
         assert_eq!(response.status(), http::StatusCode::OK);
 
         let headers = response.headers();
-        let content_type = headers.get(CONTENT_TYPE).unwrap();
-        assert_eq!(content_type, "text/html; charset=utf-8");
+        let content_type = headers
+            .get(CONTENT_TYPE)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert_eq!(content_type, TEXT_HTML_UTF_8);
 
         let bytes = server.execute(response.body()).unwrap();
         let body = str::from_utf8(&bytes).unwrap();
