@@ -82,7 +82,11 @@ mod tests {
         assert_eq!(response.status(), http::StatusCode::OK);
 
         let headers = response.headers();
-        let content_type = headers.get(CONTENT_TYPE).unwrap();
+        let content_type = headers
+            .get(CONTENT_TYPE)
+            .unwrap()
+            .to_str()
+            .unwrap();
         assert_eq!(content_type, TEXT_HTML_UTF_8);
 
         let bytes = server.execute(response.body()).unwrap();
