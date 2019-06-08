@@ -1,5 +1,10 @@
 # `jail_exporter`
 
+## v0.9.9
+
+  - No code changes
+  - Changes to `Cargo.toml` for publishing on [crates.io].
+
 ## v0.9.8
 
   - Added [pretty-assertions] for tests.
@@ -84,6 +89,7 @@
 [actix-web]: https://crates.io/crates/actix-web
 [askama]: https://crates.io/crates/askama
 [clippy]: https://github.com/rust-lang/rust-clippy
+[crates.io]: https://crates.io/
 [failure]: https://crates.io/crates/failure
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
