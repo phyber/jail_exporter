@@ -5,6 +5,8 @@ description = "Prometheus exporter for FreeBSD jails."
 edition = "2018"
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/phyber/jail_exporter"
+repository = "https://github.com/phyber/jail_exporter.git"
 authors = [
     "David O'Rourke <david.orourke@gmail.com>",
 ]
@@ -14,6 +16,15 @@ keywords = [
     "jail",
     "metrics",
     "prometheus",
+]
+exclude = [
+    ".cirrus.yml",
+    ".editorconfig",
+    ".gitignore",
+    ".rustfmt.toml",
+    "Makefile",
+    "man/jail_exporter.8",
+    "rc.d/jail_exporter",
 ]
 
 [dependencies]
