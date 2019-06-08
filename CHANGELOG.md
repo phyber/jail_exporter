@@ -1,6 +1,6 @@
 # `jail_exporter`
 
-## UPCOMING
+## v0.9.8
 
   - Added [pretty-assertions] for tests.
   - Use [Cirrus CI] to run `cargo test` on push.
@@ -13,6 +13,7 @@
   - Add locking around environment tests to fix race conditions.
   - Improve CLI testing by passing our own argv in a few cases.
   - Use [mime] crate for ContentTypes in HTTP handlers.
+  - Update [jail] to 0.1.0.
 
 ## v0.9.7
 
