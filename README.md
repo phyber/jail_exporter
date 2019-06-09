@@ -58,7 +58,7 @@ usage for jails that have disappeared, you may wish to make use of the
 Prometheus [recording rules] to track total resource usage across all jails.
 
 The exporter will not daemonize itself, instead, it is recommended to use a
-tool such as [`daemon(8)`].  See the included [`rc.d/jail_exporter`] for an
+tool such as [`daemon(8)`].  See the included [`rc.d/jail_exporter.in`] for an
 example of this.
 
 No port is available yet, but it should happen soon.
@@ -128,6 +128,6 @@ Metric                | Description
 [recording rules]: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
 [`daemon(8)`]: https://www.freebsd.org/cgi/man.cgi?query=daemon&sektion=8
 [`make(1)`]: https://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
-[`rc.d/jail_exporter`]: rc.d/jail_exporter
+[`rc.d/jail_exporter.in`]: rc.d/jail_exporter.in
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2

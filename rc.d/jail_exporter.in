@@ -34,21 +34,21 @@ load_rc_config $name
 
 pidfile="/var/run/${name}.pid"
 command="/usr/sbin/daemon"
-procname="/usr/local/bin/${name}"
+procname="%%PREFIX%%/sbin/${name}"
 command_args="-p ${pidfile} -m 3 -T ${name} \
               /usr/bin/env ${procname} \
-              --web.listen-address ${jail_exporter_listen_address} \
-              --web.telemetry-path ${jail_exporter_telemetry_path} \
+              --web.listen-address='${jail_exporter_listen_address}' \
+              --web.telemetry-path='${jail_exporter_telemetry_path}' \
               ${jail_exporter_args}"
 
-start_precmd=jail_exporter_startprecmd
+start_precmd=jail_exporter_start_precmd
 
-jail_exporter_startprecmd()
-{
+jail_exporter_start_precmd() {
     if [ ! -e ${pidfile} ]; then
         install \
             -o 'root' \
-            -g 'root' \
+            -g 'wheel' \
+            -m 0640 \
             /dev/null ${pidfile};
     fi
 }
