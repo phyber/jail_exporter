@@ -1,8 +1,17 @@
 # `jail_exporter`
 
+## v0.9.10
+
+  - No code changes.
+  - Added `exporter_build_info` metric to man page.
+  - `rc.d` script is now a `.in` file, suitable for use in ports.
+  - Fixes to `rc.d` script.
+  - Tighten permissions on `.pid` file in `rc.d` script, matching permission
+    of other daemons that run as root.
+
 ## v0.9.9
 
-  - No code changes
+  - No code changes.
   - Changes to `Cargo.toml` for publishing on [crates.io].
 
 ## v0.9.8
