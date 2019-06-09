@@ -48,7 +48,7 @@ jail_exporter_start_precmd() {
         install \
             -o 'root' \
             -g 'wheel' \
-            -m 0640 \
+            -m 0600 \
             /dev/null ${pidfile};
     fi
 }
