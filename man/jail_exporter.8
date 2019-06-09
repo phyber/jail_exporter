@@ -56,22 +56,28 @@ After setting this, a reboot will be required to enable RACCT/RCTL.
 .Sh METRICS
 The metrics that are exported are those listed in the RESOURCES section of
 .Xr rctl 8 ,
-and two additional metrics:
+and the following additional metrics:
 .Bl -tag -width num
+.It Va exporter_build_info
+The version of the currently running exporter.
+The version is given in the
+.Dq version
+label on the metric.
+Does not possess a
+.Dq name
+label.
 .It Va id
 The ID of the named jail
 .It Va num
 The current number of jails running.
 Does not possess a
 .Dq name
-label as it is just a simple gauge representing the number of running jails.
+label.
 .El
 .Pp
 All metrics are prefixed with the string
 .Dq jail_
-and in all cases except for the
-.Dq num
-metric (as mentioned above) possess a
+and in most cases (except for the metrics mentioned above) possess a
 .Dq name
 label containing the name of the jail.
 An example of a metric output by the exporter would be:
