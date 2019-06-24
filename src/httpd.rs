@@ -6,8 +6,8 @@
 #![forbid(unsafe_code)]
 use crate::errors::Error;
 use actix_web::{
-    http,
-    server,
+    web,
+    HttpServer,
 };
 use actix_web::middleware::Logger;
 use log::{
@@ -86,32 +86,28 @@ impl Server {
                 index_page: index_page.clone(),
             };
 
-            actix_web::App::with_state(state)
+            actix_web::App::new()
+                .data(state)
                 // Enable request logging
-                .middleware(Logger::default())
-
-                // Root of HTTP server. Provides a basic index page and link to
-                // the metrics page.
-                .resource("/", |r| r.method(http::Method::GET).f(index))
-
+                .wrap(Logger::default())
+                // Root of HTTP server. Provides a basic index page and
+                // link to the metrics page.
+                .route("/", web::get().to(index))
                 // Path serving up the metrics.
-                .resource(&telemetry_path, |r| {
-                    r.method(http::Method::GET).f(metrics)
-                })
+                .route(&telemetry_path, web::get().to(metrics))
         };
 
         // Create the server
         debug!("Attempting to bind to: {}", bind_address);
-        let server = match server::new(app).bind(&bind_address) {
-            Ok(s)  => Ok(s),
-            Err(e) => {
-                Err(Error::BindAddress(format!("{}: {}", bind_address, e)))
-            },
-        }?;
+        let server = HttpServer::new(app)
+            .bind(&bind_address)
+            .map_err(|e| {
+                Error::BindAddress(format!("{}: {}", bind_address, e))
+            })?;
 
         // Run it!
         info!("Starting HTTP server on {}", bind_address);
-        server.run();
+        server.run()?;
 
         Ok(())
     }

@@ -22,6 +22,10 @@ pub enum Error {
     #[fail(display = "failed to bind to {}", _0)]
     BindAddress(String),
 
+    /// Raised if an io::Error occurs
+    #[fail(display = "std::io::Error")]
+    IoError(#[fail(cause)] std::io::Error),
+
     /// Raised if there are errors originating within the `jail` crate.
     #[fail(display = "could not get jail name")]
     JailError(#[fail(cause)] jail::JailError),
@@ -48,6 +52,12 @@ pub enum Error {
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Error::IoError(e)
     }
 }
 
