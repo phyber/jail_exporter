@@ -3,6 +3,7 @@
 ## UPCOMING
 
   - Update to [prometheus] 0.7.0.
+  - Update to [actix-web] 1.0.2.
 
 ## v0.9.10
 
