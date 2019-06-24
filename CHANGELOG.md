@@ -4,6 +4,7 @@
 
   - Update to [prometheus] 0.7.0.
   - Update to [actix-web] 1.0.2.
+  - Bump minimum version of Rust to 1.34.0 in README, due to actix-web update.
 
 ## v0.9.10
 
