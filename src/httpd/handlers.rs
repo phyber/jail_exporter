@@ -59,8 +59,8 @@ mod tests {
     };
     use actix_http::HttpService;
     use actix_http_test::TestServer;
-    use bytes::Bytes;
     use pretty_assertions::assert_eq;
+    use std::str;
 
     #[test]
     fn index_ok() {
@@ -91,6 +91,7 @@ mod tests {
         assert_eq!(content_type, TEXT_HTML_UTF_8);
 
         let bytes = server.block_on(response.body()).unwrap();
-        assert_eq!(bytes, Bytes::from_static(b"Test Body").as_ref());
+        let body = str::from_utf8(&bytes).unwrap();
+        assert_eq!(body, "Test Body");
     }
 }
