@@ -1,5 +1,9 @@
 # `jail_exporter`
 
+## UPCOMING
+
+  - Update to [prometheus] 0.7.0.
+
 ## v0.9.10
 
   - No code changes.

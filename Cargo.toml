@@ -49,7 +49,7 @@ version = "0.3"
 default-features = false
 
 [dependencies.prometheus]
-version = "0.6"
+version = "0.7"
 default-features = false
 
 [dependencies.users]
