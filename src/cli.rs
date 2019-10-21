@@ -21,9 +21,18 @@ fn is_valid_filesystem_path(s: String) -> Result<(), String> {
     // Get a Path from our string and start checking
     let path = Path::new(&s);
 
+    // - is special and is a request for us to output to stdout
+    if path == Path::new("-") {
+        return Ok(())
+    }
+
     // We only take absolute paths
     if !path.is_absolute() {
         return Err("output.file-path only accepts absolute paths".to_owned());
+    }
+
+    if path == Path::new("/") {
+        return Err("output.file-path cannot be /".to_owned());
     }
 
     // We can't write to a directory
@@ -303,6 +312,18 @@ mod tests {
     #[test]
     fn is_valid_filesystem_path_ok() {
         let res = is_valid_filesystem_path("/tmp/metrics.prom".into());
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_root() {
+        let res = is_valid_filesystem_path("/".into());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_stdout() {
+        let res = is_valid_filesystem_path("-".into());
         assert!(res.is_ok());
     }
 

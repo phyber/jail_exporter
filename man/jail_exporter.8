@@ -33,6 +33,11 @@ is given a
 it will exit immediately after writing the metrics and the HTTPd will not be
 started.
 This option is designed to be paired with the Node Exporter Textfile Collector.
+Giving a
+.Ar path
+of
+.Dq Cm -
+will output collected metrics to stdout.
 .It Fl Fl web.listen-address= Ns Ar addr:port
 Specify an
 .Ar addr:port
