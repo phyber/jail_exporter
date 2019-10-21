@@ -36,6 +36,7 @@ line argument.
 
 Argument             | Default          | Purpose
 ---------------------|------------------|--------
+`output.file-path`   | N/A              | Output metrics to a file instead of running an HTTPd.
 `web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
 `web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
 
@@ -43,6 +44,7 @@ Argument             | Default          | Purpose
 
 Variable                           | Equivalent Argument
 -----------------------------------|--------------------
+`JAIL_EXPORTER_OUTPUT_FILE_PATH`   | `output.file-path`
 `JAIL_EXPORTER_WEB_LISTEN_ADDRESS` | `web.listen-address`
 `JAIL_EXPORTER_WEB_TELEMETRY_PATH` | `web.telemetry-path`
 
@@ -57,9 +59,14 @@ time series that the exporter exports.  If you wish to account for resource
 usage for jails that have disappeared, you may wish to make use of the
 Prometheus [recording rules] to track total resource usage across all jails.
 
-The exporter will not daemonize itself, instead, it is recommended to use a
-tool such as [`daemon(8)`].  See the included [`rc.d/jail_exporter.in`] for an
-example of this.
+The exporter can be run in two different ways. The default way is to run a
+persistent network daemon for Prometheus to scrape. The exporter will not
+daemonize itself, instead, it is recommended to use a tool such as
+[`daemon(8)`].  See the included [`rc.d/jail_exporter.in`] for an example of
+this.
+
+The second way is to simply output the scraped metrics to a text file. This
+mode is designed to be paired with the [`node_exporter`] [Textfile Collector].
 
 No port is available yet, but it should happen soon.
 
@@ -122,12 +129,14 @@ Metric                | Description
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
 [Rust]: https://www.rust-lang.org/
+[Textfile Collector]: https://github.com/prometheus/node_exporter#textfile-collector
 [jail]: https://crates.io/crates/jail
 [metric and label naming]: https://prometheus.io/docs/practices/naming/
 [rctl]: https://crates.io/crates/rctl
 [recording rules]: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
 [`daemon(8)`]: https://www.freebsd.org/cgi/man.cgi?query=daemon&sektion=8
 [`make(1)`]: https://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
+[`node_exporter`]: https://github.com/prometheus/node_exporter
 [`rc.d/jail_exporter.in`]: rc.d/jail_exporter.in
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
