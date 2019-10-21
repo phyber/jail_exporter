@@ -22,7 +22,7 @@ The options are as follows:
 Prints help information
 .It Fl V , Fl Fl version
 Prints version information
-.It Fl Fl output.file-path= Ns Ar path
+.It Fl Fl output.file-path Ns = Ns Ar path
 Specify a
 .Ar path
 to write collected metrics to.
@@ -38,7 +38,7 @@ Giving a
 of
 .Dq Cm -
 will output collected metrics to stdout.
-.It Fl Fl web.listen-address= Ns Ar addr:port
+.It Fl Fl web.listen-address Ns = Ns Ar addr:port
 Specify an
 .Ar addr:port
 on which to expose the metrics and web interface.
@@ -48,7 +48,7 @@ If specifying an IPv6
 .Ar addr:port
 the address portion should be enclosed within square brackets, for example:
 .Dq Cm [::1]:9452 .
-.It Fl Fl web.telemetry-path= Ns Ar path
+.It Fl Fl web.telemetry-path Ns = Ns Ar path
 Specify a
 .Ar path
 under which to expose the metrics.
