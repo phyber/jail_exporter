@@ -18,21 +18,17 @@ use std::str::FromStr;
 fn is_valid_filesystem_path(s: String) -> Result<(), String> {
     debug!("Ensuring that output.file-path is valid");
 
-    // Get a Path from our string and start checking
-    let path = Path::new(&s);
-
     // - is special and is a request for us to output to stdout
-    if path == Path::new("-") {
+    if s == "-" {
         return Ok(())
     }
+
+    // Get a Path from our string and start checking
+    let path = Path::new(&s);
 
     // We only take absolute paths
     if !path.is_absolute() {
         return Err("output.file-path only accepts absolute paths".to_owned());
-    }
-
-    if path == Path::new("/") {
-        return Err("output.file-path cannot be /".to_owned());
     }
 
     // We can't write to a directory
