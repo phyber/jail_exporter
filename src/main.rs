@@ -71,12 +71,7 @@ fn main() -> Result<(), Error> {
 
     // If an output file was specified, we do that. We will never launch the
     // HTTPd when we're passed an OUTPUT_FILE_PATH.
-    if matches.is_present("OUTPUT_FILE_PATH") {
-        let output_path = match matches.value_of("OUTPUT_FILE_PATH") {
-            None    => Err(Error::ArgNotSet("output.file-path".to_owned())),
-            Some(s) => Ok(s),
-        }?;
-
+    if let Some(output_path) = matches.value_of("OUTPUT_FILE_PATH") {
         debug!("output.file-path: {}", output_path);
 
         let exporter = FileExporter::new(output_path);
