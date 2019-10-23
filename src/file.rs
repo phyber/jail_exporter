@@ -1,5 +1,6 @@
 // File exporter
-
+#![forbid(unsafe_code)]
+#![forbid(missing_docs)]
 use crate::errors::Error;
 use jail_exporter::Exporter;
 use std::io::{
