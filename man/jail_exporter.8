@@ -10,6 +10,7 @@
 .Op Fl Fl help
 .Op Fl Fl version
 .Nm
+.Op Fl Fl output.file-path Ns = Ns Ar path
 .Op Fl Fl web.listen-address Ns = Ns Ar addr:port
 .Op Fl Fl web.telemetry-path Ns = Ns Ar path
 .Sh DESCRIPTION
@@ -21,7 +22,23 @@ The options are as follows:
 Prints help information
 .It Fl V , Fl Fl version
 Prints version information
-.It Fl Fl web.listen-address= Ns Ar addr:port
+.It Fl Fl output.file-path Ns = Ns Ar path
+Specify a
+.Ar path
+to write collected metrics to.
+When
+.Nm
+is given a
+.Ar path
+it will exit immediately after writing the metrics and the HTTPd will not be
+started.
+This option is designed to be paired with the Node Exporter Textfile Collector.
+Giving a
+.Ar path
+of
+.Dq Cm -
+will output collected metrics to stdout.
+.It Fl Fl web.listen-address Ns = Ns Ar addr:port
 Specify an
 .Ar addr:port
 on which to expose the metrics and web interface.
@@ -31,7 +48,7 @@ If specifying an IPv6
 .Ar addr:port
 the address portion should be enclosed within square brackets, for example:
 .Dq Cm [::1]:9452 .
-.It Fl Fl web.telemetry-path= Ns Ar path
+.It Fl Fl web.telemetry-path Ns = Ns Ar path
 Specify a
 .Ar path
 under which to expose the metrics.
@@ -92,6 +109,10 @@ can also take its configuration from environment variables.
 In the event that both command line options and environment variables are
 specified, the command line options will win.
 .Bl -tag -width JAIL_EXPORTER_WEB_LISTEN_ADDRESS
+.It Ev JAIL_EXPORTER_OUTPUT_FILE_PATH
+is equivalent to setting the
+.Fl Fl output.file-path
+option.
 .It Ev JAIL_EXPORTER_WEB_LISTEN_ADDRESS
 is equivalent to setting the
 .Fl Fl web.listen-address

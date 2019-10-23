@@ -3,8 +3,12 @@
 ## UPCOMING
 
   - Update to [prometheus] 0.7.0.
-  - Update to [actix-web] 1.0.2.
+  - Update to [actix-web] 1.0.8.
+  - Update to [jail] 0.1.1.
   - Bump minimum version of Rust to 1.34.0 in README, due to actix-web update.
+  - Add `output.file-path` argument which allows writing metrics to either a
+    file or stdout.
+  - Internals: Move CLI parsing functions to `cli.rs`.
 
 ## v0.9.10
 

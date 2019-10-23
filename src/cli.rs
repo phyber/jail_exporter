@@ -11,7 +11,57 @@ use clap::{
 };
 use log::debug;
 use std::net::SocketAddr;
+use std::path::Path;
 use std::str::FromStr;
+
+// Basic checks for valid filesystem path
+fn is_valid_filesystem_path(s: String) -> Result<(), String> {
+    debug!("Ensuring that output.file-path is valid");
+
+    // - is special and is a request for us to output to stdout
+    if s == "-" {
+        return Ok(())
+    }
+
+    // Get a Path from our string and start checking
+    let path = Path::new(&s);
+
+    // We only take absolute paths
+    if !path.is_absolute() {
+        return Err("output.file-path only accepts absolute paths".to_owned());
+    }
+
+    // We can't write to a directory
+    if path.is_dir() {
+        return Err("output.file-path must not point at a directory".to_owned());
+    }
+
+    // Node Exporter textfiles must end with .prom
+    if let Some(ext) = path.extension() {
+        // Got an extension, ensure that it's .prom
+        if ext != "prom" {
+            return Err("output.file-path must have .prom extension".to_owned());
+        }
+    }
+    else {
+        // Didn't find an extension at all
+        return Err("output.file-path must have .prom extension".to_owned());
+    }
+
+    // Check that the directory exists
+    if let Some(dir) = path.parent() {
+        // Got a parent directory, ensure it exists
+        if !dir.is_dir() {
+            return Err("output.file-path directory must exist".to_owned());
+        }
+    }
+    else {
+        // Didn't get a parent directory at all
+        return Err("output.file-path directory must exist".to_owned());
+    }
+
+    Ok(())
+}
 
 // Used as a validator for the argument parsing.
 fn is_valid_socket_addr(s: String) -> Result<(), String> {
@@ -56,6 +106,16 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
         .author(crate_authors!())
         .about(crate_description!())
         .set_term_width(80)
+        .arg(
+            clap::Arg::with_name("OUTPUT_FILE_PATH")
+                .env("JAIL_EXPORTER_OUTPUT_FILE_PATH")
+                .hide_env_values(true)
+                .long("output.file-path")
+                .value_name("FILE")
+                .help("File to output metrics to.")
+                .takes_value(true)
+                .validator(is_valid_filesystem_path)
+        )
         .arg(
             clap::Arg::with_name("WEB_LISTEN_ADDRESS")
                 .env("JAIL_EXPORTER_WEB_LISTEN_ADDRESS")
@@ -213,6 +273,54 @@ mod tests {
 
             assert_eq!(telemetry_path, Some("/test"));
         });
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_absolute_path() {
+        let res = is_valid_filesystem_path("tmp/metrics.prom".into());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_bad_extension() {
+        let res = is_valid_filesystem_path("/tmp/metrics.pram".into());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_bad_parent_dir() {
+        let res = is_valid_filesystem_path("/tmp/nope/metrics.prom".into());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_directory() {
+        let res = is_valid_filesystem_path("/tmp".into());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_no_extension() {
+        let res = is_valid_filesystem_path("/tmp/metrics".into());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_ok() {
+        let res = is_valid_filesystem_path("/tmp/metrics.prom".into());
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_root() {
+        let res = is_valid_filesystem_path("/".into());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn is_valid_filesystem_path_stdout() {
+        let res = is_valid_filesystem_path("-".into());
+        assert!(res.is_ok());
     }
 
     #[test]

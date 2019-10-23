@@ -34,6 +34,10 @@ pub enum Error {
     #[fail(display = "jail_exporter must be run as root")]
     NotRunningAsRoot,
 
+    /// Raised when issues occur within the file exporter
+    #[fail(display = "error occurred while persisting metrics")]
+    PersistError(#[fail(cause)] tempfile::PersistError),
+
     /// Raised if there are errors originating within the `prometheus` crate.
     #[fail(display = "error within Prometheus library")]
     PrometheusError(#[fail(cause)] prometheus::Error),
@@ -45,6 +49,10 @@ pub enum Error {
     /// Raised if an `askama` template fails to render.
     #[fail(display = "Failed to render template: {}", _0)]
     RenderTemplate(String),
+
+    /// Raised if there's an issue converting from UTF-8 to String
+    #[fail(display = "Failed to convert UTF-8 to String")]
+    Utf8Error(#[fail(cause)] std::string::FromUtf8Error),
 }
 
 // Implements basic output, allowing the above display strings to be used when
@@ -70,5 +78,17 @@ impl From<jail::JailError> for Error {
 impl From<prometheus::Error> for Error {
     fn from(e: prometheus::Error) -> Self {
         Error::PrometheusError(e)
+    }
+}
+
+impl From<tempfile::PersistError> for Error {
+    fn from(e: tempfile::PersistError) -> Self {
+        Error::PersistError(e)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(e: std::string::FromUtf8Error) -> Self {
+        Error::Utf8Error(e)
     }
 }
