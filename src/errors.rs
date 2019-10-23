@@ -22,10 +22,6 @@ pub enum Error {
     #[fail(display = "failed to bind to {}", _0)]
     BindAddress(String),
 
-    /// Raised when issues occur within the file exporter
-    #[fail(display = "error occurred while persisting metrics")]
-    PersistError(#[fail(cause)] tempfile::PersistError),
-
     /// Raised if an io::Error occurs
     #[fail(display = "std::io::Error")]
     IoError(#[fail(cause)] std::io::Error),
@@ -37,6 +33,10 @@ pub enum Error {
     /// Raised if the jail_exporter is not running as root.
     #[fail(display = "jail_exporter must be run as root")]
     NotRunningAsRoot,
+
+    /// Raised when issues occur within the file exporter
+    #[fail(display = "error occurred while persisting metrics")]
+    PersistError(#[fail(cause)] tempfile::PersistError),
 
     /// Raised if there are errors originating within the `prometheus` crate.
     #[fail(display = "error within Prometheus library")]
