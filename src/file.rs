@@ -3,6 +3,7 @@
 #![forbid(missing_docs)]
 use crate::errors::Error;
 use jail_exporter::Exporter;
+use log::debug;
 use std::io::{
     self,
     Write,
@@ -26,9 +27,13 @@ impl FileExporter {
     pub fn new(path: &str) -> Self {
         // "-" is a special case and has us write to stdout.
         let output = if path == "-" {
+            debug!("New FileExporter outputting to stdout");
+
             Output::Stdout
         }
         else {
+            debug!("New FileExporter outputting to {}", path);
+
             let path = Path::new(&path);
             Output::File(path.into())
         };
@@ -42,9 +47,13 @@ impl FileExporter {
     fn write(&self, metrics: Vec<u8>) -> Result<(), Error> {
         match &self.dest {
             Output::Stdout => {
+                debug!("Writing metrics to stdout");
+
                 io::stdout().write_all(&metrics)?;
             },
             Output::File(path) => {
+                debug!("Writing metrics to {:?}", path);
+
                 // We already vetted the parent in the CLI validator, so unwrap
                 // here should be fine.
                 let parent = path.parent().unwrap();
@@ -62,6 +71,8 @@ impl FileExporter {
     }
 
     pub fn export(self) -> Result<(), Error> {
+        debug!("Exporting metrics to file");
+
         // Get an exporter and export the metrics.
         let exporter = Exporter::new();
 
