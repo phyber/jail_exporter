@@ -806,7 +806,7 @@ dependencies = [
 
 [[package]]
 name = "jail_exporter"
-version = "0.9.11"
+version = "0.10.0"
 dependencies = [
  "actix-http 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-http-test 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",

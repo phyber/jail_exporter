@@ -1,6 +1,6 @@
 # `jail_exporter`
 
-## UPCOMING
+## v0.10.0
 
   - Update to [prometheus] 0.7.0.
   - Update to [actix-web] 1.0.8.
