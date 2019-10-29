@@ -4,7 +4,7 @@
 // This module deals with httpd templates
 //
 #![forbid(unsafe_code)]
-use crate::errors::Error;
+use crate::errors::ExporterError;
 use askama::Template;
 use log::{
     debug,
@@ -23,7 +23,7 @@ struct IndexTemplate<'a> {
 // Renders the index page template.
 pub(in crate::httpd)
 fn render_index_page(telemetry_path: &str)
--> Result<String, Error> {
+-> Result<String, ExporterError> {
     debug!("Rendering index template");
 
     let index_template = IndexTemplate {
@@ -32,7 +32,7 @@ fn render_index_page(telemetry_path: &str)
 
     match index_template.render() {
         Ok(i)  => Ok(i),
-        Err(e) => Err(Error::RenderTemplate(format!("index: {}", e))),
+        Err(e) => Err(ExporterError::RenderTemplate(format!("index: {}", e))),
     }
 }
 

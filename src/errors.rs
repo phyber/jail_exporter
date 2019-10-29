@@ -4,91 +4,58 @@
 // This module implements errors used in the rest of the crate.
 //
 #![forbid(unsafe_code)]
-use failure::Fail;
-use std::fmt;
+#![forbid(missing_docs)]
+use thiserror::Error;
 
 /// An enum for error types encountered by the jail_exporter.
-///
-/// Implements the `Fail` trait of the `failure` crate.
-#[derive(Fail)]
-pub enum Error {
+#[derive(Error, Debug)]
+pub enum ExporterError {
     /// Raised when a required argument was not set.
     /// Should not be reachable.
-    #[fail(display = "{} was not set.", _0)]
+    #[error("{0} was not set.")]
     ArgNotSet(String),
 
     /// Raised within the `httpd` module if an error is countered while binding
     /// to the given `web.listen-address`.
-    #[fail(display = "failed to bind to {}", _0)]
+    #[error("failed to bind to {0}")]
     BindAddress(String),
 
     /// Raised if an io::Error occurs
-    #[fail(display = "std::io::Error")]
-    IoError(#[fail(cause)] std::io::Error),
+    #[error("std::io::Error")]
+    IoError(#[from] std::io::Error),
 
     /// Raised if there are errors originating within the `jail` crate.
-    #[fail(display = "could not get jail name")]
-    JailError(#[fail(cause)] jail::JailError),
+    #[error("could not get jail name")]
+    JailError(jail::JailError),
 
     /// Raised if the jail_exporter is not running as root.
-    #[fail(display = "jail_exporter must be run as root")]
+    #[error("jail_exporter must be run as root")]
     NotRunningAsRoot,
 
     /// Raised when issues occur within the file exporter
-    #[fail(display = "error occurred while persisting metrics")]
-    PersistError(#[fail(cause)] tempfile::PersistError),
+    #[error("error occurred while persisting metrics")]
+    PersistError(#[from] tempfile::PersistError),
 
     /// Raised if there are errors originating within the `prometheus` crate.
-    #[fail(display = "error within Prometheus library")]
-    PrometheusError(#[fail(cause)] prometheus::Error),
+    #[error("error within Prometheus library")]
+    PrometheusError(#[from] prometheus::Error),
 
     /// Raised if there are issues with RACCT/RCTL support.
-    #[fail(display = "RACCT/RCTL: {}", _0)]
+    #[error("RACCT/RCTL: {0}")]
     RctlUnavailable(String),
 
     /// Raised if an `askama` template fails to render.
-    #[fail(display = "Failed to render template: {}", _0)]
+    #[error("Failed to render template: {0}")]
     RenderTemplate(String),
 
     /// Raised if there's an issue converting from UTF-8 to String
-    #[fail(display = "Failed to convert UTF-8 to String")]
-    Utf8Error(#[fail(cause)] std::string::FromUtf8Error),
+    #[error("Failed to convert UTF-8 to String")]
+    Utf8Error(#[from] std::string::FromUtf8Error),
 }
 
-// Implements basic output, allowing the above display strings to be used when
-// main exits due to an Error.
-impl fmt::Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(e: std::io::Error) -> Self {
-        Error::IoError(e)
-    }
-}
-
-impl From<jail::JailError> for Error {
+// There is no as_dyn_error for jail::JailError, so we manually implement From
+impl From<jail::JailError> for ExporterError {
     fn from(e: jail::JailError) -> Self {
-        Error::JailError(e)
-    }
-}
-
-impl From<prometheus::Error> for Error {
-    fn from(e: prometheus::Error) -> Self {
-        Error::PrometheusError(e)
-    }
-}
-
-impl From<tempfile::PersistError> for Error {
-    fn from(e: tempfile::PersistError) -> Self {
-        Error::PersistError(e)
-    }
-}
-
-impl From<std::string::FromUtf8Error> for Error {
-    fn from(e: std::string::FromUtf8Error) -> Self {
-        Error::Utf8Error(e)
+        Self::JailError(e)
     }
 }

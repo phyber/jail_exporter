@@ -1,5 +1,9 @@
 # `jail_exporter`
 
+## UPCOMING
+
+  - Switch from [failure] crate to [thiserror].
+
 ## v0.10.0
 
   - Update to [prometheus] 0.7.0.
@@ -117,6 +121,7 @@
 [pretty-assertions]: https://crates.io/crates/pretty-assertions
 [prometheus]: https://crates.io/crates/prometheus
 [rctl]: https://crates.io/crates/rctl
+[thiserror]: https://github.com/dtolnay/thiserror
 [users]: https://crates/io/crates/users
 [warp]: https://crates.io/crates/warp
 [Cirrus CI]: https://cirrus-ci.org/
