@@ -4,7 +4,7 @@
 // This module deals with httpd related tasks.
 //
 #![forbid(unsafe_code)]
-use crate::errors::Error;
+use crate::errors::ExporterError;
 use actix_web::{
     web,
     HttpServer,
@@ -70,7 +70,7 @@ impl Server {
     }
 
     // Run the HTTP server.
-    pub fn run(self) -> Result<(), Error> {
+    pub fn run(self) -> Result<(), ExporterError> {
         let bind_address   = self.bind_address;
         let exporter       = jail_exporter::Exporter::new();
         let index_page     = render_index_page(&self.telemetry_path)?;
@@ -102,7 +102,7 @@ impl Server {
         let server = HttpServer::new(app)
             .bind(&bind_address)
             .map_err(|e| {
-                Error::BindAddress(format!("{}: {}", bind_address, e))
+                ExporterError::BindAddress(format!("{}: {}", bind_address, e))
             })?;
 
         // Run it!

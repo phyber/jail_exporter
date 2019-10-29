@@ -13,18 +13,18 @@ use users::{
 
 mod cli;
 mod errors;
-use errors::Error;
+use errors::ExporterError;
 mod file;
 use file::FileExporter;
 mod httpd;
 
 // Checks for the availability of RACCT/RCTL in the kernel.
-fn is_racct_rctl_available() -> Result<(), Error> {
+fn is_racct_rctl_available() -> Result<(), ExporterError> {
     debug!("Checking RACCT/RCTL status");
 
     match rctl::State::check() {
         rctl::State::Disabled => {
-            Err(Error::RctlUnavailable(
+            Err(ExporterError::RctlUnavailable(
                 "Present, but disabled; enable using \
                  kern.racct.enable=1 tunable".to_owned()
             ))
@@ -34,12 +34,12 @@ fn is_racct_rctl_available() -> Result<(), Error> {
             // This isn't strictly true. Jail exporter should be able to run
             // within a jail, for situations where a user has jails within
             // jails. It is just untested at the moment.
-            Err(Error::RctlUnavailable(
+            Err(ExporterError::RctlUnavailable(
                 "Jail Exporter cannot run within a jail".to_owned()
             ))
         },
         rctl::State::NotPresent => {
-            Err(Error::RctlUnavailable(
+            Err(ExporterError::RctlUnavailable(
                 "Support not present in kernel; see rctl(8) \
                  for details".to_owned()
             ))
@@ -48,16 +48,16 @@ fn is_racct_rctl_available() -> Result<(), Error> {
 }
 
 // Checks that we're running as root.
-fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), Error> {
+fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
     debug!("Ensuring that we're running as root");
 
     match users.get_effective_uid() {
         0 => Ok(()),
-        _ => Err(Error::NotRunningAsRoot),
+        _ => Err(ExporterError::NotRunningAsRoot),
     }
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), ExporterError> {
     env_logger::init();
 
     // Check that we're running as root.
@@ -83,7 +83,7 @@ fn main() -> Result<(), Error> {
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
     let bind_address = match matches.value_of("WEB_LISTEN_ADDRESS") {
-        None    => Err(Error::ArgNotSet("web.listen-address".to_owned())),
+        None    => Err(ExporterError::ArgNotSet("web.listen-address".to_owned())),
         Some(s) => Ok(s.to_owned()),
     }?;
     debug!("web.listen-address: {}", bind_address);
@@ -93,7 +93,7 @@ fn main() -> Result<(), Error> {
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
     let telemetry_path = match matches.value_of("WEB_TELEMETRY_PATH") {
-        None    => Err(Error::ArgNotSet("web.telemetry-path".to_owned())),
+        None    => Err(ExporterError::ArgNotSet("web.telemetry-path".to_owned())),
         Some(s) => Ok(s.to_owned()),
     }?;
     debug!("web.telemetry-path: {}", telemetry_path);

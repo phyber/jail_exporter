@@ -1,7 +1,7 @@
 // File exporter
 #![forbid(unsafe_code)]
 #![forbid(missing_docs)]
-use crate::errors::Error;
+use crate::errors::ExporterError;
 use jail_exporter::Exporter;
 use log::debug;
 use std::io::{
@@ -44,7 +44,7 @@ impl FileExporter {
     }
 
     // Handles choosing the correct output type based on path
-    fn write(&self, metrics: Vec<u8>) -> Result<(), Error> {
+    fn write(&self, metrics: Vec<u8>) -> Result<(), ExporterError> {
         match &self.dest {
             Output::Stdout => {
                 debug!("Writing metrics to stdout");
@@ -70,7 +70,7 @@ impl FileExporter {
         Ok(())
     }
 
-    pub fn export(self) -> Result<(), Error> {
+    pub fn export(self) -> Result<(), ExporterError> {
         debug!("Exporting metrics to file");
 
         // Get an exporter and export the metrics.

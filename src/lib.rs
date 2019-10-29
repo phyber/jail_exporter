@@ -20,7 +20,7 @@ use std::sync::{
 };
 
 mod errors;
-use errors::Error;
+use errors::ExporterError;
 mod macros;
 
 /// Metrics that use bookkeeping
@@ -340,7 +340,7 @@ impl Exporter {
     /// # let exporter = jail_exporter::Exporter::new();
     /// let output = exporter.export();
     /// ```
-    pub fn export(&self) -> Result<ExportedMetrics, Error> {
+    pub fn export(&self) -> Result<ExportedMetrics, ExporterError> {
         // Collect metrics
         self.get_jail_metrics()?;
 
@@ -503,7 +503,7 @@ impl Exporter {
         }
     }
 
-    fn get_jail_metrics(&self) -> Result<(), Error> {
+    fn get_jail_metrics(&self) -> Result<(), ExporterError> {
         debug!("get_jail_metrics");
 
         // Set jail_total to zero before gathering.
