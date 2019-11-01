@@ -3,6 +3,7 @@
 ## UPCOMING
 
   - Switch from [failure] crate to [thiserror].
+  - Minimum Rust version bumped to 1.37.0 as we use `enum` type aliases.
 
 ## v0.10.0
 
