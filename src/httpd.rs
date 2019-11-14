@@ -4,6 +4,7 @@
 // This module deals with httpd related tasks.
 //
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 use crate::errors::ExporterError;
 use actix_web::{
     web,

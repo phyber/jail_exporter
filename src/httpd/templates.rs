@@ -4,6 +4,7 @@
 // This module deals with httpd templates
 //
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 use crate::errors::ExporterError;
 use askama::Template;
 use log::{

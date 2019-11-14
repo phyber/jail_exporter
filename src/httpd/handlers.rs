@@ -4,6 +4,7 @@
 // This module deals with httpd route handlers.
 //
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 use actix_web::HttpResponse;
 use actix_web::http::header::CONTENT_TYPE;
 use actix_web::web::Data;
