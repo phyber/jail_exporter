@@ -45,8 +45,8 @@ pub enum ExporterError {
     RctlUnavailable(String),
 
     /// Raised if an `askama` template fails to render.
-    #[error("Failed to render template: {0}")]
-    RenderTemplate(String),
+    #[error("Failed to render template")]
+    RenderTemplate(#[from] askama::Error),
 
     /// Raised if there's an issue converting from UTF-8 to String
     #[error("Failed to convert UTF-8 to String")]

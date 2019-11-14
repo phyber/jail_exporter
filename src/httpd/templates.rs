@@ -31,10 +31,9 @@ fn render_index_page(telemetry_path: &str)
         telemetry_path: &telemetry_path,
     };
 
-    match index_template.render() {
-        Ok(i)  => Ok(i),
-        Err(e) => Err(ExporterError::RenderTemplate(format!("index: {}", e))),
-    }
+    let rendered = index_template.render()?;
+
+    Ok(rendered)
 }
 
 #[cfg(test)]
