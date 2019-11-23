@@ -125,6 +125,11 @@ Metric                | Description
 `id`                  | ID of the named jail
 `num`                 | Current number of running jails
 
+## Notes
+
+CI for this project is currently unable to test the build on FreeBSD 11.3 as
+the `freebsd-11-3-release-amd64` image in Google Cloud does not boot correctly.
+
 [Build Status]: https://api.cirrus-ci.com/github/phyber/jail_exporter.svg
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
