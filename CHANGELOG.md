@@ -4,6 +4,7 @@
 
   - Switch from [failure] crate to [thiserror].
   - Minimum Rust version bumped to 1.37.0 as we use `enum` type aliases.
+  - Added basic [Grafana] dashboard example.
 
 ## v0.10.0
 
@@ -126,3 +127,4 @@
 [users]: https://crates/io/crates/users
 [warp]: https://crates.io/crates/warp
 [Cirrus CI]: https://cirrus-ci.org/
+[Grafana]: https://grafana.com/grafana/

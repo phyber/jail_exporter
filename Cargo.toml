@@ -23,6 +23,7 @@ exclude = [
     ".gitignore",
     ".rustfmt.toml",
     "Makefile",
+    "grafana/jail_exporter.json",
     "man/jail_exporter.8",
     "rc.d/jail_exporter",
 ]
