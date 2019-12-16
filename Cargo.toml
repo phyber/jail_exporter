@@ -61,7 +61,7 @@ features = ["cache"]
 
 # Used by cargo test
 [dev-dependencies]
-actix-http = "0.2"
+actix-http = "1.0"
 indoc = "0.3"
 lazy_static = "1.4"
 pretty_assertions = "0.6"
