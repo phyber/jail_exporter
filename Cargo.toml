@@ -61,15 +61,9 @@ features = ["cache"]
 
 # Used by cargo test
 [dev-dependencies]
-actix-http = "1.0"
-actix-rt = "1.0"
 indoc = "0.3"
 lazy_static = "1.4"
 pretty_assertions = "0.6"
-
-[dev-dependencies.actix-http-test]
-version = "1.0"
-default-features = false
 
 [dev-dependencies.users]
 version = "0.9"
