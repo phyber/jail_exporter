@@ -55,32 +55,33 @@ pub(in crate::httpd) fn metrics(data: Data<AppState>) -> HttpResponse {
 mod tests {
     use super::*;
     use actix_web::{
+        dev::Service,
+        test,
         web,
         App,
     };
-    use actix_http::HttpService;
-    use actix_http_test::TestServer;
     use pretty_assertions::assert_eq;
     use std::str;
 
     #[test]
     fn index_ok() {
         let exporter = jail_exporter::Exporter::new();
-        let mut server = TestServer::new(move || {
-            let state = AppState {
-                exporter:   exporter.clone(),
-                index_page: "Test Body".into(),
-            };
-            let data = Data::new(state);
-            HttpService::new(
-                App::new()
+
+        let state = AppState {
+            exporter: exporter.clone(),
+            index_page: "Test Body".into(),
+        };
+
+        let data = Data::new(state);
+
+        let mut server = test::init_service(
+            App::new()
                 .register_data(data)
                 .service(web::resource("/").to(index))
-            )
-        });
+        );
 
-        let request = server.get("/");
-        let mut response = server.block_on(request.send()).unwrap();
+        let request  = test::TestRequest::get().uri("/").to_request();
+        let response = test::block_on(server.call(request)).unwrap();
         assert!(response.status().is_success());
 
         let headers = response.headers();
@@ -91,7 +92,8 @@ mod tests {
             .unwrap();
         assert_eq!(content_type, TEXT_HTML_UTF_8);
 
-        let bytes = server.block_on(response.body()).unwrap();
+        let request = test::TestRequest::get().uri("/").to_request();
+        let bytes = test::read_response(&mut server, request);
         let body = str::from_utf8(&bytes).unwrap();
         assert_eq!(body, "Test Body");
     }
