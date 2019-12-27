@@ -1,10 +1,15 @@
 # `jail_exporter`
 
-## UPCOMING
+## v0.11.0
 
   - Switch from [failure] crate to [thiserror].
-  - Minimum Rust version bumped to 1.37.0 as we use `enum` type aliases.
+  - Minimum Rust version bumped to 1.39.0 as we use:
+    - `enum` type aliases
+    - `async`/`await` for `actix-web` 2.0
   - Added basic [Grafana] dashboard example.
+  - Update to [actix-web] 2.0.
+  - Update FreeBSD images used for CI testing.
+  - Simplified template error handling.
 
 ## v0.10.0
 
