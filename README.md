@@ -14,7 +14,7 @@ discover jails and obtain metrics.
 
 At a minimum, building Jail Exporter should require:
 
-  - Rust v1.37.0
+  - Rust v1.39.0
   - Cargo
 
 A BSD [`make(1)`] Makefile is provided for convenience, if you already have
