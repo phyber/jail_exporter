@@ -76,7 +76,7 @@ mod tests {
 
         let mut server = test::init_service(
             App::new()
-                .register_data(data)
+                .app_data(data)
                 .service(web::resource("/").to(index))
         );
 

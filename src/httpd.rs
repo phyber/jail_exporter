@@ -71,7 +71,7 @@ impl Server {
     }
 
     // Run the HTTP server.
-    pub fn run(self) -> Result<(), ExporterError> {
+    pub async fn run(self) -> Result<(), ExporterError> {
         let bind_address   = self.bind_address;
         let exporter       = jail_exporter::Exporter::new();
         let index_page     = render_index_page(&self.telemetry_path)?;
@@ -108,7 +108,7 @@ impl Server {
 
         // Run it!
         info!("Starting HTTP server on {}", bind_address);
-        server.run()?;
+        server.run().await?;
 
         Ok(())
     }

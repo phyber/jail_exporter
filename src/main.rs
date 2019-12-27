@@ -57,7 +57,8 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
     }
 }
 
-fn main() -> Result<(), ExporterError> {
+#[actix_rt::main]
+async fn main() -> Result<(), ExporterError> {
     env_logger::init();
 
     // Check that we're running as root.
@@ -100,7 +101,7 @@ fn main() -> Result<(), ExporterError> {
     httpd::Server::new()
         .bind_address(bind_address)
         .telemetry_path(telemetry_path)
-        .run()?;
+        .run().await?;
 
     Ok(())
 }
