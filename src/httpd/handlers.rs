@@ -63,8 +63,9 @@ mod tests {
     use pretty_assertions::assert_eq;
     use std::str;
 
+    #[actix_rt::test]
     #[test]
-    fn index_ok() {
+    async fn index_ok() {
         let exporter = jail_exporter::Exporter::new();
 
         let state = AppState {
@@ -78,10 +79,10 @@ mod tests {
             App::new()
                 .app_data(data)
                 .service(web::resource("/").to(index))
-        );
+        ).await;
 
         let request  = test::TestRequest::get().uri("/").to_request();
-        let response = test::block_on(server.call(request)).unwrap();
+        let response = server.call(request).await.unwrap();
         assert!(response.status().is_success());
 
         let headers = response.headers();
@@ -93,7 +94,7 @@ mod tests {
         assert_eq!(content_type, TEXT_HTML_UTF_8);
 
         let request = test::TestRequest::get().uri("/").to_request();
-        let bytes = test::read_response(&mut server, request);
+        let bytes = test::read_response(&mut server, request).await;
         let body = str::from_utf8(&bytes).unwrap();
         assert_eq!(body, "Test Body");
     }
