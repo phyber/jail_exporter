@@ -181,6 +181,10 @@ mod tests {
 
     #[test]
     fn default_web_listen_address() {
+        // Must lock since we're still testing env vars here even though we're
+        // not setting one.
+        let _locked = LOCK.lock().unwrap();
+
         let argv = vec!["jail_exporter"];
         let matches = create_app().get_matches_from(argv);
         let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
@@ -190,6 +194,10 @@ mod tests {
 
     #[test]
     fn default_web_telemetry_path() {
+        // Must lock since we're still testing env vars here even though we're
+        // not setting one.
+        let _locked = LOCK.lock().unwrap();
+
         let argv = vec!["jail_exporter"];
         let matches = create_app().get_matches_from(argv);
         let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
