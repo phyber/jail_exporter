@@ -1,5 +1,10 @@
 # `jail_exporter`
 
+## v0.12.0
+
+  - Update to [prometheus] 0.8.0.
+  - Remove [FreeBSD] 12.0 image from the test matrix, as it is EOL.
+
 ## v0.11.0
 
   - Switch from [failure] crate to [thiserror].
@@ -8,7 +13,7 @@
     - `async`/`await` for `actix-web` 2.0
   - Added basic [Grafana] dashboard example.
   - Update to [actix-web] 2.0.
-  - Update FreeBSD images used for CI testing.
+  - Update [FreeBSD] images used for CI testing.
   - Simplified template error handling.
 
 ## v0.10.0
@@ -108,7 +113,7 @@
 
   - Added `CHANGELOG.md`
   - Updated to Rust 1.31 and 2018 edition.
-  - Added FreeBSD `rc.d` script.
+  - Added [FreeBSD] `rc.d` script.
   - Switched from [warp] to [actix-web] for HTTP related functions.
   - Update to [jail] 0.0.6 and [rctl] 0.0.5.
   - Deal with errors if HTTP server can't bind to address.
@@ -132,4 +137,5 @@
 [users]: https://crates/io/crates/users
 [warp]: https://crates.io/crates/warp
 [Cirrus CI]: https://cirrus-ci.org/
+[FreeBSD]: https://www.freebsd.org/
 [Grafana]: https://grafana.com/grafana/
