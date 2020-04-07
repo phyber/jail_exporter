@@ -4,6 +4,7 @@
 
   - Update to [prometheus] 0.8.0.
   - Remove [FreeBSD] 12.0 image from the test matrix, as it is EOL.
+  - Update to [users] 0.10.0.
 
 ## v0.11.0
 
