@@ -877,7 +877,7 @@ dependencies = [
 
 [[package]]
 name = "jail_exporter"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "actix-rt",
  "actix-web",
