@@ -3,6 +3,7 @@
 //! This lib handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+use crate::errors::ExporterError;
 use jail::RunningJail;
 use log::debug;
 use prometheus::{
@@ -19,9 +20,11 @@ use std::sync::{
     Mutex,
 };
 
-mod errors;
-use errors::ExporterError;
-mod macros;
+use crate::{
+    register_int_counter_vec,
+    register_int_gauge,
+    register_int_gauge_vec,
+};
 
 /// Metrics that use bookkeeping
 enum BookKept {

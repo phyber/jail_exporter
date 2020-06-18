@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 #![forbid(missing_docs)]
 use crate::errors::ExporterError;
-use jail_exporter::Exporter;
+use crate::exporter::Exporter;
 use log::debug;
 use std::io::{
     self,

@@ -15,7 +15,7 @@ macro_rules! __generic_vec {
 macro_rules! register_int_counter_vec {
     ($REGISTRY:ident, $NAME:expr, $HELP:expr, $LABEL_NAMES:expr) => {{
         let opts = prometheus::opts!($NAME, $HELP);
-        __generic_vec!($REGISTRY, IntCounterVec, opts, $LABEL_NAMES)
+        $crate::__generic_vec!($REGISTRY, IntCounterVec, opts, $LABEL_NAMES)
     }};
 }
 
@@ -36,6 +36,6 @@ macro_rules! register_int_gauge {
 macro_rules! register_int_gauge_vec {
     ($REGISTRY:ident, $NAME:expr, $HELP:expr, $LABEL_NAMES:expr) => {{
         let opts = prometheus::opts!($NAME, $HELP);
-        __generic_vec!($REGISTRY, IntGaugeVec, opts, $LABEL_NAMES)
+        $crate::__generic_vec!($REGISTRY, IntGaugeVec, opts, $LABEL_NAMES)
     }};
 }

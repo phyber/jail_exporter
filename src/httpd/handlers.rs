@@ -13,7 +13,6 @@ use mime::{
     TEXT_HTML_UTF_8,
     TEXT_PLAIN_UTF_8,
 };
-
 use super::AppState;
 
 // Displays the index page. This is a page which simply links to the actual
@@ -60,13 +59,14 @@ mod tests {
         web,
         App,
     };
+    use crate::exporter::Exporter;
     use pretty_assertions::assert_eq;
     use std::str;
 
     #[actix_rt::test]
     #[test]
     async fn index_ok() {
-        let exporter = jail_exporter::Exporter::new();
+        let exporter = Exporter::new();
 
         let state = AppState {
             exporter: exporter.clone(),

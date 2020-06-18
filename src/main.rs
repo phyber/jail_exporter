@@ -14,9 +14,13 @@ use users::{
 mod cli;
 mod errors;
 use errors::ExporterError;
+mod exporter;
 mod file;
 use file::FileExporter;
 mod httpd;
+
+#[macro_use]
+mod macros;
 
 // Checks for the availability of RACCT/RCTL in the kernel.
 fn is_racct_rctl_available() -> Result<(), ExporterError> {
