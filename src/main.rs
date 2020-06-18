@@ -15,6 +15,7 @@ mod cli;
 mod errors;
 use errors::ExporterError;
 mod exporter;
+use exporter::Exporter;
 mod file;
 use file::FileExporter;
 mod httpd;
@@ -101,11 +102,13 @@ async fn main() -> Result<(), ExporterError> {
     )?.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
+    let exporter = Box::new(Exporter::new());
+
     // Configure and run the http server.
     httpd::Server::new()
         .bind_address(bind_address)
         .telemetry_path(telemetry_path)
-        .run().await?;
+        .run(exporter).await?;
 
     Ok(())
 }

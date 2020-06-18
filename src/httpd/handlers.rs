@@ -36,7 +36,7 @@ pub(in crate::httpd) fn metrics(data: Data<AppState>) -> HttpResponse {
     let exporter = &(data.exporter);
 
     // Exporter could fail.
-    match exporter.export() {
+    match exporter.collect() {
         Ok(o) => {
             HttpResponse::Ok()
                 .header(CONTENT_TYPE, TEXT_PLAIN_UTF_8)
@@ -66,10 +66,10 @@ mod tests {
     #[actix_rt::test]
     #[test]
     async fn index_ok() {
-        let exporter = Exporter::new();
+        let exporter = Box::new(Exporter::new());
 
         let state = AppState {
-            exporter: exporter.clone(),
+            exporter:   exporter.clone(),
             index_page: "Test Body".into(),
         };
 

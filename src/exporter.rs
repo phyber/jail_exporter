@@ -3,7 +3,13 @@
 //! This lib handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+use crate::{
+    register_int_counter_vec,
+    register_int_gauge,
+    register_int_gauge_vec,
+};
 use crate::errors::ExporterError;
+use crate::httpd::Collector;
 use jail::RunningJail;
 use log::debug;
 use prometheus::{
@@ -18,12 +24,6 @@ use std::collections::HashMap;
 use std::sync::{
     Arc,
     Mutex,
-};
-
-use crate::{
-    register_int_counter_vec,
-    register_int_gauge,
-    register_int_gauge_vec,
 };
 
 /// Metrics that use bookkeeping
@@ -602,6 +602,16 @@ impl Exporter {
         for book in books.iter() {
             let mut book = book.lock().unwrap();
             book.remove(name);
+        }
+    }
+}
+
+/// Implements the Collector trait used by the HTTPd component.
+impl Collector for Exporter {
+    fn collect(&self) -> Result<Vec<u8>, Box<dyn ::std::error::Error>> {
+        match self.export() {
+            Ok(metrics) => Ok(metrics),
+            Err(e)      => Err(Box::new(e)),
         }
     }
 }

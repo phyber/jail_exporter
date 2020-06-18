@@ -6,7 +6,6 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use crate::errors::ExporterError;
-use crate::exporter::Exporter;
 use actix_web::{
     middleware::Logger,
     web,
@@ -17,6 +16,8 @@ use log::{
     info,
 };
 
+mod collector;
+pub use collector::Collector;
 mod handlers;
 use handlers::{
     index,
@@ -28,7 +29,7 @@ use templates::render_index_page;
 // This AppState is used to pass the rendered index template to the index
 // function.
 pub(self) struct AppState {
-    exporter:   Exporter,
+    exporter:   Box<dyn Collector>,
     index_page: String,
 }
 
@@ -72,9 +73,9 @@ impl Server {
     }
 
     // Run the HTTP server.
-    pub async fn run(self) -> Result<(), ExporterError> {
+    pub async fn run<C: Collector>(self, exporter: Box<C>) -> Result<(), ExporterError>
+    where C: 'static + Clone + Send + Sync {
         let bind_address   = self.bind_address;
-        let exporter       = Exporter::new();
         let index_page     = render_index_page(&self.telemetry_path)?;
         let telemetry_path = self.telemetry_path.clone();
 
