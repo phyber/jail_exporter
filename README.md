@@ -121,7 +121,7 @@ Metric                    | `rctl(8)` name    | Description
 
 Metric                | Description
 ----------------------|------------
-`exporter_build_info` | `version` label contains running exporter version, value set to `1`
+`exporter_build_info` | The version of Rust used to build the exporter, and the version of the exporter.
 `id`                  | ID of the named jail
 `num`                 | Current number of running jails
 

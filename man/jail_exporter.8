@@ -76,10 +76,14 @@ The metrics that are exported are those listed in the RESOURCES section of
 and the following additional metrics:
 .Bl -tag -width num
 .It Va exporter_build_info
-The version of the currently running exporter.
+The version of the currently running exporter, and the version of Rust used to
+build the exporter.
 The version is given in the
 .Dq version
-label on the metric.
+label on the metric, while the Rust version used to build the exporter is given
+in the
+.Dq rustversion
+label.
 Does not possess a
 .Dq name
 label.
