@@ -3,6 +3,7 @@
 ## UPCOMING
 
   - Update to [prometheus] 0.9.0.
+  - The MSRV (minimum supported Rust version) has been bumped to 1.40.0.
 
 ## v0.12.0
 
