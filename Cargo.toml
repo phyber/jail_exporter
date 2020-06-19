@@ -60,6 +60,9 @@ version = "0.10"
 default-features = false
 features = ["cache"]
 
+[build-dependencies]
+rustc_version = "0.2"
+
 # Used by cargo test
 [dev-dependencies]
 indoc = "0.3"

@@ -285,7 +285,7 @@ impl Default for Exporter {
                 "jail_exporter_build_info",
                 "A metric with a constant '1' value labelled by version \
                  from which jail_exporter was built",
-                &["version"]
+                &["rustversion", "version"]
             ).unwrap(),
 
             jail_id: register_int_gauge_vec!(
@@ -310,7 +310,11 @@ impl Default for Exporter {
                     )),
         };
 
-        let build_info_labels = [env!("CARGO_PKG_VERSION")];
+        let build_info_labels = [
+            env!("RUSTC_VERSION"),
+            env!("CARGO_PKG_VERSION"),
+        ];
+
         metrics.build_info.with_label_values(&build_info_labels).set(1);
 
         metrics

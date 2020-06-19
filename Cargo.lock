@@ -925,6 +925,7 @@ dependencies = [
  "pretty_assertions",
  "prometheus",
  "rctl",
+ "rustc_version",
  "tempfile",
  "thiserror",
  "users 0.10.0",
