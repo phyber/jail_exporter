@@ -1,9 +1,10 @@
 # `jail_exporter`
 
-## UPCOMING
+## v0.13.0
 
   - Update to [prometheus] 0.9.0.
-  - The MSRV (minimum supported Rust version) has been bumped to 1.40.0.
+  - The MSRV (minimum supported Rust version) has been bumped to 1.40.0, as
+    `cargo msrv` shows some dependencies now require this.
 
 ## v0.12.0
 
