@@ -9,7 +9,10 @@ use crate::{
     register_int_gauge_vec,
 };
 use crate::errors::ExporterError;
-use crate::httpd::Collector;
+use crate::httpd::{
+    Collector,
+    HttpdError,
+};
 use jail::RunningJail;
 use log::debug;
 use prometheus::{
@@ -612,10 +615,10 @@ impl Exporter {
 
 /// Implements the Collector trait used by the HTTPd component.
 impl Collector for Exporter {
-    fn collect(&self) -> Result<Vec<u8>, Box<dyn ::std::error::Error>> {
+    fn collect(&self) -> Result<Vec<u8>, HttpdError> {
         match self.export() {
             Ok(metrics) => Ok(metrics),
-            Err(e)      => Err(Box::new(e)),
+            Err(e)      => Err(HttpdError::CollectorError(e.to_string())),
         }
     }
 }

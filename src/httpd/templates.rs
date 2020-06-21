@@ -5,7 +5,7 @@
 //
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
-use crate::errors::ExporterError;
+use super::errors::HttpdError;
 use askama::Template;
 use log::{
     debug,
@@ -24,7 +24,7 @@ struct IndexTemplate<'a> {
 // Renders the index page template.
 pub(in crate::httpd)
 fn render_index_page(telemetry_path: &str)
--> Result<String, ExporterError> {
+-> Result<String, HttpdError> {
     debug!("Rendering index template");
 
     let index_template = IndexTemplate {

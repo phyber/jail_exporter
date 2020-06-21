@@ -5,7 +5,6 @@
 //
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
-use crate::errors::ExporterError;
 use actix_web::{
     middleware::Logger,
     web,
@@ -17,14 +16,16 @@ use log::{
 };
 
 mod collector;
-pub use collector::Collector;
+mod errors;
 mod handlers;
+mod templates;
 use handlers::{
     index,
     metrics,
 };
-mod templates;
 use templates::render_index_page;
+pub use collector::Collector;
+pub use errors::HttpdError;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
@@ -73,7 +74,7 @@ impl Server {
     }
 
     // Run the HTTP server.
-    pub async fn run<C: Collector>(self, exporter: Box<C>) -> Result<(), ExporterError>
+    pub async fn run<C: Collector>(self, exporter: Box<C>) -> Result<(), HttpdError>
     where C: 'static + Clone + Send + Sync {
         let bind_address   = self.bind_address;
         let index_page     = render_index_page(&self.telemetry_path)?;
@@ -105,7 +106,7 @@ impl Server {
         let server = HttpServer::new(app)
             .bind(&bind_address)
             .map_err(|e| {
-                ExporterError::BindAddress(format!("{}: {}", bind_address, e))
+                HttpdError::BindAddress(format!("{}: {}", bind_address, e))
             })?;
 
         // Run it!

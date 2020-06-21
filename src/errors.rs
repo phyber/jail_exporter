@@ -15,10 +15,8 @@ pub enum ExporterError {
     #[error("{0} was not set.")]
     ArgNotSet(String),
 
-    /// Raised within the `httpd` module if an error is countered while binding
-    /// to the given `web.listen-address`.
-    #[error("failed to bind to {0}")]
-    BindAddress(String),
+    #[error("HttpdError: {0}")]
+    HttpdError(#[from] crate::httpd::HttpdError),
 
     /// Raised if an io::Error occurs
     #[error("std::io::Error")]
@@ -43,10 +41,6 @@ pub enum ExporterError {
     /// Raised if there are issues with RACCT/RCTL support.
     #[error("RACCT/RCTL: {0}")]
     RctlUnavailable(String),
-
-    /// Raised if an `askama` template fails to render.
-    #[error("Failed to render template")]
-    RenderTemplate(#[from] askama::Error),
 
     /// Raised if there's an issue converting from UTF-8 to String
     #[error("Failed to convert UTF-8 to String")]
