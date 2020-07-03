@@ -1,5 +1,9 @@
 # `jail_exporter`
 
+## v0.14.0
+
+  - Update to [askama] 0.10.1.
+
 ## v0.13.0
 
   - Update to [prometheus] 0.9.0.
