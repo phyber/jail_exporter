@@ -297,9 +297,9 @@ checksum = "4d25d88fd6b8041580a654f9d0c581a047baee2b3efee13275f2fc392fc75034"
 
 [[package]]
 name = "askama"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afb6c2f00d120a43d67345bbd3e9e21d1ee090c1fc7db7787c05bd969b83bccf"
+checksum = "b7acc25b09d27eaec97794c58d8483a227f2adc98b762f915745525d8781dba0"
 dependencies = [
  "askama_derive",
  "askama_escape",
@@ -308,9 +308,9 @@ dependencies = [
 
 [[package]]
 name = "askama_derive"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d97b96db4caba8842ec48a537cab1e6d7e809d7a408c97ae99f129e1c982750"
+checksum = "6f7dc4c28f064af8bbba24867ec6c3165c645635cb1306bca4c0f991ce8b15a9"
 dependencies = [
  "askama_shared",
  "proc-macro2 1.0.18",
@@ -326,9 +326,9 @@ checksum = "90c108c1a94380c89d2215d0ac54ce09796823cca0fd91b299cfff3b33e346fb"
 
 [[package]]
 name = "askama_shared"
-version = "0.10.2"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3342887c2f85a336bc8bc4fc79603434539cdae37565e20ccf54599dea8e42ee"
+checksum = "5b64d552e0dc2837d5c27276e80521cf864f42c079e476b3035a196566fcee59"
 dependencies = [
  "askama_escape",
  "humansize",
