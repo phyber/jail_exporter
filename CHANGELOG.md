@@ -2,7 +2,7 @@
 
 ## v0.14.0
 
-  - Update to [askama] 0.10.1.
+  - Update to [askama] 0.10.2.
 
 ## v0.13.0
 
