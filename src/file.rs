@@ -75,9 +75,7 @@ impl FileExporter {
 
         // Get an exporter and export the metrics.
         let exporter = Exporter::new();
-
-        // TODO: Fix this unwrap
-        let metrics = exporter.export().unwrap();
+        let metrics  = exporter.export()?;
 
         // Write metrics
         self.write(metrics)?;
