@@ -13,12 +13,13 @@ use users::{
 
 mod cli;
 mod errors;
-use errors::ExporterError;
 mod exporter;
-use exporter::Exporter;
 mod file;
-use file::FileExporter;
 mod httpd;
+
+use errors::ExporterError;
+use exporter::Exporter;
+use file::FileExporter;
 
 #[macro_use]
 mod macros;
