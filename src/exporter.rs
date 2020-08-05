@@ -616,10 +616,8 @@ impl Exporter {
 /// Implements the Collector trait used by the HTTPd component.
 impl Collector for Exporter {
     fn collect(&self) -> Result<Vec<u8>, HttpdError> {
-        match self.export() {
-            Ok(metrics) => Ok(metrics),
-            Err(e)      => Err(HttpdError::CollectorError(e.to_string())),
-        }
+        self.export()
+            .map_err(|e| HttpdError::CollectorError(e.to_string()))
     }
 }
 
