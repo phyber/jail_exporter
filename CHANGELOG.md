@@ -3,6 +3,7 @@
 ## v0.14.0
 
   - Update to [askama] 0.10.2.
+  - Update to [prometheus] 0.10.0.
 
 ## v0.13.0
 
