@@ -63,7 +63,7 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
     }
 }
 
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> Result<(), ExporterError> {
     env_logger::init();
 

@@ -29,7 +29,6 @@ exclude = [
 ]
 
 [dependencies]
-actix-rt = "1.0"
 askama = "0.10"
 env_logger = "0.7"
 jail = "0.1.1"
@@ -65,6 +64,7 @@ rustc_version = "0.2"
 
 # Used by cargo test
 [dev-dependencies]
+actix-rt = "1.0"
 indoc = "1.0"
 lazy_static = "1.4"
 pretty_assertions = "0.6"
