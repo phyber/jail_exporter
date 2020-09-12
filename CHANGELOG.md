@@ -5,6 +5,7 @@
   - Update to [actix-web] 3.0.0.
   - Update to [askama] 0.10.2.
   - Update to [prometheus] 0.10.0.
+  - The MSRV has been bumped to 1.42.0 as required by [actix-web].
 
 ## v0.13.0
 
