@@ -2,6 +2,7 @@
 
 ## v0.14.0
 
+  - Update to [actix-web] 3.0.0.
   - Update to [askama] 0.10.2.
   - Update to [prometheus] 0.10.0.
 
