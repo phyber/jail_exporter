@@ -105,8 +105,6 @@ impl Default for Exporter {
         let labels: &[&str] = &["name"];
 
         let metrics = Self {
-            registry: registry.clone(),
-
             coredumpsize_bytes: register_int_gauge_vec!(
                 registry,
                 "jail_coredumpsize_bytes",
@@ -303,6 +301,9 @@ impl Default for Exporter {
                 "jail_num",
                 "Current number of running jails."
             ).unwrap(),
+
+            // Registry must be added after the macros making use of it
+            registry: registry,
 
             // Book keeping
             cputime_seconds_total_old: Arc::new(Mutex::new(

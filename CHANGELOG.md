@@ -7,7 +7,8 @@
   - Update to [prometheus] 0.10.0.
   - The MSRV has been bumped to 1.42.0 as required by [actix-web].
   - Fix some minor [clippy] issues.
-  - Remove a clone from metric bookkeeping.
+  - exporter: Remove a clone from metric bookkeeping.
+  - exporter: Avoid using clone when creating exporter metrics struct.
 
 ## v0.13.0
 
