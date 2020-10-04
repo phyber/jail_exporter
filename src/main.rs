@@ -89,18 +89,21 @@ async fn main() -> Result<(), ExporterError> {
     // Get the bind_address for the httpd::Server below.
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
-    let bind_address = matches.value_of("WEB_LISTEN_ADDRESS").ok_or(
+    //let bind_address = matches.value_of("WEB_LISTEN_ADDRESS").ok_or(
+    //    ExporterError::ArgNotSet("web.listen-address".to_owned())
+    //)?.to_owned();
+    let bind_address = matches.value_of("WEB_LISTEN_ADDRESS").ok_or_else(|| {
         ExporterError::ArgNotSet("web.listen-address".to_owned())
-    )?.to_owned();
+    })?.to_owned();
     debug!("web.listen-address: {}", bind_address);
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
     // into the httpd::Server below.
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
-    let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH").ok_or(
+    let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH").ok_or_else(|| {
         ExporterError::ArgNotSet("web.telemetry-path".to_owned())
-    )?.to_owned();
+    })?.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
     let exporter = Box::new(Exporter::new());
