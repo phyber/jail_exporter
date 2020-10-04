@@ -7,6 +7,7 @@
   - Update to [prometheus] 0.10.0.
   - The MSRV has been bumped to 1.42.0 as required by [actix-web].
   - Fix some minor [clippy] issues.
+  - Remove a clone from metric bookkeeping.
 
 ## v0.13.0
 

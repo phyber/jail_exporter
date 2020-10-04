@@ -382,9 +382,9 @@ impl Exporter {
         };
 
         // Get the old value for this jail, if there isn't one, use 0.
-        let old_value = match book.get(name).cloned() {
+        let old_value = match book.get(name) {
             None    => 0,
-            Some(v) => v,
+            Some(v) => *v,
         };
 
         // Work out what our increase should be.
