@@ -5,6 +5,8 @@
   - Update to [actix-web] 3.1.0.
   - Update to [askama] 0.10.2.
   - Update to [prometheus] 0.10.0.
+  - Update to [thiserror] 1.0.21.
+  - Update to [users] 0.11.0.
   - The MSRV has been bumped to 1.42.0 as required by [actix-web].
   - Fix some minor [clippy] issues.
   - exporter: Remove a clone from metric bookkeeping.
