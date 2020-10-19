@@ -30,7 +30,7 @@ exclude = [
 
 [dependencies]
 askama = "0.10"
-env_logger = "0.7"
+env_logger = "0.8"
 jail = "0.1.1"
 log = "0.4"
 rctl = "0.1.0"
