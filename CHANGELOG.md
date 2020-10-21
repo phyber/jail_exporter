@@ -4,6 +4,7 @@
 
   - Update to [actix-web] 3.1.0.
   - Update to [askama] 0.10.2.
+  - Update to [env_logger] 0.8.1.
   - Update to [prometheus] 0.10.0.
   - Update to [thiserror] 1.0.21.
   - Update to [users] 0.11.0.
@@ -146,6 +147,7 @@
 [askama]: https://crates.io/crates/askama
 [clippy]: https://github.com/rust-lang/rust-clippy
 [crates.io]: https://crates.io/
+[env_logger]: https://crates.io/crates/env_logger
 [failure]: https://crates.io/crates/failure
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
