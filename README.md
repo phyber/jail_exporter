@@ -10,6 +10,13 @@ by [`rctl(8)`].
 The exporter is written in [Rust] and uses the [jail] and [rctl] crates to
 discover jails and obtain metrics.
 
+## Installation
+
+`jail_exporter` is available in the FreeBSD ports tree as
+`sysutils/jail_exporter`. It can be installed by either the binary package with
+`pkg install jail_exporter`, or by compiling the package yourself in the ports
+tree.
+
 ## Building
 
 At a minimum, building Jail Exporter should require:
