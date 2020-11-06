@@ -101,7 +101,7 @@ fn is_valid_telemetry_path(s: String) -> Result<(), String> {
 fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
     debug!("Creating clap app");
 
-    clap::App::new(crate_name!())
+    let app = clap::App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
@@ -137,7 +137,17 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .takes_value(true)
                 .default_value("/metrics")
                 .validator(is_valid_telemetry_path)
-        )
+        );
+
+    #[cfg(feature = "rcd")]
+    let app = app
+        .arg(
+            clap::Arg::with_name("RC_D")
+                .long("rc.d")
+                .help("Dump the jail_exporter rc.d file to stdout")
+        );
+
+    app
 }
 
 // Parses the command line arguments and returns the matches.
