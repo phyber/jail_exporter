@@ -34,9 +34,9 @@ When installing via this method, you may want to move the installed binary to
 system boot. You can do this as follows:
 
 ```shell
-# Replace `doas` with `sudo` if needed
-$ doas mv ~/.cargo/bin/jail_exporter /usr/local/sbin/
-$ doas chown root:wheel /usr/local/sbin/jail_exporter
+# Performed as root.
+$ mv ~/.cargo/bin/jail_exporter /usr/local/sbin/
+$ chown root:wheel /usr/local/sbin/jail_exporter
 $ jail_exporter --rc.d | tee /usr/local/etc/rc.d/jail_exporter
 $ chmod 755 /usr/local/etc/rc.d/jail_exporter
 ```
