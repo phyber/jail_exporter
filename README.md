@@ -12,10 +12,43 @@ discover jails and obtain metrics.
 
 ## Installation
 
+### `pkg(8)` and Ports
+
 `jail_exporter` is available in the FreeBSD ports tree as
 `sysutils/jail_exporter`. It can be installed by either the binary package with
 `pkg install jail_exporter`, or by compiling the package yourself in the ports
 tree.
+
+### Cargo Install
+
+The crate is also available via [crates.io], and can be installed using the
+`cargo install` command. However, it is heavily recommended to install the
+exporter via `pkg(8)` or the ports tree.
+
+```shell
+$ cargo install jail_exporter
+```
+
+When installing via this method, you may want to move the installed binary to
+`/usr/local/sbin` and obtain an appropriate `rc.d` to start the exporter on
+system boot. You can do this as follows:
+
+```shell
+# Replace `doas` with `sudo` if needed
+$ doas mv ~/.cargo/bin/jail_exporter /usr/local/sbin/
+$ doas chown root:wheel /usr/local/sbin/jail_exporter
+$ jail_exporter --rc.d | tee /usr/local/etc/rc.d/jail_exporter
+$ chmod 755 /usr/local/etc/rc.d/jail_exporter
+```
+
+### Enabling at System Boot
+
+You can enable `jail_exporter` to start at system boot via [`rc.conf(5)`].
+
+```shell
+# Either edit /etc/rc.conf directly or use the following command
+sysrc jail_exporter_enable=YES
+```
 
 ## Building
 
@@ -132,7 +165,18 @@ Metric                | Description
 `id`                  | ID of the named jail
 `num`                 | Current number of running jails
 
+
+## Crate Features
+
+Feature | Default | Description
+--------|---------|------------
+`rcd`   | `true`  | Enables the `--rc.d` CLI flag to dump the `rc.d` file to stdout
+
 ## Notes
+
+The `rcd` feature is enabled by default for the benefit of users installing
+via `cargo install`. It is disabled by default in the FreeBSD port as the
+`rc.d` file is supplied in the ports tree.
 
 CI for this project is currently unable to test the build on FreeBSD 11.3 as
 the `freebsd-11-3-release-amd64` image in Google Cloud does not boot correctly.
@@ -142,6 +186,7 @@ the `freebsd-11-3-release-amd64` image in Google Cloud does not boot correctly.
 [Prometheus]: https://prometheus.io/
 [Rust]: https://www.rust-lang.org/
 [Textfile Collector]: https://github.com/prometheus/node_exporter#textfile-collector
+[crates.io]: https://crates.io/crates/jail_exporter
 [jail]: https://crates.io/crates/jail
 [metric and label naming]: https://prometheus.io/docs/practices/naming/
 [rctl]: https://crates.io/crates/rctl
@@ -149,6 +194,7 @@ the `freebsd-11-3-release-amd64` image in Google Cloud does not boot correctly.
 [`daemon(8)`]: https://www.freebsd.org/cgi/man.cgi?query=daemon&sektion=8
 [`make(1)`]: https://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
 [`node_exporter`]: https://github.com/prometheus/node_exporter
+[`rc.conf(5)`]: https://man.freebsd.org/rc.conf(5)
 [`rc.d/jail_exporter.in`]: rc.d/jail_exporter.in
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8
 [`rctl_get_racct(2)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl_get_racct&sektion=2
