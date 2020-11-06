@@ -28,6 +28,13 @@ exclude = [
     "rc.d/jail_exporter",
 ]
 
+[features]
+default = ["rcd"]
+
+# Adds a CLI option to dump out an rc.d file, useful for users who install via
+# `cargo install`.
+rcd = []
+
 [dependencies]
 askama = "0.10"
 env_logger = "0.8"

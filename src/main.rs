@@ -24,6 +24,9 @@ use file::FileExporter;
 #[macro_use]
 mod macros;
 
+#[cfg(feature = "rcd")]
+const RC_D_FILE: &str = include_str!("../rc.d/jail_exporter.in");
+
 // Checks for the availability of RACCT/RCTL in the kernel.
 fn is_racct_rctl_available() -> Result<(), ExporterError> {
     debug!("Checking RACCT/RCTL status");
@@ -75,6 +78,18 @@ async fn main() -> Result<(), ExporterError> {
 
     // Parse the commandline arguments.
     let matches = cli::parse_args();
+
+    // If we have been asked to dump the rc.d, do that, and exit.
+    #[cfg(feature = "rcd")]
+    if matches.is_present("RC_D") {
+        debug!("Dumping rc.d to stdout");
+
+        let rcd = RC_D_FILE.replace("%%PREFIX%%", "/usr/local");
+
+        println!("{}", rcd);
+
+        ::std::process::exit(0);
+    }
 
     // If an output file was specified, we do that. We will never launch the
     // HTTPd when we're passed an OUTPUT_FILE_PATH.
