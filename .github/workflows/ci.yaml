@@ -1,0 +1,24 @@
+---
+name: 'Continuous Integration'
+
+on:
+  push:
+    branches:
+      - 'master'
+
+# Main test jobs are via CirrusCI as we need FreeBSD runners.
+jobs:
+  mandoc:
+    name: 'Lint Man Page'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v2'
+        with:
+          fetch-depth: 1
+      - name: 'Install mandoc'
+        run: |
+          sudo apt install mandoc
+      - name: 'Lint man page'
+        run: |
+          make manlint

@@ -142,7 +142,7 @@
   - Simplify metrics HTTP response handler.
   - Provided more metadata in `Cargo.toml`.
 
-<!-- Links -->
+<!-- links -->
 [actix-web]: https://crates.io/crates/actix-web
 [askama]: https://crates.io/crates/askama
 [clippy]: https://github.com/rust-lang/rust-clippy
