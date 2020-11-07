@@ -108,7 +108,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
         .set_term_width(80)
         .arg(
             clap::Arg::with_name("OUTPUT_FILE_PATH")
-                .env("JAIL_EXPORTER_OUTPUT_FILE_PATH")
+                .env("OUTPUT_FILE_PATH")
                 .hide_env_values(true)
                 .long("output.file-path")
                 .value_name("FILE")
@@ -118,7 +118,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
         )
         .arg(
             clap::Arg::with_name("WEB_LISTEN_ADDRESS")
-                .env("JAIL_EXPORTER_WEB_LISTEN_ADDRESS")
+                .env("WEB_LISTEN_ADDRESS")
                 .hide_env_values(true)
                 .long("web.listen-address")
                 .value_name("[ADDR:PORT]")
@@ -129,7 +129,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
         )
         .arg(
             clap::Arg::with_name("WEB_TELEMETRY_PATH")
-                .env("JAIL_EXPORTER_WEB_TELEMETRY_PATH")
+                .env("WEB_TELEMETRY_PATH")
                 .hide_env_values(true)
                 .long("web.telemetry-path")
                 .value_name("PATH")
@@ -230,7 +230,7 @@ mod tests {
 
     #[test]
     fn cli_override_env_web_listen_address() {
-        env_test("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
+        env_test("WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
             let argv = vec![
                 "jail_exporter",
                 "--web.listen-address=127.0.1.3:9452",
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn cli_override_env_web_telemetry_path() {
-        env_test("JAIL_EXPORTER_WEB_TELEMETRY_PATH", "/envvar", || {
+        env_test("WEB_TELEMETRY_PATH", "/envvar", || {
             let argv = vec![
                 "jail_exporter",
                 "--web.telemetry-path=/clioverride",
@@ -273,7 +273,7 @@ mod tests {
 
     #[test]
     fn env_set_web_listen_address() {
-        env_test("JAIL_EXPORTER_WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
+        env_test("WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
             let argv = vec!["jail_exporter"];
             let matches = create_app().get_matches_from(argv);
             let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn env_set_web_telemetry_path() {
-        env_test("JAIL_EXPORTER_WEB_TELEMETRY_PATH", "/test", || {
+        env_test("WEB_TELEMETRY_PATH", "/test", || {
             let argv = vec!["jail_exporter"];
             let matches = create_app().get_matches_from(argv);
             let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");

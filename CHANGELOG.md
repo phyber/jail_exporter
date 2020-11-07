@@ -12,6 +12,7 @@
   - Fix some minor [clippy] issues.
   - exporter: Remove a clone from metric bookkeeping.
   - exporter: Avoid using clone when creating exporter metrics struct.
+  - Change environment variables, removing the `JAIL_EXPORTER_` prefix.
 
 ## v0.13.0
 

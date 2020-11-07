@@ -112,16 +112,16 @@ jail_cputime_seconds_total{name="test"} 300
 can also take its configuration from environment variables.
 In the event that both command line options and environment variables are
 specified, the command line options will win.
-.Bl -tag -width JAIL_EXPORTER_WEB_LISTEN_ADDRESS
-.It Ev JAIL_EXPORTER_OUTPUT_FILE_PATH
+.Bl -tag -width WEB_LISTEN_ADDRESS
+.It Ev OUTPUT_FILE_PATH
 is equivalent to setting the
 .Fl Fl output.file-path
 option.
-.It Ev JAIL_EXPORTER_WEB_LISTEN_ADDRESS
+.It Ev WEB_LISTEN_ADDRESS
 is equivalent to setting the
 .Fl Fl web.listen-address
 option.
-.It Ev JAIL_EXPORTER_WEB_TELEMETRY_PATH
+.It Ev WEB_TELEMETRY_PATH
 is equivalent to setting the
 .Fl Fl web.telemetry-path
 option.

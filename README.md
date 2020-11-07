@@ -82,11 +82,11 @@ Argument             | Default          | Purpose
 
 ### Environment variables
 
-Variable                           | Equivalent Argument
------------------------------------|--------------------
-`JAIL_EXPORTER_OUTPUT_FILE_PATH`   | `output.file-path`
-`JAIL_EXPORTER_WEB_LISTEN_ADDRESS` | `web.listen-address`
-`JAIL_EXPORTER_WEB_TELEMETRY_PATH` | `web.telemetry-path`
+Variable             | Equivalent Argument
+---------------------|--------------------
+`OUTPUT_FILE_PATH`   | `output.file-path`
+`WEB_LISTEN_ADDRESS` | `web.listen-address`
+`WEB_TELEMETRY_PATH` | `web.telemetry-path`
 
 ## Running
 
