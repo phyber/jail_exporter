@@ -66,6 +66,17 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
     }
 }
 
+#[cfg(feature = "rcd")]
+fn output_rc_script() {
+    debug!("Dumping rc.d to stdout");
+
+    // The script we included is the one that we use for the ports tree, so
+    // we need to replace %%PREFIX%% with a reasonable prefix.
+    let rcd = RC_D_FILE.replace("%%PREFIX%%", "/usr/local");
+
+    println!("{}", rcd);
+}
+
 #[actix_web::main]
 async fn main() -> Result<(), ExporterError> {
     // We do as much as we can without checking if we're running as root.
@@ -74,16 +85,10 @@ async fn main() -> Result<(), ExporterError> {
     // Parse the commandline arguments.
     let matches = cli::parse_args();
 
-    // If we have been asked to dump the rc.d, do that, and exit.
     #[cfg(feature = "rcd")]
+    // If we have been asked to dump the rc.d, do that, and exit.
     if matches.is_present("RC_D") {
-        debug!("Dumping rc.d to stdout");
-
-        // The script we included is the one that we use for the ports tree, so
-        // we need to replace %%PREFIX%% with a reasonable prefix.
-        let rcd = RC_D_FILE.replace("%%PREFIX%%", "/usr/local");
-
-        println!("{}", rcd);
+        output_rc_script();
 
         ::std::process::exit(0);
     }
