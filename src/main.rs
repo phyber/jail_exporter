@@ -68,13 +68,8 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
 
 #[actix_web::main]
 async fn main() -> Result<(), ExporterError> {
+    // We do as much as we can without checking if we're running as root.
     env_logger::init();
-
-    // Check that we're running as root.
-    is_running_as_root(&mut UsersCache::new())?;
-
-    // Check if RACCT/RCTL is available and if it's not, exit.
-    is_racct_rctl_available()?;
 
     // Parse the commandline arguments.
     let matches = cli::parse_args();
@@ -84,12 +79,21 @@ async fn main() -> Result<(), ExporterError> {
     if matches.is_present("RC_D") {
         debug!("Dumping rc.d to stdout");
 
+        // The script we included is the one that we use for the ports tree, so
+        // we need to replace %%PREFIX%% with a reasonable prefix.
         let rcd = RC_D_FILE.replace("%%PREFIX%%", "/usr/local");
 
         println!("{}", rcd);
 
         ::std::process::exit(0);
     }
+
+    // Root is required beyond this point.
+    // Check that we're running as root.
+    is_running_as_root(&mut UsersCache::new())?;
+
+    // Check if RACCT/RCTL is available and if it's not, exit.
+    is_racct_rctl_available()?;
 
     // If an output file was specified, we do that. We will never launch the
     // HTTPd when we're passed an OUTPUT_FILE_PATH.
