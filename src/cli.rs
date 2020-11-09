@@ -139,12 +139,12 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .validator(is_valid_telemetry_path)
         );
 
-    #[cfg(feature = "rcd")]
+    #[cfg(feature = "rc_script")]
     let app = app
         .arg(
-            clap::Arg::with_name("RC_D")
-                .long("rc.d")
-                .help("Dump the jail_exporter rc.d file to stdout")
+            clap::Arg::with_name("RC_SCRIPT")
+                .long("rc-script")
+                .help("Dump the jail_exporter rc(8) script to stdout")
         );
 
     app

@@ -13,6 +13,8 @@
   - exporter: Remove a clone from metric bookkeeping.
   - exporter: Avoid using clone when creating exporter metrics struct.
   - Change environment variables, removing the `JAIL_EXPORTER_` prefix.
+  - Added `rc_script` feature enabling a `--rc-script` CLI flag which outputs
+    the `jail_exporter` [`rc(8)`] script on stdout.
 
 ## v0.13.0
 
@@ -163,3 +165,4 @@
 [Cirrus CI]: https://cirrus-ci.org/
 [FreeBSD]: https://www.freebsd.org/
 [Grafana]: https://grafana.com/grafana/
+[`rc(8)`]: https://man.freebsd.org/rc(8)

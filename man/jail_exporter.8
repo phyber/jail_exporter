@@ -9,7 +9,7 @@
 .Op Fl hV
 .Op Fl Fl help
 .Op Fl Fl version
-.Op Fl Fl rc.d
+.Op Fl Fl rc-script
 .Nm
 .Op Fl Fl output.file-path Ns = Ns Ar path
 .Op Fl Fl web.listen-address Ns = Ns Ar addr:port
@@ -23,7 +23,7 @@ The options are as follows:
 Prints help information
 .It Fl V , Fl Fl version
 Prints version information
-.It Fl Fl rc.d
+.It Fl Fl rc-script
 Dumps the
 .Nm
 .Xr rc 8
@@ -142,14 +142,18 @@ option.
 .Sh FILES
 .Bl -tag -width /usr/local/etc/rc.d/jail_exporter -compact
 .It Pa /usr/local/etc/rc.d/jail_exporter
-the rc.d script
+the
+.Xr rc 8
+script
 .It Pa /usr/local/sbin/jail_exporter
 the exporter daemon
 .El
 .Sh SEE ALSO
 .Xr rctl 4 ,
 .Xr loader.conf 5 ,
+.Xr ports 7 ,
 .Xr jail 8 ,
+.Xr rc 8 ,
 .Xr rctl 8
 .Sh HISTORY
 .Nm

@@ -24,8 +24,8 @@ use file::FileExporter;
 #[macro_use]
 mod macros;
 
-#[cfg(feature = "rcd")]
-const RC_D_FILE: &str = include_str!("../rc.d/jail_exporter.in");
+#[cfg(feature = "rc_script")]
+const RC_SCRIPT: &str = include_str!("../rc.d/jail_exporter.in");
 
 // Checks for the availability of RACCT/RCTL in the kernel.
 fn is_racct_rctl_available() -> Result<(), ExporterError> {
@@ -66,15 +66,15 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
     }
 }
 
-#[cfg(feature = "rcd")]
+#[cfg(feature = "rc_script")]
 fn output_rc_script() {
-    debug!("Dumping rc.d to stdout");
+    debug!("Dumping rc(8) script to stdout");
 
     // The script we included is the one that we use for the ports tree, so
     // we need to replace %%PREFIX%% with a reasonable prefix.
-    let rcd = RC_D_FILE.replace("%%PREFIX%%", "/usr/local");
+    let output = RC_SCRIPT.replace("%%PREFIX%%", "/usr/local");
 
-    println!("{}", rcd);
+    println!("{}", output);
 }
 
 #[actix_web::main]
@@ -85,9 +85,9 @@ async fn main() -> Result<(), ExporterError> {
     // Parse the commandline arguments.
     let matches = cli::parse_args();
 
-    #[cfg(feature = "rcd")]
-    // If we have been asked to dump the rc.d, do that, and exit.
-    if matches.is_present("RC_D") {
+    #[cfg(feature = "rc_script")]
+    // If we have been asked to dump the rc(8) script, do that, and exit.
+    if matches.is_present("RC_SCRIPT") {
         output_rc_script();
 
         ::std::process::exit(0);

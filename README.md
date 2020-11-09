@@ -30,14 +30,14 @@ $ cargo install jail_exporter
 ```
 
 When installing via this method, you may want to move the installed binary to
-`/usr/local/sbin` and obtain an appropriate `rc.d` to start the exporter on
+`/usr/local/sbin` and obtain an appropriate [`rc(8)`] to start the exporter on
 system boot. You can do this as follows:
 
 ```shell
 # Performed as root.
 $ mv ~/.cargo/bin/jail_exporter /usr/local/sbin/
 $ chown root:wheel /usr/local/sbin/jail_exporter
-$ jail_exporter --rc.d | tee /usr/local/etc/rc.d/jail_exporter
+$ jail_exporter --rc-script | tee /usr/local/etc/rc.d/jail_exporter
 $ chmod 755 /usr/local/etc/rc.d/jail_exporter
 ```
 
@@ -165,21 +165,17 @@ Metric                | Description
 `id`                  | ID of the named jail
 `num`                 | Current number of running jails
 
-
 ## Crate Features
 
-Feature | Default | Description
---------|---------|------------
-`rcd`   | `true`  | Enables the `--rc.d` CLI flag to dump the `rc.d` file to stdout
+Feature     | Default | Description
+------------|---------|------------
+`rc_script` | `true`  | Enables the `--rc-script` CLI flag to dump the [`rc(8)`] script to stdout
 
 ## Notes
 
-The `rcd` feature is enabled by default for the benefit of users installing
-via `cargo install`. It is disabled by default in the FreeBSD port as the
-`rc.d` file is supplied in the ports tree.
-
-CI for this project is currently unable to test the build on FreeBSD 11.3 as
-the `freebsd-11-3-release-amd64` image in Google Cloud does not boot correctly.
+The `rc_script` feature is enabled by default for the benefit of users
+installing via `cargo install`. It is disabled by default in the FreeBSD port
+as the [`rc(8)`] script is supplied in the ports tree.
 
 [Build Status]: https://api.cirrus-ci.com/github/phyber/jail_exporter.svg
 [FreeBSD]: https://www.freebsd.org/
@@ -194,6 +190,7 @@ the `freebsd-11-3-release-amd64` image in Google Cloud does not boot correctly.
 [`daemon(8)`]: https://www.freebsd.org/cgi/man.cgi?query=daemon&sektion=8
 [`make(1)`]: https://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
 [`node_exporter`]: https://github.com/prometheus/node_exporter
+[`rc(8)`]: https://man.freebsd.org/rc(8)
 [`rc.conf(5)`]: https://man.freebsd.org/rc.conf(5)
 [`rc.d/jail_exporter.in`]: rc.d/jail_exporter.in
 [`rctl(8)`]: https://www.freebsd.org/cgi/man.cgi?query=rctl&sektion=8

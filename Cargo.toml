@@ -29,11 +29,11 @@ exclude = [
 ]
 
 [features]
-default = ["rcd"]
+default = ["rc_script"]
 
-# Adds a CLI option to dump out an rc.d file, useful for users who install via
-# `cargo install`.
-rcd = []
+# Adds a CLI option to dump out an rc(8) script, useful for users who install
+# via `cargo install`.
+rc_script = []
 
 [dependencies]
 askama = "0.10"
