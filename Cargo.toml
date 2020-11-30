@@ -45,7 +45,7 @@ tempfile = "3.1.0"
 thiserror = "1.0"
 
 [dependencies.actix-web]
-version = "3.0"
+version = "3.3"
 default-features = false
 
 [dependencies.clap]
