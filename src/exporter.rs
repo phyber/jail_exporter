@@ -31,12 +31,12 @@ use std::sync::{
 
 /// Metrics that use bookkeeping
 enum BookKept {
-    CpuTime(i64),
-    Wallclock(i64),
+    CpuTime(u64),
+    Wallclock(u64),
 }
 
 /// Book keeping for the jail counters.
-type CounterBookKeeper = HashMap<String, i64>;
+type CounterBookKeeper = HashMap<String, u64>;
 type Rusage = HashMap<rctl::Resource, usize>;
 
 /// Vector of String representing jails that have disappeared since the last
@@ -369,7 +369,7 @@ impl Exporter {
 
     /// Updates the book for the given metric and returns the amount the value
     /// has increased by.
-    fn update_metric_book(&self, name: &str, resource: &BookKept) -> i64 {
+    fn update_metric_book(&self, name: &str, resource: &BookKept) -> u64 {
         // Get the Book of Old Values and the current value.
         let (mut book, value) = match *resource {
             BookKept::CpuTime(v) => {
@@ -413,7 +413,10 @@ impl Exporter {
         let labels: &[&str] = &[&name];
 
         for (key, value) in metrics {
-            // Convert the usize to an i64.
+            // Convert the usize to an i64 as the majority of metrics take
+            // this.
+            // Counters cast this back to a u64, which should be safe as it
+            // was a usize originally.
             let value = *value as i64;
 
             match key {
@@ -425,12 +428,12 @@ impl Exporter {
                 rctl::Resource::CpuTime => {
                     let inc = self.update_metric_book(
                         &name,
-                        &BookKept::CpuTime(value)
+                        &BookKept::CpuTime(value as u64)
                     );
 
                     self.cputime_seconds_total
                         .with_label_values(labels)
-                        .inc_by(inc);
+                        .inc_by(inc as u64);
                 },
                 rctl::Resource::DataSize => {
                     self.datasize_bytes.with_label_values(labels).set(value);
@@ -497,12 +500,12 @@ impl Exporter {
                 rctl::Resource::Wallclock => {
                     let inc = self.update_metric_book(
                         &name,
-                        &BookKept::Wallclock(value)
+                        &BookKept::Wallclock(value as u64)
                     );
 
                     self.wallclock_seconds_total
                         .with_label_values(labels)
-                        .inc_by(inc);
+                        .inc_by(inc as u64);
                 },
                 rctl::Resource::WriteBps => {
                     self.writebps.with_label_values(labels).set(value)
