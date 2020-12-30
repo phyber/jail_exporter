@@ -139,6 +139,29 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .validator(is_valid_telemetry_path)
         );
 
+    #[cfg(feature = "auth")]
+    let app = app
+        .arg(
+            clap::Arg::with_name("WEB_AUTH_PASSWORD")
+                .env("WEB_AUTH_PASSWORD")
+                .hide_env_values(true)
+                .long("web.auth-password")
+                .value_name("PASSWORD")
+                .help("Password for HTTP basic authentication")
+                .takes_value(true)
+                .requires("WEB_AUTH_USERNAME")
+        )
+        .arg(
+            clap::Arg::with_name("WEB_AUTH_USERNAME")
+                .env("WEB_AUTH_USERNAME")
+                .hide_env_values(true)
+                .long("web.auth-username")
+                .value_name("USERNAME")
+                .help("Username for authentication")
+                .takes_value(true)
+                .requires("WEB_AUTH_PASSWORD")
+        );
+
     #[cfg(feature = "rc_script")]
     let app = app
         .arg(
