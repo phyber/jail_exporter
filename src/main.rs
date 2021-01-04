@@ -130,13 +130,36 @@ async fn main() -> Result<(), ExporterError> {
     })?.to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
-    let exporter = Box::new(Exporter::new());
-
-    // Configure and run the http server.
-    httpd::Server::new()
+    // Start configuring HTTP server.
+    // unused_mut here silences a warning if the crate is compiled without auth
+    // support.
+    #[allow(unused_mut)]
+    let mut server = httpd::Server::new()
         .bind_address(bind_address)
-        .telemetry_path(telemetry_path)
-        .run(exporter).await?;
+        .telemetry_path(telemetry_path);
+
+    #[cfg(feature = "auth")]
+    // Get and set the username and password for HTTP Basic Auth
+    {
+        let auth_password = matches.value_of("WEB_AUTH_PASSWORD");
+        let auth_username = matches.value_of("WEB_AUTH_USERNAME");
+
+        // CLI validation should have already ensured that both of these are
+        // set, but check again.
+        if auth_password.is_some() && auth_username.is_some() {
+            debug!("Setting username and password for server");
+
+            let auth_password = auth_password.unwrap().to_string();
+            let auth_username = auth_username.unwrap().to_string();
+
+            server = server
+                .auth_password(auth_password)
+                .auth_username(auth_username);
+        }
+    }
+
+    let exporter = Box::new(Exporter::new());
+    server.run(exporter).await?;
 
     Ok(())
 }

@@ -3,13 +3,17 @@
 ## v0.14.0
 
   - Update dependencies.
-  - The MSRV has been bumped to 1.42.0 as required by [actix-web].
+  - The MSRV has been bumped to 1.44.0 as required by dependencies.
   - Fix some minor [clippy] issues.
   - exporter: Remove a clone from metric bookkeeping.
   - exporter: Avoid using clone when creating exporter metrics struct.
   - Change environment variables, removing the `JAIL_EXPORTER_` prefix.
-  - Added `rc_script` feature enabling a `--rc-script` CLI flag which outputs
+  - Added `rc_script` feature, enabling a `--rc-script` CLI flag which outputs
     the `jail_exporter` [`rc(8)`] script on stdout.
+  - Added `auth` feature, enabling HTTP Basic Authentication via the CLI
+    arguments `--web.auth-password` and `--web.auth-username`.
+    - Note that these CLI arguments could be exposed via `ps(1)` on a
+      multi-user system.
 
 ## v0.13.0
 

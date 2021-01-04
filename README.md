@@ -54,7 +54,7 @@ sysrc jail_exporter_enable=YES
 
 At a minimum, building Jail Exporter should require:
 
-  - Rust v1.42.0
+  - Rust v1.44.0
   - Cargo
 
 A BSD [`make(1)`] Makefile is provided for convenience, if you already have
@@ -77,6 +77,8 @@ line argument.
 Argument             | Default          | Purpose
 ---------------------|------------------|--------
 `output.file-path`   | N/A              | Output metrics to a file instead of running an HTTPd.
+`web.auth-password`  | N/A              | Password for HTTP Basic Auth user.
+`web.auth-username   | N/A              | Username for HTTP Basic Auth user.
 `web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
 `web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
 
@@ -85,6 +87,8 @@ Argument             | Default          | Purpose
 Variable             | Equivalent Argument
 ---------------------|--------------------
 `OUTPUT_FILE_PATH`   | `output.file-path`
+`WEB_AUTH_PASSWORD`  | `web.auth-password`
+`WEB_AUTH_USERNAME`  | `web.auth-username`
 `WEB_LISTEN_ADDRESS` | `web.listen-address`
 `WEB_TELEMETRY_PATH` | `web.telemetry-path`
 
@@ -169,6 +173,7 @@ Metric                | Description
 
 Feature     | Default | Description
 ------------|---------|------------
+`auth`      | `true`  | Enables HTTP Basic Authentication
 `rc_script` | `true`  | Enables the `--rc-script` CLI flag to dump the [`rc(8)`] script to stdout
 
 ## Notes
@@ -176,6 +181,12 @@ Feature     | Default | Description
 The `rc_script` feature is enabled by default for the benefit of users
 installing via `cargo install`. It is disabled by default in the FreeBSD port
 as the [`rc(8)`] script is supplied in the ports tree.
+
+The HTTP Basic Authentication is configured via the `--web.auth-password` and
+`--web.auth-username` command line arguments. These arguments may be exposed
+via `ps(1)` depending on the configuration of your system. Measures to prevent
+the leaking of the password should be taken if the exporter metrics are
+considered sensitive.
 
 [Build Status]: https://api.cirrus-ci.com/github/phyber/jail_exporter.svg
 [FreeBSD]: https://www.freebsd.org/

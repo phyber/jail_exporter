@@ -69,6 +69,12 @@ mod tests {
         let exporter = Box::new(Exporter::new());
 
         let state = AppState {
+            #[cfg(feature = "auth")]
+            auth_password: None,
+
+            #[cfg(feature = "auth")]
+            auth_username: None,
+
             exporter:   exporter.clone(),
             index_page: "Test Body".into(),
         };
