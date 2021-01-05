@@ -15,6 +15,17 @@ pub enum ExporterError {
     #[error("{0} was not set.")]
     ArgNotSet(String),
 
+    #[cfg(feature = "auth")]
+    /// Raised if there is an error while hashing a password.
+    #[error("bcrypt error while hashing password")]
+    BcryptHashingError(#[from] bcrypt::BcryptError),
+
+    #[cfg(feature = "auth")]
+    /// Raised if there is a problem validating the bcrypt password while
+    /// validating the config.
+    #[error("bcrypt error with password for user: {0}")]
+    BcryptValidationError(String),
+
     #[error("HttpdError: {0}")]
     HttpdError(#[from] crate::httpd::HttpdError),
 

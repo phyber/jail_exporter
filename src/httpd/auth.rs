@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use std::str::FromStr;
 
 // Invalid username characters as defined in RFC7617
 const INVALID_USERNAME_CHARS: &[char] = &[':'];
@@ -50,7 +51,7 @@ impl BasicAuthConfig {
             Some(users) => users,
         };
 
-        for (username, _password) in users {
+        for (username, hashed_password) in users {
             // A username is invalid if it contains any characters from the
             // INVALID_USERNAME_CHARS const.
             let invalid_username = username
@@ -59,6 +60,17 @@ impl BasicAuthConfig {
 
             if invalid_username {
                 let err = ExporterError::InvalidUsername(username.into());
+                return Err(err);
+            }
+
+            if let Err(err) = bcrypt::HashParts::from_str(&hashed_password) {
+                let msg = format!(
+                    "bcrypt error '{}' when validating user {}",
+                    err,
+                    username,
+                );
+
+                let err = ExporterError::BcryptValidationError(msg);
                 return Err(err);
             }
         }
@@ -96,8 +108,8 @@ pub async fn validate_credentials(
         return Err(ErrorUnauthorized("Unauthorized"));
     }
 
-    // We know the user_id exists in the hash, get the password for it.
-    let auth_password = &auth_users[user_id];
+    // We know the user_id exists in the hash, get the hashed password for it.
+    let hashed_password = &auth_users[user_id];
 
     // We need to get the reference to the Cow str to compare
     // passwords properly, so a little unwrapping is necessary
@@ -106,7 +118,17 @@ pub async fn validate_credentials(
         None           => return Err(ErrorUnauthorized("Unauthorized")),
     };
 
-    if password != auth_password {
+    let validated = match bcrypt::verify(password, hashed_password) {
+        Ok(b)  => b,
+        Err(e) => {
+            // We can't easily deal with the original error here, so log it and
+            // simply don't validate the user.
+            debug!("Couldn't verify password, bcrypt error: {}", e);
+            false
+        },
+    };
+
+    if !validated {
         debug!("password doesn't match auth_password, denying access");
         return Err(ErrorUnauthorized("Unauthorized"));
     };
@@ -137,7 +159,10 @@ mod tests {
 
     fn get_users_config() -> BasicAuthConfig {
         let mut users: HashMap<String, String> = HashMap::new();
-        users.insert("foo".into(), "bar".into());
+        users.insert(
+            "foo".into(),
+            "$2b$04$nFPE4cwFjOFGUmdp.o2NTuh/blJDaEwikX1qoitVe144TsS2l5whS".into(),
+        );
 
         BasicAuthConfig {
             basic_auth_users: Some(users),

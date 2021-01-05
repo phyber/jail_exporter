@@ -100,8 +100,8 @@ The configuration file format is the same as specified in [`exporter-toolkit`].
 ```yaml
 ---
 basic_auth_users:
-    username: 'some password'
-    another_user: 'good password'
+    username: 'bcrypt hashed secret'
+    another_user: 'bcrypt hashed secret'
 ```
 
 If no configuration is specified, or the configuration is specified but
@@ -110,6 +110,19 @@ contains no users, authentication will be disabled.
 While loading the configuration, usernames will be checked for compliance with
 [RFC7617]. If any invalid usernames are detected, `jail_exporter` will error
 out and refuse to start.
+
+User passwords are [bcrypt] hashed secrets, which can be generated with the
+`bcrypt` subcommand.
+
+```shell
+jail_exporter bcrypt foobarpass
+$2b$04$FDs/.p4csWdp8cnPbU6rK.TNvo5OuNx9zd4B0cbujnfleIvzejBYG
+```
+
+The cost for the password hashing can be controlled with the `--cost` argument
+to the `bcrypt` subcommand and defaults to `12`. This default it taken from the
+bcrypt crate and should be tuned for the computer the hashing will be running
+on, as this cost will be paid each time a connection is authenticated.
 
 ## Running
 
@@ -207,6 +220,7 @@ as the [`rc(8)`] script is supplied in the ports tree.
 [RFC7617]: https://tools.ietf.org/html/rfc7617
 [Rust]: https://www.rust-lang.org/
 [Textfile Collector]: https://github.com/prometheus/node_exporter#textfile-collector
+[bcrypt]: https://en.wikipedia.org/wiki/Bcrypt
 [crates.io]: https://crates.io/crates/jail_exporter
 [jail]: https://crates.io/crates/jail
 [metric and label naming]: https://prometheus.io/docs/practices/naming/

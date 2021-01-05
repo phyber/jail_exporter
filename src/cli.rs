@@ -29,6 +29,23 @@ fn is_valid_basic_auth_config_path(s: String) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(feature = "auth")]
+// Ensures that a given bcrypt cost is valid
+fn is_valid_bcrypt_cost(s: String) -> Result<(), String> {
+    debug!("Ensuring that bcrypt cost is valid");
+
+    let cost = match s.parse::<u32>() {
+        Err(_) => return Err("could not parse bcrypt cost as integer".to_owned()),
+        Ok(c)  => c,
+    };
+
+    if cost < 4 || cost > 31 {
+        return Err("cost cannot be less than 4 or more than 31".to_owned());
+    }
+
+    Ok(())
+}
+
 // Basic checks for valid filesystem path for .prom output file
 fn is_valid_output_file_path(s: String) -> Result<(), String> {
     debug!("Ensuring that output.file-path is valid");
@@ -155,8 +172,8 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
         );
 
     #[cfg(feature = "auth")]
-    let app = app
-        .arg(
+    let app = {
+        let app = app.arg(
             clap::Arg::with_name("WEB_AUTH_CONFIG")
                 .env("WEB_AUTH_CONFIG")
                 .hide_env_values(true)
@@ -166,6 +183,32 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .takes_value(true)
                 .validator(is_valid_basic_auth_config_path)
         );
+
+        // The default cost here is copied from the bcrypt::DEFAULT_COST
+        // constant.
+        let bcrypt = clap::SubCommand::with_name("bcrypt")
+            .about("Returns bcrypt encrypted passwords suitable for HTTP Basic Auth")
+            .arg(
+                clap::Arg::with_name("COST")
+                    .long("cost")
+                    .value_name("COST")
+                    .help("Computes the hash using the given cost")
+                    .takes_value(true)
+                    .default_value("12")
+                    .validator(is_valid_bcrypt_cost)
+            )
+            .arg(
+                clap::Arg::with_name("PASSWORD")
+                    .value_name("PASSWORD")
+                    .help("The password to hash using bcrypt")
+                    .takes_value(true)
+                    .required(true)
+            );
+
+        let app = app.subcommand(bcrypt);
+
+        app
+    };
 
     #[cfg(feature = "rc_script")]
     let app = app

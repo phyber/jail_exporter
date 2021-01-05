@@ -96,6 +96,23 @@ async fn main() -> Result<(), ExporterError> {
         ::std::process::exit(0);
     }
 
+    #[cfg(feature = "auth")]
+    // If we have the auth feature, we can bcrypt passwords for the user.
+    if let Some(cmd) = matches.subcommand_matches("bcrypt") {
+        // Cost argument is validated and has a default, we can unwrap right
+        // away.
+        let cost = cmd.value_of("COST").unwrap();
+        let cost: u32 = cost.parse().unwrap();
+
+        // Password argument is required, unwrap is safe.
+        let password = cmd.value_of("PASSWORD").unwrap();
+        let hash = bcrypt::hash(password, cost)?;
+
+        println!("{}", hash);
+
+        ::std::process::exit(0);
+    }
+
     // Root is required beyond this point.
     // Check that we're running as root.
     is_running_as_root(&mut UsersCache::new())?;
