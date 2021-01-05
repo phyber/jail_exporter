@@ -16,20 +16,12 @@ use log::{
 };
 
 #[cfg(feature = "auth")]
-use actix_web::{
-    dev::ServiceRequest,
-    error::ErrorUnauthorized,
-    middleware::Condition,
-    web::Data,
-    Error,
-};
+use actix_web::middleware::Condition;
 
 #[cfg(feature = "auth")]
-use actix_web_httpauth::{
-    extractors::basic::BasicAuth,
-    middleware::HttpAuthentication,
-};
+use actix_web_httpauth::middleware::HttpAuthentication;
 
+mod auth;
 mod collector;
 mod errors;
 mod handlers;
@@ -45,88 +37,40 @@ pub use errors::HttpdError;
 // This AppState is used to pass the rendered index template to the index
 // function.
 pub(self) struct AppState {
+    exporter:   Box<dyn Collector>,
+    index_page: String,
+
     #[cfg(feature = "auth")]
     auth_password: Option<String>,
 
     #[cfg(feature = "auth")]
     auth_username: Option<String>,
-
-    exporter:      Box<dyn Collector>,
-    index_page:    String,
-}
-
-#[cfg(feature = "auth")]
-// Validate HTTP Basic auth credentials.
-// Usernames and passwords aren't checked in constant time.
-async fn validate_credentials(
-    req: ServiceRequest,
-    credentials: BasicAuth,
-) -> Result<ServiceRequest, Error> {
-    debug!("Validating credentials");
-
-    let state = req.app_data::<Data<AppState>>()
-        .expect("Missing AppState")
-        .get_ref();
-
-    // These derefs give us an Option<&str> instead of the real
-    // Option<String>, allowing us to compare to the Cow<&str>
-    // easily later on.
-    let auth_password = state.auth_password.as_deref();
-    let auth_username = state.auth_username.as_deref();
-
-    // If the state password or username are None, no
-    // authentication was setup, and we can simply return.
-    if auth_password.is_none() || auth_username.is_none() {
-        debug!("No username or password in AppState, allowing access");
-        return Ok(req);
-    }
-
-    // Username comparson is simple.
-    let user_id = credentials.user_id().as_ref();
-    if Some(user_id) != auth_username {
-        debug!("user_id doesn't match auth_username, denying access");
-        return Err(ErrorUnauthorized("Unauthorized"));
-    };
-
-    // We need to get the reference to the Cow str to compare
-    // passwords properly, so a little unwrapping is necessary
-    let password = match credentials.password() {
-        Some(password) => Some(password.as_ref()),
-        None           => None,
-    };
-
-    if password != auth_password {
-        debug!("password doesn't match auth_password, denying access");
-        return Err(ErrorUnauthorized("Unauthorized"));
-    };
-
-    Ok(req)
 }
 
 // Used for the httpd builder
 #[derive(Debug)]
 pub struct Server {
-    #[cfg(feature = "auth")]
-    auth_password:  Option<String>,
-
-    #[cfg(feature = "auth")]
-    auth_username:  Option<String>,
-
     bind_address:   String,
     telemetry_path: String,
+
+    #[cfg(feature = "auth")]
+    auth_password: Option<String>,
+
+    #[cfg(feature = "auth")]
+    auth_username: Option<String>,
 }
 
 impl Default for Server {
     fn default() -> Self {
         Self {
-            #[cfg(feature = "auth")]
-            auth_password:  None,
-
-            #[cfg(feature = "auth")]
-            auth_username:  None,
-
             bind_address:   "127.0.0.1:9452".into(),
             telemetry_path: "/metrics".into(),
+
+            #[cfg(feature = "auth")]
+            auth_password: None,
+
+            #[cfg(feature = "auth")]
+            auth_username: None,
         }
     }
 }
@@ -185,25 +129,20 @@ impl Server {
         #[cfg(feature = "auth")]
         let auth_username = self.auth_username;
 
-        #[cfg(feature = "auth")]
-        // This boolean decides if the authentication middleware is enabled in
-        // the wrap condition.
-        let enable_auth = auth_password.is_some() && auth_username.is_some();
-
         // Route handlers
         debug!("Registering HTTP app routes");
         let app = move || {
             // This state is shared between threads and allows us to pass
             // arbitrary items to request handlers.
             let state = AppState {
+                exporter:   exporter.clone(),
+                index_page: index_page.clone(),
+
                 #[cfg(feature = "auth")]
                 auth_password: auth_password.clone(),
 
                 #[cfg(feature = "auth")]
                 auth_username: auth_username.clone(),
-
-                exporter:      exporter.clone(),
-                index_page:    index_page.clone(),
             };
 
             // Order is important in the App config.
@@ -214,10 +153,16 @@ impl Server {
 
             #[cfg(feature = "auth")]
             // Authentication
-            let app = app.wrap(Condition::new(
-                enable_auth,
-                HttpAuthentication::basic(validate_credentials),
-            ));
+            let app = {
+                // This boolean decides if the authentication middleware is
+                // enabled in the wrap condition.
+                let enable = auth_password.is_some() && auth_username.is_some();
+
+                app.wrap(Condition::new(
+                    enable,
+                    HttpAuthentication::basic(auth::validate_credentials),
+                ))
+            };
 
             // Finally add routes
             app
@@ -241,80 +186,5 @@ impl Server {
         server.run().await?;
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[cfg(feature = "auth")]
-    use actix_web::{
-        dev::Payload,
-        test,
-        FromRequest,
-    };
-
-    struct TestCollector;
-    impl Collector for TestCollector {
-        fn collect(&self) -> Result<Vec<u8>, HttpdError> {
-            Ok("collector".as_bytes().to_vec())
-        }
-    }
-
-    #[cfg(feature = "auth")]
-    #[actix_rt::test]
-    async fn validate_credentials_ok() {
-        let exporter = Box::new(TestCollector);
-
-        let data = AppState {
-            auth_password: Some("bar".into()),
-            auth_username: Some("foo".into()),
-            exporter:      exporter,
-            index_page:    "test".into(),
-        };
-
-        // HTTP request using Basic auth with username "foo" password "bar"
-        let req = test::TestRequest::get()
-            .data(data)
-            .header("Authorization", "Basic Zm9vOmJhcg==")
-            .to_http_request();
-
-        let credentials = BasicAuth::from_request(&req, &mut Payload::None)
-            .await
-            .unwrap();
-
-        let req = ServiceRequest::from_request(req).unwrap();
-        let res = validate_credentials(req, credentials).await;
-
-        assert!(res.is_ok());
-    }
-
-    #[cfg(feature = "auth")]
-    #[actix_rt::test]
-    async fn validate_credentials_unauthorized() {
-        let exporter = Box::new(TestCollector);
-
-        let data = AppState {
-            auth_password: Some("bar".into()),
-            auth_username: Some("foo".into()),
-            exporter:      exporter,
-            index_page:    "test".into(),
-        };
-
-        // HTTP request using Basic auth with username "bad" password "password"
-        let req = test::TestRequest::get()
-            .data(data)
-            .header("Authorization", "Basic YmFkOnBhc3N3b3Jk")
-            .to_http_request();
-
-        let credentials = BasicAuth::from_request(&req, &mut Payload::None)
-            .await
-            .unwrap();
-
-        let req = ServiceRequest::from_request(req).unwrap();
-        let res = validate_credentials(req, credentials).await;
-
-        assert!(res.is_err());
     }
 }
