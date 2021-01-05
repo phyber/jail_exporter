@@ -112,13 +112,14 @@ impl Server {
         let telemetry_path = self.telemetry_path.clone();
 
         #[cfg(feature = "auth")]
+        // Unwrap the config if we have one, otherwise use a default.
         let basic_auth_config = match self.basic_auth_config {
             Some(config) => config,
             None         => Default::default(),
         };
 
         // Route handlers
-        debug!("Registering HTTP app routes");
+        debug!("Creating HTTP server app");
         let app = move || {
             // This state is shared between threads and allows us to pass
             // arbitrary items to request handlers.
@@ -139,13 +140,10 @@ impl Server {
             #[cfg(feature = "auth")]
             // Authentication
             let app = {
-                // This boolean decides if the authentication middleware is
-                // enabled in the wrap condition.
-                //let enable = auth_password.is_some() && auth_username.is_some();
-                let enable = basic_auth_config.basic_auth_users.is_some();
-
+                // Only enable the authentication if there are some users to
+                // check.
                 app.wrap(Condition::new(
-                    enable,
+                    basic_auth_config.basic_auth_users.is_some(),
                     HttpAuthentication::basic(auth::validate_credentials),
                 ))
             };

@@ -96,6 +96,8 @@ pub async fn validate_credentials(
     let auth_users = match &auth_config.basic_auth_users {
         Some(users) => users,
         None        => {
+            // We shouldn't end up here, because the middleware should be
+            // disabled if we have no users, but we handle it here anyway.
             debug!("No users defined in auth config, allowing access");
             return Ok(req);
         },
@@ -176,6 +178,15 @@ mod tests {
         let config = BasicAuthConfig::from_yaml(&path);
 
         assert!(config.is_err());
+    }
+
+    // Config is a null auth users entry.
+    #[test]
+    fn basic_user_config_from_yaml_null() {
+        let path = "test-data/config_null.yaml";
+        let config = BasicAuthConfig::from_yaml(&path);
+
+        assert!(config.is_ok());
     }
 
     // Config consists of valid usernames
