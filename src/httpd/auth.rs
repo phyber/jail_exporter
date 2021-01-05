@@ -65,8 +65,11 @@ pub async fn validate_credentials(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::httpd::{
+        collector::Collector,
+        errors::HttpdError,
+    };
 
-    #[cfg(feature = "auth")]
     use actix_web::{
         dev::Payload,
         test,

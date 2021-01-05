@@ -21,7 +21,9 @@ use actix_web::middleware::Condition;
 #[cfg(feature = "auth")]
 use actix_web_httpauth::middleware::HttpAuthentication;
 
+#[cfg(feature = "auth")]
 mod auth;
+
 mod collector;
 mod errors;
 mod handlers;
