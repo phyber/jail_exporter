@@ -21,6 +21,9 @@ use errors::ExporterError;
 use exporter::Exporter;
 use file::FileExporter;
 
+#[cfg(feature = "auth")]
+use httpd::auth::BasicAuthConfig;
+
 #[macro_use]
 mod macros;
 
@@ -141,20 +144,10 @@ async fn main() -> Result<(), ExporterError> {
     #[cfg(feature = "auth")]
     // Get and set the username and password for HTTP Basic Auth
     {
-        let auth_password = matches.value_of("WEB_AUTH_PASSWORD");
-        let auth_username = matches.value_of("WEB_AUTH_USERNAME");
+        if let Some(path) = matches.value_of("WEB_AUTH_CONFIG") {
+            let config = BasicAuthConfig::from_yaml(&path)?;
 
-        // CLI validation should have already ensured that both of these are
-        // set, but check again.
-        if auth_password.is_some() && auth_username.is_some() {
-            debug!("Setting username and password for server");
-
-            let auth_password = auth_password.unwrap().to_string();
-            let auth_username = auth_username.unwrap().to_string();
-
-            server = server
-                .auth_password(auth_password)
-                .auth_username(auth_username);
+            server = server.auth_config(config);
         }
     }
 

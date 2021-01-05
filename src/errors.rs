@@ -18,6 +18,11 @@ pub enum ExporterError {
     #[error("HttpdError: {0}")]
     HttpdError(#[from] crate::httpd::HttpdError),
 
+    #[cfg(feature = "auth")]
+    /// Raised if a configured username is invalid
+    #[error("Invalid username: {0}")]
+    InvalidUsername(String),
+
     /// Raised if an io::Error occurs
     #[error("std::io::Error")]
     IoError(#[from] std::io::Error),
@@ -45,6 +50,11 @@ pub enum ExporterError {
     /// Raised if there's an issue converting from UTF-8 to String
     #[error("Failed to convert UTF-8 to String")]
     Utf8Error(#[from] std::string::FromUtf8Error),
+
+    #[cfg(feature = "auth")]
+    /// Raised if there is an issue reading the YAML configuration
+    #[error("Failed to read YAML configuration")]
+    YamlError(#[from] serde_yaml::Error),
 }
 
 // There is no as_dyn_error for jail::JailError, so we manually implement From

@@ -1,0 +1,4 @@
+---
+basic_auth_users:
+    foo: 'bar'
+    baz: 'daz'

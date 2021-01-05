@@ -6,7 +6,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use super::AppState;
-use log::debug;
+use crate::errors::ExporterError;
 use actix_web::{
     dev::ServiceRequest,
     error::ErrorUnauthorized,
@@ -14,6 +14,58 @@ use actix_web::{
     Error,
 };
 use actix_web_httpauth::extractors::basic::BasicAuth;
+use log::debug;
+use serde::Deserialize;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
+
+// Invalid username characters as defined in RFC7617
+const INVALID_USERNAME_CHARS: &[char] = &[':'];
+
+#[derive(Clone, Debug, Default, Deserialize)]
+pub struct BasicAuthConfig {
+    pub basic_auth_users: Option<HashMap<String, String>>,
+}
+
+impl BasicAuthConfig {
+    // Loads a YAML config from the given path returning the BasicAuthConfig
+    pub fn from_yaml(path: &str) -> Result<Self, ExporterError> {
+        let path = Path::new(&path);
+        let file = File::open(&path)?;
+        let reader = BufReader::new(file);
+        let config: Self = serde_yaml::from_reader(reader)?;
+
+        config.validate()?;
+
+        Ok(config)
+    }
+
+    // Validates that usernames don't contain invalid characters.
+    fn validate(&self) -> Result<(), ExporterError> {
+        // Not having users is perfectly valid.
+        let users = match &self.basic_auth_users {
+            None        => return Ok(()),
+            Some(users) => users,
+        };
+
+        for (username, _password) in users {
+            // A username is invalid if it contains any characters from the
+            // INVALID_USERNAME_CHARS const.
+            let invalid_username = username
+                .chars()
+                .any(|c| INVALID_USERNAME_CHARS.contains(&c));
+
+            if invalid_username {
+                let err = ExporterError::InvalidUsername(username.into());
+                return Err(err);
+            }
+        }
+
+        Ok(())
+    }
+}
 
 // Validate HTTP Basic auth credentials.
 // Usernames and passwords aren't checked in constant time.
@@ -27,31 +79,31 @@ pub async fn validate_credentials(
         .expect("Missing AppState")
         .get_ref();
 
-    // These derefs give us an Option<&str> instead of the real
-    // Option<String>, allowing us to compare to the Cow<&str>
-    // easily later on.
-    let auth_password = state.auth_password.as_deref();
-    let auth_username = state.auth_username.as_deref();
+    // Get the users from the config if they exist.
+    let auth_config = &state.basic_auth_config;
+    let auth_users = match &auth_config.basic_auth_users {
+        Some(users) => users,
+        None        => {
+            debug!("No users defined in auth config, allowing access");
+            return Ok(req);
+        },
+    };
 
-    // If the state password or username are None, no
-    // authentication was setup, and we can simply return.
-    if auth_password.is_none() || auth_username.is_none() {
-        debug!("No username or password in AppState, allowing access");
-        return Ok(req);
+    // Get the incoming user_id and check for an entry in the users hash
+    let user_id = credentials.user_id().as_ref();
+    if !auth_users.contains_key(user_id) {
+        debug!("user_id doesn't match any configured user");
+        return Err(ErrorUnauthorized("Unauthorized"));
     }
 
-    // Username comparson is simple.
-    let user_id = credentials.user_id().as_ref();
-    if Some(user_id) != auth_username {
-        debug!("user_id doesn't match auth_username, denying access");
-        return Err(ErrorUnauthorized("Unauthorized"));
-    };
+    // We know the user_id exists in the hash, get the password for it.
+    let auth_password = &auth_users[user_id];
 
     // We need to get the reference to the Cow str to compare
     // passwords properly, so a little unwrapping is necessary
     let password = match credentials.password() {
-        Some(password) => Some(password.as_ref()),
-        None           => None,
+        Some(password) => password.as_ref(),
+        None           => return Err(ErrorUnauthorized("Unauthorized")),
     };
 
     if password != auth_password {
@@ -83,16 +135,42 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "auth")]
+    fn get_users_config() -> BasicAuthConfig {
+        let mut users: HashMap<String, String> = HashMap::new();
+        users.insert("foo".into(), "bar".into());
+
+        BasicAuthConfig {
+            basic_auth_users: Some(users),
+        }
+    }
+
+    // Tests that errors are returned when config contains an invalid username
+    #[test]
+    fn basic_user_config_from_yaml_invalid() {
+        let path = "test-data/config_invalid.yaml";
+        let config = BasicAuthConfig::from_yaml(&path);
+
+        assert!(config.is_err());
+    }
+
+    // Config consists of valid usernames
+    #[test]
+    fn basic_user_config_from_yaml_ok() {
+        let path = "test-data/config_ok.yaml";
+        let config = BasicAuthConfig::from_yaml(&path);
+
+        assert!(config.is_ok());
+    }
+
     #[actix_rt::test]
     async fn validate_credentials_ok() {
         let exporter = Box::new(TestCollector);
+        let auth_config = get_users_config();
 
         let data = AppState {
-            auth_password: Some("bar".into()),
-            auth_username: Some("foo".into()),
-            exporter:      exporter,
-            index_page:    "test".into(),
+            basic_auth_config: auth_config,
+            exporter:          exporter,
+            index_page:        "test".into(),
         };
 
         // HTTP request using Basic auth with username "foo" password "bar"
@@ -111,16 +189,15 @@ mod tests {
         assert!(res.is_ok());
     }
 
-    #[cfg(feature = "auth")]
     #[actix_rt::test]
     async fn validate_credentials_unauthorized() {
         let exporter = Box::new(TestCollector);
+        let auth_config = get_users_config();
 
         let data = AppState {
-            auth_password: Some("bar".into()),
-            auth_username: Some("foo".into()),
-            exporter:      exporter,
-            index_page:    "test".into(),
+            basic_auth_config: auth_config,
+            exporter:          exporter,
+            index_page:        "test".into(),
         };
 
         // HTTP request using Basic auth with username "bad" password "password"

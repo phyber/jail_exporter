@@ -22,12 +22,16 @@ use actix_web::middleware::Condition;
 use actix_web_httpauth::middleware::HttpAuthentication;
 
 #[cfg(feature = "auth")]
-mod auth;
+pub mod auth;
 
 mod collector;
 mod errors;
 mod handlers;
 mod templates;
+
+#[cfg(feature = "auth")]
+pub use auth::BasicAuthConfig;
+
 use handlers::{
     index,
     metrics,
@@ -43,10 +47,7 @@ pub(self) struct AppState {
     index_page: String,
 
     #[cfg(feature = "auth")]
-    auth_password: Option<String>,
-
-    #[cfg(feature = "auth")]
-    auth_username: Option<String>,
+    basic_auth_config: BasicAuthConfig,
 }
 
 // Used for the httpd builder
@@ -56,10 +57,7 @@ pub struct Server {
     telemetry_path: String,
 
     #[cfg(feature = "auth")]
-    auth_password: Option<String>,
-
-    #[cfg(feature = "auth")]
-    auth_username: Option<String>,
+    basic_auth_config: Option<BasicAuthConfig>,
 }
 
 impl Default for Server {
@@ -69,10 +67,7 @@ impl Default for Server {
             telemetry_path: "/metrics".into(),
 
             #[cfg(feature = "auth")]
-            auth_password: None,
-
-            #[cfg(feature = "auth")]
-            auth_username: None,
+            basic_auth_config: None,
         }
     }
 }
@@ -85,20 +80,11 @@ impl Server {
     }
 
     #[cfg(feature = "auth")]
-    // Sets the HTTP basic auth password
-    pub fn auth_password(mut self, password: String) -> Self {
-        debug!("Setting HTTP basic auth password to: {}", password);
+    // Set the HTTP Basic Auth configuration
+    pub fn auth_config(mut self, config: BasicAuthConfig) -> Self {
+        debug!("Setting HTTP basic auth config");
 
-        self.auth_password = Some(password);
-        self
-    }
-
-    #[cfg(feature = "auth")]
-    // Sets the HTTP basic auth username
-    pub fn auth_username(mut self, username: String) -> Self {
-        debug!("Setting HTTP basic auth username to: {}", username);
-
-        self.auth_username = Some(username);
+        self.basic_auth_config = Some(config);
         self
     }
 
@@ -126,10 +112,10 @@ impl Server {
         let telemetry_path = self.telemetry_path.clone();
 
         #[cfg(feature = "auth")]
-        let auth_password = self.auth_password;
-
-        #[cfg(feature = "auth")]
-        let auth_username = self.auth_username;
+        let basic_auth_config = match self.basic_auth_config {
+            Some(config) => config,
+            None         => Default::default(),
+        };
 
         // Route handlers
         debug!("Registering HTTP app routes");
@@ -141,10 +127,7 @@ impl Server {
                 index_page: index_page.clone(),
 
                 #[cfg(feature = "auth")]
-                auth_password: auth_password.clone(),
-
-                #[cfg(feature = "auth")]
-                auth_username: auth_username.clone(),
+                basic_auth_config: basic_auth_config.clone(),
             };
 
             // Order is important in the App config.
@@ -158,7 +141,8 @@ impl Server {
             let app = {
                 // This boolean decides if the authentication middleware is
                 // enabled in the wrap condition.
-                let enable = auth_password.is_some() && auth_username.is_some();
+                //let enable = auth_password.is_some() && auth_username.is_some();
+                let enable = basic_auth_config.basic_auth_users.is_some();
 
                 app.wrap(Condition::new(
                     enable,

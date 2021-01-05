@@ -14,8 +14,23 @@ use std::net::SocketAddr;
 use std::path::Path;
 use std::str::FromStr;
 
-// Basic checks for valid filesystem path
-fn is_valid_filesystem_path(s: String) -> Result<(), String> {
+#[cfg(feature = "auth")]
+// Basic checks for valid filesystem path for web.auth-config existing.
+fn is_valid_basic_auth_config_path(s: String) -> Result<(), String> {
+    debug!("Ensuring that web.auth-config is valid");
+
+    // Get a Path from our string and start checking
+    let path = Path::new(&s);
+
+    if !path.is_file() {
+        return Err("web.auth-config doesn't doesn't exist".to_owned());
+    }
+
+    Ok(())
+}
+
+// Basic checks for valid filesystem path for .prom output file
+fn is_valid_output_file_path(s: String) -> Result<(), String> {
     debug!("Ensuring that output.file-path is valid");
 
     // - is special and is a request for us to output to stdout
@@ -114,7 +129,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .value_name("FILE")
                 .help("File to output metrics to.")
                 .takes_value(true)
-                .validator(is_valid_filesystem_path)
+                .validator(is_valid_output_file_path)
         )
         .arg(
             clap::Arg::with_name("WEB_LISTEN_ADDRESS")
@@ -142,24 +157,14 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
     #[cfg(feature = "auth")]
     let app = app
         .arg(
-            clap::Arg::with_name("WEB_AUTH_PASSWORD")
-                .env("WEB_AUTH_PASSWORD")
+            clap::Arg::with_name("WEB_AUTH_CONFIG")
+                .env("WEB_AUTH_CONFIG")
                 .hide_env_values(true)
-                .long("web.auth-password")
-                .value_name("PASSWORD")
-                .help("Password for HTTP basic authentication")
+                .long("web.auth-config")
+                .value_name("CONFIG")
+                .help("Path to HTTP Basic Authentication configuration")
                 .takes_value(true)
-                .requires("WEB_AUTH_USERNAME")
-        )
-        .arg(
-            clap::Arg::with_name("WEB_AUTH_USERNAME")
-                .env("WEB_AUTH_USERNAME")
-                .hide_env_values(true)
-                .long("web.auth-username")
-                .value_name("USERNAME")
-                .help("Username for authentication")
-                .takes_value(true)
-                .requires("WEB_AUTH_PASSWORD")
+                .validator(is_valid_basic_auth_config_path)
         );
 
     #[cfg(feature = "rc_script")]
@@ -317,50 +322,50 @@ mod tests {
     }
 
     #[test]
-    fn is_valid_filesystem_path_absolute_path() {
-        let res = is_valid_filesystem_path("tmp/metrics.prom".into());
+    fn is_valid_output_file_path_absolute_path() {
+        let res = is_valid_output_file_path("tmp/metrics.prom".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_bad_extension() {
-        let res = is_valid_filesystem_path("/tmp/metrics.pram".into());
+    fn is_valid_output_file_path_bad_extension() {
+        let res = is_valid_output_file_path("/tmp/metrics.pram".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_bad_parent_dir() {
-        let res = is_valid_filesystem_path("/tmp/nope/metrics.prom".into());
+    fn is_valid_output_file_path_bad_parent_dir() {
+        let res = is_valid_output_file_path("/tmp/nope/metrics.prom".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_directory() {
-        let res = is_valid_filesystem_path("/tmp".into());
+    fn is_valid_output_file_path_directory() {
+        let res = is_valid_output_file_path("/tmp".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_no_extension() {
-        let res = is_valid_filesystem_path("/tmp/metrics".into());
+    fn is_valid_output_file_path_no_extension() {
+        let res = is_valid_output_file_path("/tmp/metrics".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_ok() {
-        let res = is_valid_filesystem_path("/tmp/metrics.prom".into());
+    fn is_valid_output_file_path_ok() {
+        let res = is_valid_output_file_path("/tmp/metrics.prom".into());
         assert!(res.is_ok());
     }
 
     #[test]
-    fn is_valid_filesystem_path_root() {
-        let res = is_valid_filesystem_path("/".into());
+    fn is_valid_output_file_path_root() {
+        let res = is_valid_output_file_path("/".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_stdout() {
-        let res = is_valid_filesystem_path("-".into());
+    fn is_valid_output_file_path_stdout() {
+        let res = is_valid_output_file_path("-".into());
         assert!(res.is_ok());
     }
 

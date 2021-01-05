@@ -32,7 +32,7 @@ exclude = [
 default = ["auth", "rc_script"]
 
 # Enables HTTP basic authentication
-auth = ["actix-web-httpauth"]
+auth = ["actix-web-httpauth", "serde", "serde_yaml"]
 
 # Adds a CLI option to dump out an rc(8) script, useful for users who install
 # via `cargo install`.
@@ -67,6 +67,14 @@ default-features = false
 [dependencies.prometheus]
 version = "0.11.0"
 default-features = false
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+
+[dependencies.serde_yaml]
+version = "0.8"
+optional = true
 
 [dependencies.users]
 version = "0.11"

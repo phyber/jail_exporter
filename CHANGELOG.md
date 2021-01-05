@@ -10,10 +10,10 @@
   - Change environment variables, removing the `JAIL_EXPORTER_` prefix.
   - Added `rc_script` feature, enabling a `--rc-script` CLI flag which outputs
     the `jail_exporter` [`rc(8)`] script on stdout.
-  - Added `auth` feature, enabling HTTP Basic Authentication via the CLI
-    arguments `--web.auth-password` and `--web.auth-username`.
-    - Note that these CLI arguments could be exposed via `ps(1)` on a
-      multi-user system.
+  - Added `auth` feature, enabling HTTP Basic authentication.
+    Configuration for the HTTP Basic authentication is via a YAML configuration
+    file, the location of the configuration is specified via the
+    `--web.auth-config` CLI argument.
 
 ## v0.13.0
 
