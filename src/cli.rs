@@ -95,6 +95,23 @@ fn is_valid_output_file_path(s: String) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(feature = "bcrypt_cmd")]
+// Validates that the incoming value can be used as a password length
+fn is_valid_password_length(s: String) -> Result<(), String> {
+    debug!("Ensuring that bcrypt --length is valid");
+
+    let length = match s.parse::<usize>() {
+        Ok(length) => Ok(length),
+        Err(_)     => Err(format!("Could not parse '{}' as valid length", s)),
+    }?;
+
+    if length < 8 {
+        return Err("--length must be at least 8 characters".to_owned());
+    }
+
+    Ok(())
+}
+
 // Used as a validator for the argument parsing.
 fn is_valid_socket_addr(s: String) -> Result<(), String> {
     debug!("Ensuring that web.listen-address is valid");
@@ -185,8 +202,6 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
 
     #[cfg(feature = "bcrypt_cmd")]
     let app = {
-        // The default cost here is copied from the bcrypt::DEFAULT_COST
-        // constant.
         let bcrypt = clap::SubCommand::with_name("bcrypt")
             .about("Returns bcrypt encrypted passwords suitable for HTTP Basic Auth")
             .arg(
@@ -198,6 +213,16 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                     .takes_value(true)
                     .default_value("12")
                     .validator(is_valid_bcrypt_cost)
+            )
+            .arg(
+                clap::Arg::with_name("LENGTH")
+                    .long("length")
+                    .short("l")
+                    .help("Specify the random password length")
+                    .takes_value(true)
+                    .default_value("32")
+                    .requires("RANDOM")
+                    .validator(is_valid_password_length)
             )
             .arg(
                 clap::Arg::with_name("RANDOM")

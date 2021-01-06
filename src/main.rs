@@ -111,8 +111,10 @@ async fn main() -> Result<(), ExporterError> {
     if let Some(cmd) = matches.subcommand_matches("bcrypt") {
         // Cost argument is validated and has a default, we can unwrap right
         // away.
-        let cost = cmd.value_of("COST").unwrap();
-        let cost: u32 = cost.parse().unwrap();
+        let cost: u32 = cmd.value_of("COST")
+            .unwrap()
+            .parse()
+            .unwrap();
         let random = cmd.is_present("RANDOM");
 
         // Password argument is required, unwrap is safe.
@@ -120,13 +122,18 @@ async fn main() -> Result<(), ExporterError> {
             Some(password) => password.into(),
             None           => {
                 if random {
-                    let password = thread_rng()
-                        .sample_iter(&Alphanumeric)
-                        .take(32)
-                        .map(char::from)
-                        .collect();
+                    // length was validated by the CLI, we should be safe to
+                    // unwrap and parse to usize here.
+                    let length: usize = cmd.value_of("LENGTH")
+                        .unwrap()
+                        .parse()
+                        .unwrap();
 
-                    password
+                    thread_rng()
+                        .sample_iter(&Alphanumeric)
+                        .take(length)
+                        .map(char::from)
+                        .collect()
                 }
                 else {
                     Password::new()
