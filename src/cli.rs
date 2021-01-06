@@ -192,6 +192,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
             .arg(
                 clap::Arg::with_name("COST")
                     .long("cost")
+                    .short("c")
                     .value_name("COST")
                     .help("Computes the hash using the given cost")
                     .takes_value(true)
@@ -201,6 +202,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
             .arg(
                 clap::Arg::with_name("RANDOM")
                     .long("random")
+                    .short("r")
                     .help("Generate a random password instead of having to \
                            specify one")
             )
