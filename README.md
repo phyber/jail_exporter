@@ -112,11 +112,25 @@ While loading the configuration, usernames will be checked for compliance with
 out and refuse to start.
 
 User passwords are [bcrypt] hashed secrets, which can be generated with the
-`bcrypt` subcommand.
+`bcrypt` subcommand if `jail_exporter` was compiled with the `bcrypt_cmd`
+feature (enabled by default).
 
 ```shell
-jail_exporter bcrypt foobarpass
-$2b$04$FDs/.p4csWdp8cnPbU6rK.TNvo5OuNx9zd4B0cbujnfleIvzejBYG
+# Generate a password by specifying it on the CLI 
+$ jail_exporter bcrypt foobar
+Hash: $2b$12$kSOSps7NIQaEQi2CXb.Ll.qYQZ3pCK7NDWKUH7QvHzprUyLHL6tsq
+
+# Generate a password via an interactive prompt
+# The password will be prompted for and then confirmed
+$ jail_exporter bcrypt
+Password: [hidden]
+Hash: $2b$12$/5ghhZFShmhrq5W4tE1hnubk/xgGH0MmixxQeKwSGx0g7kjDFL2hq
+
+# Generate a random password
+# The random plaintext password will also be output.
+$ jail_exporter bcrypt --random
+Password: TiFRz4rg6JHdRunnIFm2aB3uNa0OnlU7
+Hash: $2b$12$dyK2iA1Yq1ToA9AWtjg96exmvLABj05DuB1V5a4haUOZvu2.Hvbo2
 ```
 
 The cost for the password hashing can be controlled with the `--cost` argument
@@ -203,10 +217,11 @@ Metric                | Description
 
 ## Crate Features
 
-Feature     | Default | Description
-------------|---------|------------
-`auth`      | `true`  | Enables HTTP Basic Authentication
-`rc_script` | `true`  | Enables the `--rc-script` CLI flag to dump the [`rc(8)`] script to stdout
+Feature      | Default | Description
+-------------|---------|------------
+`auth`       | `true`  | Enables HTTP Basic Authentication
+`bcrypt_cmd` | `true`  | Enables a `bcrypt` subcommand to assist with hashing passwords for HTTP Basic Authentication
+`rc_script`  | `true`  | Enables the `--rc-script` CLI flag to dump the [`rc(8)`] script to stdout
 
 ## Notes
 
