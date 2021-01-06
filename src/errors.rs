@@ -15,7 +15,7 @@ pub enum ExporterError {
     #[error("{0} was not set.")]
     ArgNotSet(String),
 
-    #[cfg(feature = "auth")]
+    #[cfg(feature = "bcrypt_cmd")]
     /// Raised if there is an error while hashing a password.
     #[error("bcrypt error while hashing password")]
     BcryptHashingError(#[from] bcrypt::BcryptError),

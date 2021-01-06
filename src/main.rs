@@ -21,13 +21,13 @@ use errors::ExporterError;
 use exporter::Exporter;
 use file::FileExporter;
 
-#[cfg(feature = "auth")]
+#[cfg(feature = "bcrypt_cmd")]
 use dialoguer::Password;
 
 #[cfg(feature = "auth")]
 use httpd::auth::BasicAuthConfig;
 
-#[cfg(feature = "auth")]
+#[cfg(feature = "bcrypt_cmd")]
 use rand::{
     distributions::Alphanumeric,
     thread_rng,
@@ -106,7 +106,7 @@ async fn main() -> Result<(), ExporterError> {
         ::std::process::exit(0);
     }
 
-    #[cfg(feature = "auth")]
+    #[cfg(feature = "bcrypt_cmd")]
     // If we have the auth feature, we can bcrypt passwords for the user.
     if let Some(cmd) = matches.subcommand_matches("bcrypt") {
         // Cost argument is validated and has a default, we can unwrap right

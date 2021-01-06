@@ -29,7 +29,7 @@ fn is_valid_basic_auth_config_path(s: String) -> Result<(), String> {
     Ok(())
 }
 
-#[cfg(feature = "auth")]
+#[cfg(feature = "bcrypt_cmd")]
 // Ensures that a given bcrypt cost is valid
 fn is_valid_bcrypt_cost(s: String) -> Result<(), String> {
     debug!("Ensuring that bcrypt cost is valid");
@@ -172,18 +172,19 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
         );
 
     #[cfg(feature = "auth")]
-    let app = {
-        let app = app.arg(
-            clap::Arg::with_name("WEB_AUTH_CONFIG")
-                .env("WEB_AUTH_CONFIG")
-                .hide_env_values(true)
-                .long("web.auth-config")
-                .value_name("CONFIG")
-                .help("Path to HTTP Basic Authentication configuration")
-                .takes_value(true)
-                .validator(is_valid_basic_auth_config_path)
-        );
+    let app = app.arg(
+        clap::Arg::with_name("WEB_AUTH_CONFIG")
+            .env("WEB_AUTH_CONFIG")
+            .hide_env_values(true)
+            .long("web.auth-config")
+            .value_name("CONFIG")
+            .help("Path to HTTP Basic Authentication configuration")
+            .takes_value(true)
+            .validator(is_valid_basic_auth_config_path)
+    );
 
+    #[cfg(feature = "bcrypt_cmd")]
+    let app = {
         // The default cost here is copied from the bcrypt::DEFAULT_COST
         // constant.
         let bcrypt = clap::SubCommand::with_name("bcrypt")

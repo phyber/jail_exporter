@@ -31,6 +31,7 @@ exclude = [
 [features]
 default = [
     "auth",
+    "bcrypt_cmd",
     "rc_script",
 ]
 
@@ -38,10 +39,16 @@ default = [
 auth = [
     "actix-web-httpauth",
     "bcrypt",
-    "dialoguer",
-    "rand",
     "serde",
     "serde_yaml",
+]
+
+# Provides a bcrypt subcommand to assist with hashing passwords for
+# authentication
+bcrypt_cmd = [
+    "bcrypt",
+    "dialoguer",
+    "rand",
 ]
 
 # Adds a CLI option to dump out an rc(8) script, useful for users who install
