@@ -22,8 +22,20 @@ use std::io::BufReader;
 use std::path::Path;
 use std::str::FromStr;
 
-// Invalid username characters as defined in RFC7617
-const INVALID_USERNAME_CHARS: &[char] = &[':'];
+// Invalid username characters as defined in RFC7617.
+// 0x00 - 0x1f / 0x7f / :
+const INVALID_USERNAME_CHARS: &[char] = &[
+    // 0x00 - 0x1f
+    '\u{00}', '\u{01}', '\u{02}', '\u{03}', '\u{04}', '\u{05}', '\u{06}',
+    '\u{07}', '\u{08}', '\u{09}', '\u{0a}', '\u{0b}', '\u{0c}', '\u{0d}',
+    '\u{0e}', '\u{0f}', '\u{10}', '\u{11}', '\u{12}', '\u{13}', '\u{14}',
+    '\u{15}', '\u{16}', '\u{17}', '\u{18}', '\u{19}', '\u{1a}', '\u{1b}',
+    '\u{1c}', '\u{1d}', '\u{1e}', '\u{1f}',
+    // 0x7f
+    '\u{7f}',
+    // Colon
+    ':',
+];
 
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct BasicAuthConfig {
