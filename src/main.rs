@@ -22,6 +22,9 @@ use exporter::Exporter;
 use file::FileExporter;
 
 #[cfg(feature = "auth")]
+use dialoguer::Password;
+
+#[cfg(feature = "auth")]
 use httpd::auth::BasicAuthConfig;
 
 #[macro_use]
@@ -105,7 +108,16 @@ async fn main() -> Result<(), ExporterError> {
         let cost: u32 = cost.parse().unwrap();
 
         // Password argument is required, unwrap is safe.
-        let password = cmd.value_of("PASSWORD").unwrap();
+        let password = match cmd.value_of("PASSWORD") {
+            Some(password) => password.into(),
+            None           => {
+                Password::new()
+                    .with_prompt("Password")
+                    .with_confirmation("Confirm password", "Password mismatch")
+                    .interact()?
+            },
+        };
+
         let hash = bcrypt::hash(password, cost)?;
 
         println!("{}", hash);

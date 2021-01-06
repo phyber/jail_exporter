@@ -200,9 +200,9 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
             .arg(
                 clap::Arg::with_name("PASSWORD")
                     .value_name("PASSWORD")
-                    .help("The password to hash using bcrypt")
+                    .help("The password to hash using bcrypt, a prompt is \
+                           provided if this is not specified")
                     .takes_value(true)
-                    .required(true)
             );
 
         let app = app.subcommand(bcrypt);

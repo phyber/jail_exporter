@@ -32,7 +32,7 @@ exclude = [
 default = ["auth", "rc_script"]
 
 # Enables HTTP basic authentication
-auth = ["actix-web-httpauth", "bcrypt", "serde", "serde_yaml"]
+auth = ["actix-web-httpauth", "bcrypt", "dialoguer", "serde", "serde_yaml"]
 
 # Adds a CLI option to dump out an rc(8) script, useful for users who install
 # via `cargo install`.
@@ -63,6 +63,10 @@ optional = true
 version = "2.33"
 default-features = false
 features = ["vec_map"]
+
+[dependencies.dialoguer]
+version = "0.7"
+optional = true
 
 [dependencies.mime]
 version = "0.3"
