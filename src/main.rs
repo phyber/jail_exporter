@@ -27,6 +27,13 @@ use dialoguer::Password;
 #[cfg(feature = "auth")]
 use httpd::auth::BasicAuthConfig;
 
+#[cfg(feature = "auth")]
+use rand::{
+    distributions::Alphanumeric,
+    thread_rng,
+    Rng,
+};
+
 #[macro_use]
 mod macros;
 
@@ -106,21 +113,40 @@ async fn main() -> Result<(), ExporterError> {
         // away.
         let cost = cmd.value_of("COST").unwrap();
         let cost: u32 = cost.parse().unwrap();
+        let random = cmd.is_present("RANDOM");
 
         // Password argument is required, unwrap is safe.
         let password = match cmd.value_of("PASSWORD") {
             Some(password) => password.into(),
             None           => {
-                Password::new()
-                    .with_prompt("Password")
-                    .with_confirmation("Confirm password", "Password mismatch")
-                    .interact()?
+                if random {
+                    let password = thread_rng()
+                        .sample_iter(&Alphanumeric)
+                        .take(32)
+                        .map(char::from)
+                        .collect();
+
+                    password
+                }
+                else {
+                    Password::new()
+                        .with_prompt("Password")
+                        .with_confirmation(
+                            "Confirm password",
+                            "Password mismatch",
+                        )
+                        .interact()?
+                }
             },
         };
 
-        let hash = bcrypt::hash(password, cost)?;
+        let hash = bcrypt::hash(&password, cost)?;
 
-        println!("{}", hash);
+        if random {
+            println!("Password: {}", password);
+        }
+
+        println!("Hash: {}", hash);
 
         ::std::process::exit(0);
     }

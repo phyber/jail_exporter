@@ -198,6 +198,12 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                     .validator(is_valid_bcrypt_cost)
             )
             .arg(
+                clap::Arg::with_name("RANDOM")
+                    .long("random")
+                    .help("Generate a random password instead of having to \
+                           specify one")
+            )
+            .arg(
                 clap::Arg::with_name("PASSWORD")
                     .value_name("PASSWORD")
                     .help("The password to hash using bcrypt, a prompt is \
