@@ -79,6 +79,59 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
     }
 }
 
+#[cfg(feature = "bcrypt_cmd")]
+// Handles hashing and outputting bcrypted passwords for the bcrypt sub
+// command.
+fn bcrypt_cmd(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
+    // Cost argument is validated and has a default, we can unwrap right
+    // away.
+    let cost: u32 = matches.value_of("COST")
+        .unwrap()
+        .parse()
+        .unwrap();
+    let random = matches.is_present("RANDOM");
+
+    // Password argument is required, unwrap is safe.
+    let password = match matches.value_of("PASSWORD") {
+        Some(password) => password.into(),
+        None           => {
+            if random {
+                // length was validated by the CLI, we should be safe to
+                // unwrap and parse to usize here.
+                let length: usize = matches.value_of("LENGTH")
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+
+                thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(length)
+                    .map(char::from)
+                    .collect()
+            }
+            else {
+                Password::new()
+                    .with_prompt("Password")
+                    .with_confirmation(
+                        "Confirm password",
+                        "Password mismatch",
+                    )
+                    .interact()?
+            }
+        },
+    };
+
+    let hash = bcrypt::hash(&password, cost)?;
+
+    if random {
+        println!("Password: {}", password);
+    }
+
+    println!("Hash: {}", hash);
+
+    Ok(())
+}
+
 #[cfg(feature = "rc_script")]
 fn output_rc_script() {
     debug!("Dumping rc(8) script to stdout");
@@ -108,52 +161,8 @@ async fn main() -> Result<(), ExporterError> {
 
     #[cfg(feature = "bcrypt_cmd")]
     // If we have the auth feature, we can bcrypt passwords for the user.
-    if let Some(cmd) = matches.subcommand_matches("bcrypt") {
-        // Cost argument is validated and has a default, we can unwrap right
-        // away.
-        let cost: u32 = cmd.value_of("COST")
-            .unwrap()
-            .parse()
-            .unwrap();
-        let random = cmd.is_present("RANDOM");
-
-        // Password argument is required, unwrap is safe.
-        let password = match cmd.value_of("PASSWORD") {
-            Some(password) => password.into(),
-            None           => {
-                if random {
-                    // length was validated by the CLI, we should be safe to
-                    // unwrap and parse to usize here.
-                    let length: usize = cmd.value_of("LENGTH")
-                        .unwrap()
-                        .parse()
-                        .unwrap();
-
-                    thread_rng()
-                        .sample_iter(&Alphanumeric)
-                        .take(length)
-                        .map(char::from)
-                        .collect()
-                }
-                else {
-                    Password::new()
-                        .with_prompt("Password")
-                        .with_confirmation(
-                            "Confirm password",
-                            "Password mismatch",
-                        )
-                        .interact()?
-                }
-            },
-        };
-
-        let hash = bcrypt::hash(&password, cost)?;
-
-        if random {
-            println!("Password: {}", password);
-        }
-
-        println!("Hash: {}", hash);
+    if let Some(subcmd) = matches.subcommand_matches("bcrypt") {
+        bcrypt_cmd(&subcmd)?;
 
         ::std::process::exit(0);
     }
