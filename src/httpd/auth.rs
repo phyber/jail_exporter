@@ -24,13 +24,18 @@ use std::str::FromStr;
 
 // Invalid username characters as defined in RFC7617.
 // 0x00 - 0x1f / 0x7f / :
+// These are split up to hopefully make the set easier for a human to validate
 const INVALID_USERNAME_CHARS: &[char] = &[
-    // 0x00 - 0x1f
-    '\u{00}', '\u{01}', '\u{02}', '\u{03}', '\u{04}', '\u{05}', '\u{06}',
-    '\u{07}', '\u{08}', '\u{09}', '\u{0a}', '\u{0b}', '\u{0c}', '\u{0d}',
-    '\u{0e}', '\u{0f}', '\u{10}', '\u{11}', '\u{12}', '\u{13}', '\u{14}',
-    '\u{15}', '\u{16}', '\u{17}', '\u{18}', '\u{19}', '\u{1a}', '\u{1b}',
-    '\u{1c}', '\u{1d}', '\u{1e}', '\u{1f}',
+    // 0x00 - 0x09
+    '\u{00}', '\u{01}', '\u{02}', '\u{03}', '\u{04}', '\u{05}',
+    '\u{06}', '\u{07}', '\u{08}', '\u{09}',
+    // 0x0a - 0x0f
+    '\u{0a}', '\u{0b}', '\u{0c}', '\u{0d}', '\u{0e}', '\u{0f}',
+    // 0x10 - 0x19
+    '\u{10}', '\u{11}', '\u{12}', '\u{13}', '\u{14}', '\u{15}',
+    '\u{16}', '\u{17}', '\u{18}', '\u{19}',
+    // 0x1a - 0x1f
+    '\u{1a}', '\u{1b}', '\u{1c}', '\u{1d}', '\u{1e}', '\u{1f}',
     // 0x7f
     '\u{7f}',
     // Colon
