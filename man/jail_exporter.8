@@ -12,9 +12,17 @@
 .Op Fl Fl rc-script
 .Nm
 .Op Fl Fl output.file-path Ns = Ns Ar path
+.Op Fl Fl web.auth-config Ns = Ns Ar path
 .Op Fl Fl web.listen-address Ns = Ns Ar addr:port
 .Op Fl Fl web.telemetry-path Ns = Ns Ar path
+.Nm
+.Cm bcrypt
+.Op Fl Fl random
+.Op Fl Fl cost Ns = Ns Ar cost
+.Op Fl Fl length Ns = Ns Ar length
+.Op Ar password
 .Sh DESCRIPTION
+.Ss Command Line Arguments
 .Nm jail_exporter
 is a Prometheus exporter for jail metrics.
 The options are as follows:
@@ -51,6 +59,19 @@ Giving a
 of
 .Dq Cm -
 will output collected metrics to stdout.
+.It Fl Fl web.auth-config Ns = Ns Ar path
+Specify a
+.Ar path
+to load HTTP Basic Authentication configuration from.
+The configuration is in the YAML format and is documented in the
+.Sx EXAMPLES
+section.
+There is no default location for this configuration file, but a location such
+as
+.Pa /usr/local/etc/jail_exporter.yaml
+or
+.Pa /usr/local/etc/jail_exporter/config.yaml
+is suggested.
 .It Fl Fl web.listen-address Ns = Ns Ar addr:port
 Specify an
 .Ar addr:port
@@ -68,6 +89,54 @@ under which to expose the metrics.
 Defaults to
 .Dq Cm /metrics .
 .El
+.Ss Sub-Commands
+.Nm
+also features a
+.Cm bcrypt
+sub-command, useful for hashing the passwords used for HTTP Basic
+authentication.
+This sub-command features the following arguments:
+.Bl -tag -width indent
+.It Fl Fl random
+Generates a random password and outputs both the plaintext and hashed values.
+.It Fl Fl cost Ns = Ns Ar cost
+Specifies the bcrypt
+.Ar cost
+of the hash.
+Defaults to
+.Dq Cm 12 .
+.It Fl Fl length Ns = Ns Ar length
+Specifies the password length to generate when used with the
+.Fl Fl random
+flag.
+Defaults to
+.Dq Cm 32 .
+.It Ar password
+Optionally specify a
+.Ar password
+to hash.
+If a
+.Ar password
+is not specified, it is interactively prompted for.
+.El
+.Ss HTTP Basic Authentication Configuration
+HTTP basic authentication is configured via a YAML configuration file.
+The format of this file follows the suggestions of the Prometheus
+exporter-toolkit.
+This authentication configuration consists of a
+.Dq basic_auth_users
+key which is a map of usernames to bcrypt hashed passwords.
+These hashes can be generated with the
+.Nm
+.Cm bcrypt
+sub-command or any other utility capable of generating bcrypt hashes.
+Any keys in the file other than
+.Dq basic_auth_users
+are ignored.
+.Pp
+An example HTTP basic authentication configuration can be found in the
+.Sx EXAMPLES
+section.
 .Sh USAGE
 .Nm
 must be run as
@@ -130,6 +199,10 @@ specified, the command line options will win.
 is equivalent to setting the
 .Fl Fl output.file-path
 option.
+.It Ev WEB_AUTH_CONFIG
+is equivalent to setting the
+.Fl Fl web.auth-config
+option.
 .It Ev WEB_LISTEN_ADDRESS
 is equivalent to setting the
 .Fl Fl web.listen-address
@@ -148,6 +221,29 @@ script
 .It Pa /usr/local/sbin/jail_exporter
 the exporter daemon
 .El
+.Sh EXAMPLES
+.Ss HTTP Basic Authentication
+Simple configuration file for two users:
+.Pp
+.Dl ---
+.Dl basic_auth_users:
+.Dl \ \ foo: '$2b$12$cGBwrALG2Crkm5jPdvzlG.R8.j8LMeCEecm4y/So6YVd4YiIrfqsW'
+.Dl \ \ bar: '$2b$12$8c6yHGFexzAvbtNSHV3WNO0zJoaWfDy9WqX7s8vCAajV08LE/cW06'
+.Ss Sub-Commands
+.Pp
+Generating a bcrypt password hash by specifying the password on the command
+line using the default bcrypt cost:
+.Pp
+.Dl $ jail_exporter bcrypt foopass
+.Pp
+Generating a random bcrypt password hash with an increased cost and custom
+length:
+.Pp
+.Dl $ jail_exporter bcrypt --random --cost 14 --length 48
+.Pp
+Generating a bcrypt password via the interactive prompt:
+.Pp
+.Dl $ jail_exporter bcrypt
 .Sh SEE ALSO
 .Xr rctl 4 ,
 .Xr loader.conf 5 ,

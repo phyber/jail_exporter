@@ -15,10 +15,23 @@ use log::{
     info,
 };
 
+#[cfg(feature = "auth")]
+use actix_web::middleware::Condition;
+
+#[cfg(feature = "auth")]
+use actix_web_httpauth::middleware::HttpAuthentication;
+
+#[cfg(feature = "auth")]
+pub mod auth;
+
 mod collector;
 mod errors;
 mod handlers;
 mod templates;
+
+#[cfg(feature = "auth")]
+pub use auth::BasicAuthConfig;
+
 use handlers::{
     index,
     metrics,
@@ -32,6 +45,9 @@ pub use errors::HttpdError;
 pub(self) struct AppState {
     exporter:   Box<dyn Collector>,
     index_page: String,
+
+    #[cfg(feature = "auth")]
+    basic_auth_config: BasicAuthConfig,
 }
 
 // Used for the httpd builder
@@ -39,6 +55,9 @@ pub(self) struct AppState {
 pub struct Server {
     bind_address:   String,
     telemetry_path: String,
+
+    #[cfg(feature = "auth")]
+    basic_auth_config: Option<BasicAuthConfig>,
 }
 
 impl Default for Server {
@@ -46,6 +65,9 @@ impl Default for Server {
         Self {
             bind_address:   "127.0.0.1:9452".into(),
             telemetry_path: "/metrics".into(),
+
+            #[cfg(feature = "auth")]
+            basic_auth_config: None,
         }
     }
 }
@@ -55,6 +77,15 @@ impl Server {
     // Returns a new server instance.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    #[cfg(feature = "auth")]
+    // Set the HTTP Basic Auth configuration
+    pub fn auth_config(mut self, config: BasicAuthConfig) -> Self {
+        debug!("Setting HTTP basic auth config");
+
+        self.basic_auth_config = Some(config);
+        self
     }
 
     // Sets the bind_address of the server.
@@ -80,20 +111,45 @@ impl Server {
         let index_page     = render_index_page(&self.telemetry_path)?;
         let telemetry_path = self.telemetry_path.clone();
 
+        #[cfg(feature = "auth")]
+        // Unwrap the config if we have one, otherwise use a default.
+        let basic_auth_config = match self.basic_auth_config {
+            Some(config) => config,
+            None         => Default::default(),
+        };
+
         // Route handlers
-        debug!("Registering HTTP app routes");
+        debug!("Creating HTTP server app");
         let app = move || {
             // This state is shared between threads and allows us to pass
             // arbitrary items to request handlers.
             let state = AppState {
                 exporter:   exporter.clone(),
                 index_page: index_page.clone(),
+
+                #[cfg(feature = "auth")]
+                basic_auth_config: basic_auth_config.clone(),
             };
 
-            actix_web::App::new()
+            // Order is important in the App config.
+            let app = actix_web::App::new()
                 .data(state)
                 // Enable request logging
-                .wrap(Logger::default())
+                .wrap(Logger::default());
+
+            #[cfg(feature = "auth")]
+            // Authentication
+            let app = {
+                // Only enable the authentication if there are some users to
+                // check.
+                app.wrap(Condition::new(
+                    basic_auth_config.basic_auth_users.is_some(),
+                    HttpAuthentication::basic(auth::validate_credentials),
+                ))
+            };
+
+            // Finally add routes
+            app
                 // Root of HTTP server. Provides a basic index page and
                 // link to the metrics page.
                 .route("/", web::get().to(index))

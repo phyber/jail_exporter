@@ -29,7 +29,27 @@ exclude = [
 ]
 
 [features]
-default = ["rc_script"]
+default = [
+    "auth",
+    "bcrypt_cmd",
+    "rc_script",
+]
+
+# Enables HTTP basic authentication
+auth = [
+    "actix-web-httpauth",
+    "bcrypt",
+    "serde",
+    "serde_yaml",
+]
+
+# Provides a bcrypt subcommand to assist with hashing passwords for
+# authentication
+bcrypt_cmd = [
+    "bcrypt",
+    "dialoguer",
+    "rand",
+]
 
 # Adds a CLI option to dump out an rc(8) script, useful for users who install
 # via `cargo install`.
@@ -48,10 +68,22 @@ thiserror = "1.0"
 version = "3.3.0"
 default-features = false
 
+[dependencies.actix-web-httpauth]
+version = "0.5.0"
+optional = true
+
+[dependencies.bcrypt]
+version = "0.9"
+optional = true
+
 [dependencies.clap]
 version = "2.33"
 default-features = false
 features = ["vec_map"]
+
+[dependencies.dialoguer]
+version = "0.7"
+optional = true
 
 [dependencies.mime]
 version = "0.3"
@@ -60,6 +92,18 @@ default-features = false
 [dependencies.prometheus]
 version = "0.11.0"
 default-features = false
+
+[dependencies.rand]
+version = "0.8"
+optional = true
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+
+[dependencies.serde_yaml]
+version = "0.8"
+optional = true
 
 [dependencies.users]
 version = "0.11"

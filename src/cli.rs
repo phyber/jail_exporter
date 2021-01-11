@@ -14,8 +14,59 @@ use std::net::SocketAddr;
 use std::path::Path;
 use std::str::FromStr;
 
-// Basic checks for valid filesystem path
-fn is_valid_filesystem_path(s: String) -> Result<(), String> {
+#[cfg(feature = "auth")]
+// Basic checks for valid filesystem path for web.auth-config existing.
+fn is_valid_basic_auth_config_path(s: String) -> Result<(), String> {
+    debug!("Ensuring that web.auth-config is valid");
+
+    // Get a Path from our string and start checking
+    let path = Path::new(&s);
+
+    if !path.is_file() {
+        return Err("web.auth-config doesn't doesn't exist".to_owned());
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "bcrypt_cmd")]
+// Ensures that a given bcrypt cost is valid
+fn is_valid_bcrypt_cost(s: String) -> Result<(), String> {
+    debug!("Ensuring that bcrypt cost is valid");
+
+    let cost = match s.parse::<u32>() {
+        Err(_) => return Err("could not parse bcrypt cost as integer".to_owned()),
+        Ok(c)  => c,
+    };
+
+    // Min and max costs taken from the bcrypt crate. The consts are private so
+    // we can't reference them directly.
+    if cost < 4 || cost > 31 {
+        return Err("cost cannot be less than 4 or more than 31".to_owned());
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "bcrypt_cmd")]
+// Validates that the incoming value can be used as a password length
+fn is_valid_length(s: String) -> Result<(), String> {
+    debug!("Ensuring that bcrypt --length is valid");
+
+    let length = match s.parse::<usize>() {
+        Ok(length) => Ok(length),
+        Err(_)     => Err(format!("Could not parse '{}' as valid length", s)),
+    }?;
+
+    if length < 1 {
+        return Err("--length cannot be less than 1".into());
+    }
+
+    Ok(())
+}
+
+// Basic checks for valid filesystem path for .prom output file
+fn is_valid_output_file_path(s: String) -> Result<(), String> {
     debug!("Ensuring that output.file-path is valid");
 
     // - is special and is a request for us to output to stdout
@@ -58,6 +109,20 @@ fn is_valid_filesystem_path(s: String) -> Result<(), String> {
     else {
         // Didn't get a parent directory at all
         return Err("output.file-path directory must exist".to_owned());
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "bcrypt_cmd")]
+// Checks that a password is valid with some basic checks.
+fn is_valid_password(s: String) -> Result<(), String> {
+    debug!("Ensuring that password is valid");
+
+    let length = s.chars().count();
+
+    if length < 1 {
+        return Err("password cannot be empty".into());
     }
 
     Ok(())
@@ -114,7 +179,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .value_name("FILE")
                 .help("File to output metrics to.")
                 .takes_value(true)
-                .validator(is_valid_filesystem_path)
+                .validator(is_valid_output_file_path)
         )
         .arg(
             clap::Arg::with_name("WEB_LISTEN_ADDRESS")
@@ -138,6 +203,62 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                 .default_value("/metrics")
                 .validator(is_valid_telemetry_path)
         );
+
+    #[cfg(feature = "auth")]
+    let app = app.arg(
+        clap::Arg::with_name("WEB_AUTH_CONFIG")
+            .env("WEB_AUTH_CONFIG")
+            .hide_env_values(true)
+            .long("web.auth-config")
+            .value_name("CONFIG")
+            .help("Path to HTTP Basic Authentication configuration")
+            .takes_value(true)
+            .validator(is_valid_basic_auth_config_path)
+    );
+
+    #[cfg(feature = "bcrypt_cmd")]
+    let app = {
+        let bcrypt = clap::SubCommand::with_name("bcrypt")
+            .about("Returns bcrypt encrypted passwords suitable for HTTP Basic Auth")
+            .arg(
+                clap::Arg::with_name("COST")
+                    .long("cost")
+                    .short("c")
+                    .value_name("COST")
+                    .help("Computes the hash using the given cost")
+                    .takes_value(true)
+                    .default_value("12")
+                    .validator(is_valid_bcrypt_cost)
+            )
+            .arg(
+                clap::Arg::with_name("LENGTH")
+                    .long("length")
+                    .short("l")
+                    .help("Specify the random password length")
+                    .takes_value(true)
+                    .default_value("32")
+                    .validator(is_valid_length)
+            )
+            .arg(
+                clap::Arg::with_name("RANDOM")
+                    .long("random")
+                    .short("r")
+                    .help("Generate a random password instead of having to \
+                           specify one")
+            )
+            .arg(
+                clap::Arg::with_name("PASSWORD")
+                    .value_name("PASSWORD")
+                    .help("The password to hash using bcrypt, a prompt is \
+                           provided if this is not specified")
+                    .takes_value(true)
+                    .validator(is_valid_password)
+            );
+
+        let app = app.subcommand(bcrypt);
+
+        app
+    };
 
     #[cfg(feature = "rc_script")]
     let app = app
@@ -294,50 +415,50 @@ mod tests {
     }
 
     #[test]
-    fn is_valid_filesystem_path_absolute_path() {
-        let res = is_valid_filesystem_path("tmp/metrics.prom".into());
+    fn is_valid_output_file_path_absolute_path() {
+        let res = is_valid_output_file_path("tmp/metrics.prom".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_bad_extension() {
-        let res = is_valid_filesystem_path("/tmp/metrics.pram".into());
+    fn is_valid_output_file_path_bad_extension() {
+        let res = is_valid_output_file_path("/tmp/metrics.pram".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_bad_parent_dir() {
-        let res = is_valid_filesystem_path("/tmp/nope/metrics.prom".into());
+    fn is_valid_output_file_path_bad_parent_dir() {
+        let res = is_valid_output_file_path("/tmp/nope/metrics.prom".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_directory() {
-        let res = is_valid_filesystem_path("/tmp".into());
+    fn is_valid_output_file_path_directory() {
+        let res = is_valid_output_file_path("/tmp".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_no_extension() {
-        let res = is_valid_filesystem_path("/tmp/metrics".into());
+    fn is_valid_output_file_path_no_extension() {
+        let res = is_valid_output_file_path("/tmp/metrics".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_ok() {
-        let res = is_valid_filesystem_path("/tmp/metrics.prom".into());
+    fn is_valid_output_file_path_ok() {
+        let res = is_valid_output_file_path("/tmp/metrics.prom".into());
         assert!(res.is_ok());
     }
 
     #[test]
-    fn is_valid_filesystem_path_root() {
-        let res = is_valid_filesystem_path("/".into());
+    fn is_valid_output_file_path_root() {
+        let res = is_valid_output_file_path("/".into());
         assert!(res.is_err());
     }
 
     #[test]
-    fn is_valid_filesystem_path_stdout() {
-        let res = is_valid_filesystem_path("-".into());
+    fn is_valid_output_file_path_stdout() {
+        let res = is_valid_output_file_path("-".into());
         assert!(res.is_ok());
     }
 
