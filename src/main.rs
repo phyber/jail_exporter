@@ -214,7 +214,7 @@ async fn main() -> Result<(), ExporterError> {
         .telemetry_path(telemetry_path);
 
     #[cfg(feature = "auth")]
-    // Get and set the username and password for HTTP Basic Auth
+    // Set the configuration file for HTTP Basic Auth
     {
         if let Some(path) = matches.value_of("WEB_AUTH_CONFIG") {
             let config = BasicAuthConfig::from_yaml(&path)?;
