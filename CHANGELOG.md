@@ -11,9 +11,9 @@
   - Added `rc_script` feature, enabling a `--rc-script` CLI flag which outputs
     the `jail_exporter` [`rc(8)`] script on stdout.
   - Added `auth` feature, enabling HTTP Basic authentication.
-    - Configuration for the HTTP Basic authentication is via a YAML configuration
-      file, the location of the configuration is specified via the
-      `--web.auth-config` CLI argument.
+    - Configuration for the HTTP Basic authentication is via a YAML
+      configuration file, the location of the configuration is specified via
+      the `--web.auth-config` CLI argument.
   - Added `bcrypt` subcommand when compiled with the `auth` feature.
     - This is to assist users when they're enabling HTTP Basic Authentication
       as they may not have tools installed for generating bcrypt hashes.
