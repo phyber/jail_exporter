@@ -110,13 +110,26 @@ fn bcrypt_cmd(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
                     .collect()
             }
             else {
-                Password::new()
+                let password = Password::new()
                     .with_prompt("Password")
                     .with_confirmation(
                         "Confirm password",
                         "Password mismatch",
                     )
-                    .interact()?
+                    .interact()?;
+
+                let length = password.chars().count();
+
+                if length < cli::MINIMUM_PASSWORD_LENGTH {
+                    eprintln!(
+                        "password must be at least {} characters",
+                        cli::MINIMUM_PASSWORD_LENGTH,
+                    );
+
+                    ::std::process::exit(1);
+                }
+
+                password
             }
         },
     };

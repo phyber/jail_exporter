@@ -14,6 +14,9 @@ use std::net::SocketAddr;
 use std::path::Path;
 use std::str::FromStr;
 
+#[cfg(feature = "bcrypt_cmd")]
+pub const MINIMUM_PASSWORD_LENGTH: usize = 8;
+
 #[cfg(feature = "auth")]
 // Basic checks for valid filesystem path for web.auth-config existing.
 fn is_valid_basic_auth_config_path(s: String) -> Result<(), String> {
@@ -97,7 +100,7 @@ fn is_valid_output_file_path(s: String) -> Result<(), String> {
 
 #[cfg(feature = "bcrypt_cmd")]
 // Validates that the incoming value can be used as a password length
-fn is_valid_password_length(s: String) -> Result<(), String> {
+fn is_valid_length(s: String) -> Result<(), String> {
     debug!("Ensuring that bcrypt --length is valid");
 
     let length = match s.parse::<usize>() {
@@ -105,8 +108,28 @@ fn is_valid_password_length(s: String) -> Result<(), String> {
         Err(_)     => Err(format!("Could not parse '{}' as valid length", s)),
     }?;
 
-    if length < 8 {
-        return Err("--length must be at least 8 characters".to_owned());
+    if length < MINIMUM_PASSWORD_LENGTH {
+        return Err(format!(
+            "--length must be at least {} characters",
+            MINIMUM_PASSWORD_LENGTH,
+        ));
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "bcrypt_cmd")]
+// Checks that a password is valid with some basic checks.
+fn is_valid_password(s: String) -> Result<(), String> {
+    debug!("Ensuring that password is valid");
+
+    let length = s.chars().count();
+
+    if length < MINIMUM_PASSWORD_LENGTH {
+        return Err(format!(
+            "password must be at least {} characters",
+            MINIMUM_PASSWORD_LENGTH,
+        ));
     }
 
     Ok(())
@@ -221,8 +244,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                     .help("Specify the random password length")
                     .takes_value(true)
                     .default_value("32")
-                    .requires("RANDOM")
-                    .validator(is_valid_password_length)
+                    .validator(is_valid_length)
             )
             .arg(
                 clap::Arg::with_name("RANDOM")
@@ -237,6 +259,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                     .help("The password to hash using bcrypt, a prompt is \
                            provided if this is not specified")
                     .takes_value(true)
+                    .validator(is_valid_password)
             );
 
         let app = app.subcommand(bcrypt);
