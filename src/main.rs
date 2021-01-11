@@ -86,12 +86,13 @@ fn bcrypt_cmd(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
     // Cost argument is validated and has a default, we can unwrap right
     // away.
     let cost: u32 = matches.value_of("COST")
-        .unwrap()
+        .expect("no bcrypt cost given")
         .parse()
-        .unwrap();
+        .expect("couldn't parse cost as u32");
     let random = matches.is_present("RANDOM");
 
-    // Password argument is required, unwrap is safe.
+    // If a password was given on the CLI, just unwrap it. If none was given,
+    // we either generate a random password or interactively prompt for it.
     let password = match matches.value_of("PASSWORD") {
         Some(password) => password.into(),
         None           => {
@@ -99,9 +100,9 @@ fn bcrypt_cmd(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
                 // length was validated by the CLI, we should be safe to
                 // unwrap and parse to usize here.
                 let length: usize = matches.value_of("LENGTH")
-                    .unwrap()
+                    .expect("no password length given")
                     .parse()
-                    .unwrap();
+                    .expect("couldn't parse length as usize");
 
                 thread_rng()
                     .sample_iter(&Alphanumeric)
@@ -110,26 +111,13 @@ fn bcrypt_cmd(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
                     .collect()
             }
             else {
-                let password = Password::new()
+                Password::new()
                     .with_prompt("Password")
                     .with_confirmation(
                         "Confirm password",
                         "Password mismatch",
                     )
-                    .interact()?;
-
-                let length = password.chars().count();
-
-                if length < cli::MINIMUM_PASSWORD_LENGTH {
-                    eprintln!(
-                        "password must be at least {} characters",
-                        cli::MINIMUM_PASSWORD_LENGTH,
-                    );
-
-                    ::std::process::exit(1);
-                }
-
-                password
+                    .interact()?
             }
         },
     };

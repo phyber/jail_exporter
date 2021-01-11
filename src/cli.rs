@@ -14,9 +14,6 @@ use std::net::SocketAddr;
 use std::path::Path;
 use std::str::FromStr;
 
-#[cfg(feature = "bcrypt_cmd")]
-pub const MINIMUM_PASSWORD_LENGTH: usize = 8;
-
 #[cfg(feature = "auth")]
 // Basic checks for valid filesystem path for web.auth-config existing.
 fn is_valid_basic_auth_config_path(s: String) -> Result<(), String> {
@@ -44,6 +41,23 @@ fn is_valid_bcrypt_cost(s: String) -> Result<(), String> {
 
     if cost < 4 || cost > 31 {
         return Err("cost cannot be less than 4 or more than 31".to_owned());
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "bcrypt_cmd")]
+// Validates that the incoming value can be used as a password length
+fn is_valid_length(s: String) -> Result<(), String> {
+    debug!("Ensuring that bcrypt --length is valid");
+
+    let length = match s.parse::<usize>() {
+        Ok(length) => Ok(length),
+        Err(_)     => Err(format!("Could not parse '{}' as valid length", s)),
+    }?;
+
+    if length < 1 {
+        return Err("--length cannot be less than 1".into());
     }
 
     Ok(())
@@ -99,37 +113,14 @@ fn is_valid_output_file_path(s: String) -> Result<(), String> {
 }
 
 #[cfg(feature = "bcrypt_cmd")]
-// Validates that the incoming value can be used as a password length
-fn is_valid_length(s: String) -> Result<(), String> {
-    debug!("Ensuring that bcrypt --length is valid");
-
-    let length = match s.parse::<usize>() {
-        Ok(length) => Ok(length),
-        Err(_)     => Err(format!("Could not parse '{}' as valid length", s)),
-    }?;
-
-    if length < MINIMUM_PASSWORD_LENGTH {
-        return Err(format!(
-            "--length must be at least {} characters",
-            MINIMUM_PASSWORD_LENGTH,
-        ));
-    }
-
-    Ok(())
-}
-
-#[cfg(feature = "bcrypt_cmd")]
 // Checks that a password is valid with some basic checks.
 fn is_valid_password(s: String) -> Result<(), String> {
     debug!("Ensuring that password is valid");
 
     let length = s.chars().count();
 
-    if length < MINIMUM_PASSWORD_LENGTH {
-        return Err(format!(
-            "password must be at least {} characters",
-            MINIMUM_PASSWORD_LENGTH,
-        ));
+    if length < 1 {
+        return Err("password cannot be empty".into());
     }
 
     Ok(())
