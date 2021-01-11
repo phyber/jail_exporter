@@ -39,6 +39,8 @@ fn is_valid_bcrypt_cost(s: String) -> Result<(), String> {
         Ok(c)  => c,
     };
 
+    // Min and max costs taken from the bcrypt crate. The consts are private so
+    // we can't reference them directly.
     if cost < 4 || cost > 31 {
         return Err("cost cannot be less than 4 or more than 31".to_owned());
     }
