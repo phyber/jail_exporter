@@ -5,6 +5,7 @@
 //!
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+#![allow(clippy::redundant_field_names)]
 use log::debug;
 use users::{
     Users,

@@ -41,7 +41,7 @@ fn is_valid_bcrypt_cost(s: String) -> Result<(), String> {
 
     // Min and max costs taken from the bcrypt crate. The consts are private so
     // we can't reference them directly.
-    if cost < 4 || cost > 31 {
+    if !(4..=31).contains(&cost) {
         return Err("cost cannot be less than 4 or more than 31".to_owned());
     }
 
@@ -255,9 +255,7 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
                     .validator(is_valid_password)
             );
 
-        let app = app.subcommand(bcrypt);
-
-        app
+        app.subcommand(bcrypt)
     };
 
     #[cfg(feature = "rc_script")]
