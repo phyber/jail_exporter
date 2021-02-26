@@ -130,9 +130,9 @@ dependencies = [
 
 [[package]]
 name = "actix-rt"
-version = "2.0.2"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c88cf46527e27f66efcd5831f60b3d9c2dac795b6d255ed17791752d6c36a8ea"
+checksum = "0b4e57bc1a3915e71526d128baf4323700bd1580bc676239e2298a4c5b001f18"
 dependencies = [
  "actix-macros 0.2.0",
  "futures-core",
@@ -1096,7 +1096,7 @@ dependencies = [
 name = "jail_exporter"
 version = "0.14.0"
 dependencies = [
- "actix-rt 2.0.2",
+ "actix-rt 2.1.0",
  "actix-web",
  "actix-web-httpauth",
  "askama",
