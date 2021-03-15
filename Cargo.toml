@@ -82,7 +82,7 @@ default-features = false
 features = ["vec_map"]
 
 [dependencies.dialoguer]
-version = "0.7"
+version = "0.8"
 optional = true
 
 [dependencies.mime]
