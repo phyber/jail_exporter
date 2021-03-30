@@ -115,7 +115,7 @@ rustc_version = "0.3"
 
 # Used by cargo test
 [dev-dependencies]
-actix-rt = "2.0"
+actix-rt = "2.2"
 indoc = "1.0"
 lazy_static = "1.4"
 pretty_assertions = "0.6"
