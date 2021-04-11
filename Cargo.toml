@@ -82,7 +82,7 @@ default-features = false
 features = ["vec_map"]
 
 [dependencies.dialoguer]
-version = "0.7"
+version = "0.8"
 optional = true
 
 [dependencies.mime]
@@ -118,7 +118,7 @@ rustc_version = "0.3"
 actix-rt = "2.0"
 indoc = "1.0"
 lazy_static = "1.4"
-pretty_assertions = "0.6"
+pretty_assertions = "0.7"
 
 [dev-dependencies.users]
 version = "0.11"
