@@ -1,0 +1,40 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: actix-rt
+    versions:
+    - 2.0.0
+    - 2.0.2
+    - 2.1.0
+    - 2.2.0
+  - dependency-name: serde
+    versions:
+    - 1.0.124
+    - 1.0.125
+  - dependency-name: actix-web-httpauth
+    versions:
+    - 0.5.1
+  - dependency-name: dialoguer
+    versions:
+    - 0.8.0
+  - dependency-name: pretty_assertions
+    versions:
+    - 0.7.1
+  - dependency-name: prometheus
+    versions:
+    - 0.12.0
+  - dependency-name: thiserror
+    versions:
+    - 1.0.24
+  - dependency-name: env_logger
+    versions:
+    - 0.8.3
+  - dependency-name: serde_yaml
+    versions:
+    - 0.8.16
+    - 0.8.17
