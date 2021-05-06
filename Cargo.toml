@@ -1,6 +1,6 @@
 [package]
 name = "jail_exporter"
-version = "0.14.0"
+version = "0.14.1"
 description = "Prometheus exporter for FreeBSD jails."
 edition = "2018"
 license = "MIT"
@@ -58,9 +58,7 @@ rc_script = []
 [dependencies]
 askama = "0.10"
 env_logger = "0.8"
-jail = "0.1.1"
 log = "0.4"
-rctl = "0.1.0"
 tempfile = "3.1.0"
 thiserror = "1.0"
 
@@ -85,6 +83,9 @@ features = ["vec_map"]
 version = "0.8"
 optional = true
 
+[dependencies.jail]
+path = "vendor/jail"
+
 [dependencies.mime]
 version = "0.3"
 default-features = false
@@ -96,6 +97,9 @@ default-features = false
 [dependencies.rand]
 version = "0.8"
 optional = true
+
+[dependencies.rctl]
+path = "vendor/rctl"
 
 [dependencies.serde]
 version = "1.0"
