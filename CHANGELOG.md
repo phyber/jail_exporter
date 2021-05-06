@@ -1,5 +1,11 @@
 # `jail_exporter`
 
+## v0.14.1
+
+  - Temporarily vendor `jail` and `rctl` dependencies to restore functionality
+    on [FreeBSD] 13.0.
+  - Add FreeBSD 13.0 as a build environment in CI.
+
 ## v0.14.0
 
   - Update dependencies.
