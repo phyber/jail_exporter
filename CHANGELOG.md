@@ -1,10 +1,14 @@
 # `jail_exporter`
 
-## v0.14.1
+## v0.15.0
 
-  - Temporarily vendor `jail` and `rctl` dependencies to restore functionality
-    on [FreeBSD] 13.0.
   - Add FreeBSD 13.0 as a build environment in CI.
+  - Temporarily handle `rctl` checks ourselves, as the upstream `rctl` crate
+    has not yet released a FreeBSD 13 compatible version.
+  - Bump all dependency versions.
+  - Bump MSRV to 1.51.0
+  - Set `resolver` version to `2` in `Cargo.toml`, we may as well since
+    dependencies have bumped our MSRV to 1.51.0.
 
 ## v0.14.0
 

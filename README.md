@@ -54,7 +54,7 @@ sysrc jail_exporter_enable=YES
 
 At a minimum, building Jail Exporter should require:
 
-  - Rust v1.44.0
+  - Rust v1.51.0
   - Cargo
 
 A BSD [`make(1)`] Makefile is provided for convenience, if you already have

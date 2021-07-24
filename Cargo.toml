@@ -1,12 +1,13 @@
 [package]
 name = "jail_exporter"
-version = "0.14.0"
+version = "0.15.0"
 description = "Prometheus exporter for FreeBSD jails."
 edition = "2018"
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/phyber/jail_exporter"
 repository = "https://github.com/phyber/jail_exporter.git"
+resolver = "2"
 authors = [
     "David O'Rourke <david.orourke@gmail.com>",
 ]
@@ -57,7 +58,7 @@ rc_script = []
 
 [dependencies]
 askama = "0.10"
-env_logger = "0.8"
+env_logger = "0.9"
 jail = "0.1.1"
 log = "0.4"
 rctl = "0.1.0"
@@ -74,7 +75,7 @@ version = "0.5.0"
 optional = true
 
 [dependencies.bcrypt]
-version = "0.9"
+version = "0.10"
 optional = true
 
 [dependencies.clap]
@@ -112,7 +113,7 @@ default-features = false
 features = ["cache"]
 
 [build-dependencies]
-rustc_version = "0.3"
+rustc_version = "0.4"
 
 # Used by cargo test
 [dev-dependencies]
