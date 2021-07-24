@@ -112,7 +112,7 @@ default-features = false
 features = ["cache"]
 
 [build-dependencies]
-rustc_version = "0.3"
+rustc_version = "0.4"
 
 # Used by cargo test
 [dev-dependencies]
