@@ -17,10 +17,12 @@ mod errors;
 mod exporter;
 mod file;
 mod httpd;
+mod rctlstate;
 
 use errors::ExporterError;
 use exporter::Exporter;
 use file::FileExporter;
+use rctlstate::RctlState;
 
 #[cfg(feature = "bcrypt_cmd")]
 use dialoguer::Password;
@@ -45,15 +47,15 @@ const RC_SCRIPT: &str = include_str!("../rc.d/jail_exporter.in");
 fn is_racct_rctl_available() -> Result<(), ExporterError> {
     debug!("Checking RACCT/RCTL status");
 
-    match rctl::State::check() {
-        rctl::State::Disabled => {
+    match RctlState::check() {
+        RctlState::Disabled => {
             Err(ExporterError::RctlUnavailable(
                 "Present, but disabled; enable using \
                  kern.racct.enable=1 tunable".to_owned()
             ))
         },
-        rctl::State::Enabled => Ok(()),
-        rctl::State::Jailed => {
+        RctlState::Enabled => Ok(()),
+        RctlState::Jailed => {
             // This isn't strictly true. Jail exporter should be able to run
             // within a jail, for situations where a user has jails within
             // jails. It is just untested at the moment.
@@ -61,7 +63,7 @@ fn is_racct_rctl_available() -> Result<(), ExporterError> {
                 "Jail Exporter cannot run within a jail".to_owned()
             ))
         },
-        rctl::State::NotPresent => {
+        RctlState::NotPresent => {
             Err(ExporterError::RctlUnavailable(
                 "Support not present in kernel; see rctl(8) \
                  for details".to_owned()

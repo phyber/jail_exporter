@@ -61,6 +61,7 @@ env_logger = "0.8"
 jail = "0.1.1"
 log = "0.4"
 rctl = "0.1.0"
+sysctl = "0.4"
 tempfile = "3.1.0"
 thiserror = "1.0"
 
