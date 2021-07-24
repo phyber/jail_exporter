@@ -34,23 +34,22 @@ impl RctlState {
             Err(_)  => return Self::NotPresent,
         };
 
-        match ctl.value() {
-            Ok(value) => {
-                match value {
-                    // FreeBSD 13 returns a U8 as the kernel variable is bool
-                    CtlValue::U8(1) => Self::Enabled,
+        if let Ok(value) = ctl.value() {
+            match value {
+                // FreeBSD 13 returns a U8 as the kernel variable is bool
+                CtlValue::U8(1) => Self::Enabled,
 
-                    // FreeBSD older than 13 returns a Uint as the kernel
-                    // variable is an int
-                    CtlValue::Uint(1) => Self::Enabled,
+                // FreeBSD older than 13 returns a Uint as the kernel
+                // variable is an int
+                CtlValue::Uint(1) => Self::Enabled,
 
-                    // Anything else, it's disabled
-                    _ => Self::Disabled,
-                }
-            },
-
-            // Anything else, it's disabled
-            _ => Self::Disabled,
+                // Anything else, it's disabled
+                _ => Self::Disabled,
+            }
+        }
+        else {
+            // On any error, assume it's disabled
+            Self::Disabled
         }
     }
 
@@ -63,14 +62,14 @@ impl RctlState {
             Err(_)  => return true,
         };
 
-        match ctl.value() {
-            Ok(value) => {
-                match value {
-                    CtlValue::Int(1) => true,
-                    _                => false,
-                }
-            },
-            Err(_) => true,
+        if let Ok(value) = ctl.value() {
+            match value {
+                CtlValue::Int(1) => true,
+                _                => false,
+            }
+        }
+        else {
+            true
         }
     }
 }
