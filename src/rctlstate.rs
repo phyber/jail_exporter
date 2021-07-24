@@ -63,10 +63,7 @@ impl RctlState {
         };
 
         if let Ok(value) = ctl.value() {
-            match value {
-                CtlValue::Int(1) => true,
-                _                => false,
-            }
+            matches!(value, CtlValue::Int(1))
         }
         else {
             true
