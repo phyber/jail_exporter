@@ -4,7 +4,6 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use clap::{
-    crate_authors,
     crate_description,
     crate_name,
     crate_version,
@@ -168,7 +167,6 @@ fn create_app<'a, 'b>() -> clap::App<'a, 'b> {
 
     let app = clap::App::new(crate_name!())
         .version(crate_version!())
-        .author(crate_authors!())
         .about(crate_description!())
         .set_term_width(80)
         .arg(
