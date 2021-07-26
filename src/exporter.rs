@@ -58,39 +58,39 @@ pub struct Exporter {
 
     // Prometheus time series
     // These come from rctl
-    coredumpsize_bytes: IntGaugeVec,
-    cputime_seconds_total: IntCounterVec,
-    datasize_bytes: IntGaugeVec,
-    memorylocked_bytes: IntGaugeVec,
-    memoryuse_bytes: IntGaugeVec,
-    msgqsize_bytes: IntGaugeVec,
-    maxproc: IntGaugeVec,
-    msgqqueued: IntGaugeVec,
-    nmsgq: IntGaugeVec,
-    nsem: IntGaugeVec,
-    nsemop: IntGaugeVec,
-    nshm: IntGaugeVec,
-    nthr: IntGaugeVec,
-    openfiles: IntGaugeVec,
-    pcpu_used: IntGaugeVec,
-    pseudoterminals: IntGaugeVec,
-    readbps: IntGaugeVec,
-    readiops: IntGaugeVec,
-    shmsize_bytes: IntGaugeVec,
-    stacksize_bytes: IntGaugeVec,
-    swapuse_bytes: IntGaugeVec,
-    vmemoryuse_bytes: IntGaugeVec,
+    coredumpsize_bytes:      IntGaugeVec,
+    cputime_seconds_total:   IntCounterVec,
+    datasize_bytes:          IntGaugeVec,
+    memorylocked_bytes:      IntGaugeVec,
+    memoryuse_bytes:         IntGaugeVec,
+    msgqsize_bytes:          IntGaugeVec,
+    maxproc:                 IntGaugeVec,
+    msgqqueued:              IntGaugeVec,
+    nmsgq:                   IntGaugeVec,
+    nsem:                    IntGaugeVec,
+    nsemop:                  IntGaugeVec,
+    nshm:                    IntGaugeVec,
+    nthr:                    IntGaugeVec,
+    openfiles:               IntGaugeVec,
+    pcpu_used:               IntGaugeVec,
+    pseudoterminals:         IntGaugeVec,
+    readbps:                 IntGaugeVec,
+    readiops:                IntGaugeVec,
+    shmsize_bytes:           IntGaugeVec,
+    stacksize_bytes:         IntGaugeVec,
+    swapuse_bytes:           IntGaugeVec,
+    vmemoryuse_bytes:        IntGaugeVec,
     wallclock_seconds_total: IntCounterVec,
-    writebps: IntGaugeVec,
-    writeiops: IntGaugeVec,
+    writebps:                IntGaugeVec,
+    writeiops:               IntGaugeVec,
 
     // Metrics this library generates
     build_info: IntGaugeVec,
-    jail_id: IntGaugeVec,
+    jail_id:    IntGaugeVec,
     jail_total: IntGauge,
 
     // Counter bookkeeping
-    cputime_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
+    cputime_seconds_total_old:   Arc<Mutex<CounterBookKeeper>>,
     wallclock_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
 }
 
@@ -307,11 +307,11 @@ impl Default for Exporter {
 
             // Book keeping
             cputime_seconds_total_old: Arc::new(Mutex::new(
-                    CounterBookKeeper::new()
-                    )),
+                CounterBookKeeper::new()
+            )),
             wallclock_seconds_total_old: Arc::new(Mutex::new(
-                    CounterBookKeeper::new()
-                    )),
+                CounterBookKeeper::new()
+            )),
         };
 
         let build_info_labels = [
