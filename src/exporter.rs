@@ -437,7 +437,7 @@ impl Exporter {
 
                     self.cputime_seconds_total
                         .with_label_values(labels)
-                        .inc_by(inc as u64);
+                        .inc_by(inc);
                 },
                 rctl::Resource::DataSize => {
                     self.datasize_bytes.with_label_values(labels).set(value);
@@ -509,7 +509,7 @@ impl Exporter {
 
                     self.wallclock_seconds_total
                         .with_label_values(labels)
-                        .inc_by(inc as u64);
+                        .inc_by(inc);
                 },
                 rctl::Resource::WriteBps => {
                     self.writebps.with_label_values(labels).set(value)
