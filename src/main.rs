@@ -166,7 +166,7 @@ async fn main() -> Result<(), ExporterError> {
     #[cfg(feature = "bcrypt_cmd")]
     // If we have the auth feature, we can bcrypt passwords for the user.
     if let Some(subcmd) = matches.subcommand_matches("bcrypt") {
-        bcrypt_cmd(&subcmd)?;
+        bcrypt_cmd(subcmd)?;
 
         ::std::process::exit(0);
     }
@@ -220,7 +220,7 @@ async fn main() -> Result<(), ExporterError> {
     // Set the configuration file for HTTP Basic Auth
     {
         if let Some(path) = matches.value_of("WEB_AUTH_CONFIG") {
-            let config = BasicAuthConfig::from_yaml(&path)?;
+            let config = BasicAuthConfig::from_yaml(path)?;
 
             server = server.auth_config(config);
         }

@@ -80,7 +80,7 @@ impl BasicAuthConfig {
                 return Err(err);
             }
 
-            if let Err(err) = bcrypt::HashParts::from_str(&hashed_password) {
+            if let Err(err) = bcrypt::HashParts::from_str(hashed_password) {
                 let msg = format!(
                     "bcrypt error '{}' when validating user {}",
                     err,

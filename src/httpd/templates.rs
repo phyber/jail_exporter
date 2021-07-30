@@ -28,7 +28,7 @@ fn render_index_page(telemetry_path: &str)
     debug!("Rendering index template");
 
     let index_template = IndexTemplate {
-        telemetry_path: &telemetry_path,
+        telemetry_path: telemetry_path,
     };
 
     let rendered = index_template.render()?;

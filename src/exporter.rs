@@ -414,7 +414,7 @@ impl Exporter {
         debug!("process_metrics_hash");
 
         // Convenience variable
-        let labels: &[&str] = &[&name];
+        let labels: &[&str] = &[name];
 
         for (key, value) in metrics {
             // Convert the usize to an i64 as the majority of metrics take
@@ -431,7 +431,7 @@ impl Exporter {
                 },
                 rctl::Resource::CpuTime => {
                     let inc = self.update_metric_book(
-                        &name,
+                        name,
                         &BookKept::CpuTime(value as u64)
                     );
 
@@ -503,7 +503,7 @@ impl Exporter {
                 },
                 rctl::Resource::Wallclock => {
                     let inc = self.update_metric_book(
-                        &name,
+                        name,
                         &BookKept::Wallclock(value as u64)
                     );
 
@@ -562,7 +562,7 @@ impl Exporter {
 
         book
             .keys()
-            .filter(|n| !seen.contains(&n))
+            .filter(|n| !seen.contains(n))
             .map(|n| n.to_owned())
             .collect()
     }
@@ -576,7 +576,7 @@ impl Exporter {
 
     fn remove_jail_metrics(&self, name: &str) {
         // Convenience variable
-        let labels: &[&str] = &[&name];
+        let labels: &[&str] = &[name];
 
         // Remove the jail metrics
         self.coredumpsize_bytes.remove_label_values(labels).ok();
