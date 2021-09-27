@@ -3,12 +3,12 @@
 ## v0.15.0
 
   - Add FreeBSD 13.0 as a build environment in CI.
-  - Temporarily handle `rctl` checks ourselves, as the upstream `rctl` crate
-    has not yet released a FreeBSD 13 compatible version.
   - Bump all dependency versions.
   - Bump MSRV to 1.51.0
   - Set `resolver` version to `2` in `Cargo.toml`, we may as well since
     dependencies have bumped our MSRV to 1.51.0.
+  - Update [jail] and [rctl] crates to 0.2.0.
+  - Resolve various clippy issues.
 
 ## v0.14.0
 
