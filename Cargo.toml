@@ -92,7 +92,7 @@ version = "0.3"
 default-features = false
 
 [dependencies.prometheus]
-version = "0.12.0"
+version = "0.13.0"
 default-features = false
 
 [dependencies.rand]
