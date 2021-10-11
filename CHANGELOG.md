@@ -5,6 +5,7 @@
   - Remove FreeBSD 11.4 from CI configuration as its no longer supported
   - Update to [prometheus] 0.13.0
   - Update to [pretty-assertions] 1.0
+  - Fixed a typo in the man page (thanks, Schueni1)
 
 ## v0.15.0
 
