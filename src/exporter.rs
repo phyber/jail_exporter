@@ -3,11 +3,6 @@
 //! This lib handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
-use crate::{
-    register_int_counter_vec,
-    register_int_gauge,
-    register_int_gauge_vec,
-};
 use crate::errors::ExporterError;
 use crate::httpd::{
     Collector,
@@ -16,6 +11,9 @@ use crate::httpd::{
 use jail::RunningJail;
 use log::debug;
 use prometheus::{
+    register_int_counter_vec_with_registry,
+    register_int_gauge_vec_with_registry,
+    register_int_gauge_with_registry,
     Encoder,
     IntCounterVec,
     IntGauge,
@@ -109,201 +107,201 @@ impl Default for Exporter {
         let labels: &[&str] = &["name"];
 
         let metrics = Self {
-            coredumpsize_bytes: register_int_gauge_vec!(
-                registry,
+            coredumpsize_bytes: register_int_gauge_vec_with_registry!(
                 "coredumpsize_bytes",
                 "core dump size, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            cputime_seconds_total: register_int_counter_vec!(
-                registry,
+            cputime_seconds_total: register_int_counter_vec_with_registry!(
                 "cputime_seconds_total",
                 "CPU time, in seconds",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            datasize_bytes: register_int_gauge_vec!(
-                registry,
+            datasize_bytes: register_int_gauge_vec_with_registry!(
                 "datasize_bytes",
                 "data size, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            maxproc: register_int_gauge_vec!(
-                registry,
+            maxproc: register_int_gauge_vec_with_registry!(
                 "maxproc",
                 "number of processes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            memorylocked_bytes: register_int_gauge_vec!(
-                registry,
+            memorylocked_bytes: register_int_gauge_vec_with_registry!(
                 "memorylocked_bytes",
                 "locked memory, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            memoryuse_bytes: register_int_gauge_vec!(
-                registry,
+            memoryuse_bytes: register_int_gauge_vec_with_registry!(
                 "memoryuse_bytes",
                 "resident set size, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            msgqqueued: register_int_gauge_vec!(
-                registry,
+            msgqqueued: register_int_gauge_vec_with_registry!(
                 "msgqqueued",
                 "number of queued SysV messages",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            msgqsize_bytes: register_int_gauge_vec!(
-                registry,
+            msgqsize_bytes: register_int_gauge_vec_with_registry!(
                 "msgqsize_bytes",
                 "SysV message queue size, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            nmsgq: register_int_gauge_vec!(
-                registry,
+            nmsgq: register_int_gauge_vec_with_registry!(
                 "nmsgq",
                 "number of SysV message queues",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            nsem: register_int_gauge_vec!(
-                registry,
+            nsem: register_int_gauge_vec_with_registry!(
                 "nsem",
                 "number of SysV semaphores",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            nsemop: register_int_gauge_vec!(
-                registry,
+            nsemop: register_int_gauge_vec_with_registry!(
                 "nsemop",
                 "number of SysV semaphores modified in a single semop(2) call",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            nshm: register_int_gauge_vec!(
-                registry,
+            nshm: register_int_gauge_vec_with_registry!(
                 "nshm",
                 "number of SysV shared memory segments",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            nthr: register_int_gauge_vec!(
-                registry,
+            nthr: register_int_gauge_vec_with_registry!(
                 "nthr",
                 "number of threads",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            openfiles: register_int_gauge_vec!(
-                registry,
+            openfiles: register_int_gauge_vec_with_registry!(
                 "openfiles",
                 "file descriptor table size",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            pcpu_used: register_int_gauge_vec!(
-                registry,
+            pcpu_used: register_int_gauge_vec_with_registry!(
                 "pcpu_used",
                 "%CPU, in percents of a single CPU core",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            pseudoterminals: register_int_gauge_vec!(
-                registry,
+            pseudoterminals: register_int_gauge_vec_with_registry!(
                 "pseudoterminals",
                 "number of PTYs",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            readbps: register_int_gauge_vec!(
-                registry,
+            readbps: register_int_gauge_vec_with_registry!(
                 "readbps",
                 "filesystem reads, in bytes per second",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            readiops: register_int_gauge_vec!(
-                registry,
+            readiops: register_int_gauge_vec_with_registry!(
                 "readiops",
                 "filesystem reads, in operations per second",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            shmsize_bytes: register_int_gauge_vec!(
-                registry,
+            shmsize_bytes: register_int_gauge_vec_with_registry!(
                 "shmsize_bytes",
                 "SysV shared memory size, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            stacksize_bytes: register_int_gauge_vec!(
-                registry,
+            stacksize_bytes: register_int_gauge_vec_with_registry!(
                 "stacksize_bytes",
                 "stack size, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            swapuse_bytes: register_int_gauge_vec!(
-                registry,
+            swapuse_bytes: register_int_gauge_vec_with_registry!(
                 "swapuse_bytes",
                 "swap space that may be reserved or used, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            vmemoryuse_bytes: register_int_gauge_vec!(
-                registry,
+            vmemoryuse_bytes: register_int_gauge_vec_with_registry!(
                 "vmemoryuse_bytes",
                 "address space limit, in bytes",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            wallclock_seconds_total: register_int_counter_vec!(
-                registry,
+            wallclock_seconds_total: register_int_counter_vec_with_registry!(
                 "wallclock_seconds_total",
                 "wallclock time, in seconds",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            writebps: register_int_gauge_vec!(
-                registry,
+            writebps: register_int_gauge_vec_with_registry!(
                 "writebps",
                 "filesystem writes, in bytes per second",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            writeiops: register_int_gauge_vec!(
-                registry,
+            writeiops: register_int_gauge_vec_with_registry!(
                 "writeiops",
                 "filesystem writes, in operations per second",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
             // Metrics created by the exporter
-            build_info: register_int_gauge_vec!(
-                registry,
+            build_info: register_int_gauge_vec_with_registry!(
                 "exporter_build_info",
                 "A metric with a constant '1' value labelled by version \
                  from which jail_exporter was built",
-                &["rustversion", "version"]
+                &["rustversion", "version"],
+                registry,
             ).unwrap(),
 
-            jail_id: register_int_gauge_vec!(
-                registry,
+            jail_id: register_int_gauge_vec_with_registry!(
                 "id",
                 "ID of the named jail.",
-                labels
+                labels,
+                registry,
             ).unwrap(),
 
-            jail_total: register_int_gauge!(
-                registry,
+            jail_total: register_int_gauge_with_registry!(
                 "num",
-                "Current number of running jails."
+                "Current number of running jails.",
+                registry,
             ).unwrap(),
 
             // Registry must be added after the macros making use of it

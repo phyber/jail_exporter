@@ -6,6 +6,8 @@
   - Update to [prometheus] 0.13.0
   - Update to [pretty-assertions] 1.0
   - Fixed a typo in the man page (thanks, Schueni1)
+  - Use the new custom registry macros from [prometheus] and remove our own
+    versions
 
 ## v0.15.0
 

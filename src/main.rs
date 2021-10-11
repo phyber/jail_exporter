@@ -37,9 +37,6 @@ use rand::{
     Rng,
 };
 
-#[macro_use]
-mod macros;
-
 #[cfg(feature = "rc_script")]
 const RC_SCRIPT: &str = include_str!("../rc.d/jail_exporter.in");
 
