@@ -1,5 +1,9 @@
 # `jail_exporter`
 
+## v0.15.1
+
+  - Remove FreeBSD 11.4 from CI configuration as its no longer supported
+
 ## v0.15.0
 
   - Add FreeBSD 13.0 as a build environment in CI.
