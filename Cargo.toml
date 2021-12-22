@@ -57,7 +57,7 @@ bcrypt_cmd = [
 rc_script = []
 
 [dependencies]
-askama = "0.10"
+askama = "0.11"
 env_logger = "0.9"
 jail = "0.2.0"
 log = "0.4"
