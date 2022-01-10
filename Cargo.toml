@@ -63,7 +63,7 @@ jail = "0.2.0"
 log = "0.4"
 rctl = "0.2.0"
 sysctl = "0.4"
-tempfile = "3.1.0"
+tempfile = "3.3.0"
 thiserror = "1.0"
 
 [dependencies.actix-web]
