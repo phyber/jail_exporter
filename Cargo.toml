@@ -120,7 +120,7 @@ rustc_version = "0.4"
 actix-rt = "2.0"
 indoc = "1.0"
 lazy_static = "1.4"
-pretty_assertions = "1.0"
+pretty_assertions = "1.1"
 
 [dev-dependencies.users]
 version = "0.11"
