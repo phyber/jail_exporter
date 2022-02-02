@@ -7,6 +7,9 @@ use clap::{
     crate_description,
     crate_name,
     crate_version,
+    App,
+    Arg,
+    ArgMatches,
 };
 use log::debug;
 use std::net::SocketAddr;
@@ -162,15 +165,15 @@ fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
 }
 
 // Create a clap app
-fn create_app<'a>() -> clap::App<'a> {
+fn create_app<'a>() -> App<'a> {
     debug!("Creating clap app");
 
-    let app = clap::App::new(crate_name!())
+    let app = App::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())
         .term_width(80)
         .arg(
-            clap::Arg::new("OUTPUT_FILE_PATH")
+            Arg::new("OUTPUT_FILE_PATH")
                 .env("OUTPUT_FILE_PATH")
                 .hide_env_values(true)
                 .long("output.file-path")
@@ -180,7 +183,7 @@ fn create_app<'a>() -> clap::App<'a> {
                 .validator(is_valid_output_file_path)
         )
         .arg(
-            clap::Arg::new("WEB_LISTEN_ADDRESS")
+            Arg::new("WEB_LISTEN_ADDRESS")
                 .env("WEB_LISTEN_ADDRESS")
                 .hide_env_values(true)
                 .long("web.listen-address")
@@ -191,7 +194,7 @@ fn create_app<'a>() -> clap::App<'a> {
                 .validator(is_valid_socket_addr)
         )
         .arg(
-            clap::Arg::new("WEB_TELEMETRY_PATH")
+            Arg::new("WEB_TELEMETRY_PATH")
                 .env("WEB_TELEMETRY_PATH")
                 .hide_env_values(true)
                 .long("web.telemetry-path")
@@ -204,7 +207,7 @@ fn create_app<'a>() -> clap::App<'a> {
 
     #[cfg(feature = "auth")]
     let app = app.arg(
-        clap::Arg::new("WEB_AUTH_CONFIG")
+        Arg::new("WEB_AUTH_CONFIG")
             .env("WEB_AUTH_CONFIG")
             .hide_env_values(true)
             .long("web.auth-config")
@@ -216,10 +219,10 @@ fn create_app<'a>() -> clap::App<'a> {
 
     #[cfg(feature = "bcrypt_cmd")]
     let app = {
-        let bcrypt = clap::App::new("bcrypt")
+        let bcrypt = App::new("bcrypt")
             .about("Returns bcrypt encrypted passwords suitable for HTTP Basic Auth")
             .arg(
-                clap::Arg::new("COST")
+                Arg::new("COST")
                     .long("cost")
                     .short('c')
                     .value_name("COST")
@@ -229,7 +232,7 @@ fn create_app<'a>() -> clap::App<'a> {
                     .validator(is_valid_bcrypt_cost)
             )
             .arg(
-                clap::Arg::new("LENGTH")
+                Arg::new("LENGTH")
                     .long("length")
                     .short('l')
                     .help("Specify the random password length")
@@ -238,14 +241,14 @@ fn create_app<'a>() -> clap::App<'a> {
                     .validator(is_valid_length)
             )
             .arg(
-                clap::Arg::new("RANDOM")
+                Arg::new("RANDOM")
                     .long("random")
                     .short('r')
                     .help("Generate a random password instead of having to \
                            specify one")
             )
             .arg(
-                clap::Arg::new("PASSWORD")
+                Arg::new("PASSWORD")
                     .value_name("PASSWORD")
                     .help("The password to hash using bcrypt, a prompt is \
                            provided if this is not specified")
@@ -259,7 +262,7 @@ fn create_app<'a>() -> clap::App<'a> {
     #[cfg(feature = "rc_script")]
     let app = app
         .arg(
-            clap::Arg::new("RC_SCRIPT")
+            Arg::new("RC_SCRIPT")
                 .long("rc-script")
                 .help("Dump the jail_exporter rc(8) script to stdout")
         );
@@ -268,7 +271,7 @@ fn create_app<'a>() -> clap::App<'a> {
 }
 
 // Parses the command line arguments and returns the matches.
-pub fn parse_args() -> clap::ArgMatches {
+pub fn parse_args() -> ArgMatches {
     debug!("Parsing command line arguments");
 
     create_app().get_matches()
