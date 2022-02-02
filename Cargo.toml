@@ -84,8 +84,10 @@ default-features = false
 features = ["vec_map"]
 
 [dependencies.dialoguer]
-version = "0.8"
+version = "0.9"
+default-features = false
 optional = true
+features = ["password"]
 
 [dependencies.mime]
 version = "0.3"
