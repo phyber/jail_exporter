@@ -5,6 +5,7 @@
   - Update all crate versions, and disable some unused crate features
   - Add FreeBSD 12.3 to the test matrix
   - Move `rc_script` functionality to its own file
+  - Move `bcrypt` command functionality to its own file
 
 ## v0.15.1
 

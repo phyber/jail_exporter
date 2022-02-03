@@ -19,6 +19,9 @@ mod file;
 mod httpd;
 mod rctlstate;
 
+#[cfg(feature = "bcrypt_cmd")]
+mod bcrypt;
+
 #[cfg(feature = "rc_script")]
 mod rcscript;
 
@@ -27,18 +30,8 @@ use exporter::Exporter;
 use file::FileExporter;
 use rctlstate::RctlState;
 
-#[cfg(feature = "bcrypt_cmd")]
-use dialoguer::Password;
-
 #[cfg(feature = "auth")]
 use httpd::auth::BasicAuthConfig;
-
-#[cfg(feature = "bcrypt_cmd")]
-use rand::{
-    distributions::Alphanumeric,
-    thread_rng,
-    Rng,
-};
 
 // Checks for the availability of RACCT/RCTL in the kernel.
 fn is_racct_rctl_available() -> Result<(), ExporterError> {
@@ -79,60 +72,6 @@ fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
     }
 }
 
-#[cfg(feature = "bcrypt_cmd")]
-// Handles hashing and outputting bcrypted passwords for the bcrypt sub
-// command.
-fn bcrypt_cmd(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
-    // Cost argument is validated and has a default, we can unwrap right
-    // away.
-    let cost: u32 = matches.value_of("COST")
-        .expect("no bcrypt cost given")
-        .parse()
-        .expect("couldn't parse cost as u32");
-    let random = matches.is_present("RANDOM");
-
-    // If a password was given on the CLI, just unwrap it. If none was given,
-    // we either generate a random password or interactively prompt for it.
-    let password = match matches.value_of("PASSWORD") {
-        Some(password) => password.into(),
-        None           => {
-            if random {
-                // length was validated by the CLI, we should be safe to
-                // unwrap and parse to usize here.
-                let length: usize = matches.value_of("LENGTH")
-                    .expect("no password length given")
-                    .parse()
-                    .expect("couldn't parse length as usize");
-
-                thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(length)
-                    .map(char::from)
-                    .collect()
-            }
-            else {
-                Password::new()
-                    .with_prompt("Password")
-                    .with_confirmation(
-                        "Confirm password",
-                        "Password mismatch",
-                    )
-                    .interact()?
-            }
-        },
-    };
-
-    let hash = bcrypt::hash(&password, cost)?;
-
-    if random {
-        println!("Password: {}", password);
-    }
-
-    println!("Hash: {}", hash);
-
-    Ok(())
-}
-
 #[actix_web::main]
 async fn main() -> Result<(), ExporterError> {
     // We do as much as we can without checking if we're running as root.
@@ -152,7 +91,7 @@ async fn main() -> Result<(), ExporterError> {
     #[cfg(feature = "bcrypt_cmd")]
     // If we have the auth feature, we can bcrypt passwords for the user.
     if let Some(subcmd) = matches.subcommand_matches("bcrypt") {
-        bcrypt_cmd(subcmd)?;
+        bcrypt::generate_from(subcmd)?;
 
         ::std::process::exit(0);
     }
