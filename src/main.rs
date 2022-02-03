@@ -19,6 +19,9 @@ mod file;
 mod httpd;
 mod rctlstate;
 
+#[cfg(feature = "rc_script")]
+mod rcscript;
+
 use errors::ExporterError;
 use exporter::Exporter;
 use file::FileExporter;
@@ -36,9 +39,6 @@ use rand::{
     thread_rng,
     Rng,
 };
-
-#[cfg(feature = "rc_script")]
-const RC_SCRIPT: &str = include_str!("../rc.d/jail_exporter.in");
 
 // Checks for the availability of RACCT/RCTL in the kernel.
 fn is_racct_rctl_available() -> Result<(), ExporterError> {
@@ -133,17 +133,6 @@ fn bcrypt_cmd(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
     Ok(())
 }
 
-#[cfg(feature = "rc_script")]
-fn output_rc_script() {
-    debug!("Dumping rc(8) script to stdout");
-
-    // The script we included is the one that we use for the ports tree, so
-    // we need to replace %%PREFIX%% with a reasonable prefix.
-    let output = RC_SCRIPT.replace("%%PREFIX%%", "/usr/local");
-
-    println!("{}", output);
-}
-
 #[actix_web::main]
 async fn main() -> Result<(), ExporterError> {
     // We do as much as we can without checking if we're running as root.
@@ -155,7 +144,7 @@ async fn main() -> Result<(), ExporterError> {
     #[cfg(feature = "rc_script")]
     // If we have been asked to dump the rc(8) script, do that, and exit.
     if matches.is_present("RC_SCRIPT") {
-        output_rc_script();
+        rcscript::output();
 
         ::std::process::exit(0);
     }
