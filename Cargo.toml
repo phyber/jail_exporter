@@ -91,7 +91,7 @@ features = [
 ]
 
 [dependencies.dialoguer]
-version = "0.9"
+version = "0.10"
 default-features = false
 optional = true
 features = ["password"]
