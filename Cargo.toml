@@ -82,7 +82,7 @@ version = "0.10"
 optional = true
 
 [dependencies.clap]
-version = "3.0"
+version = "3.1.1"
 default-features = false
 features = [
     "cargo",
@@ -91,7 +91,7 @@ features = [
 ]
 
 [dependencies.dialoguer]
-version = "0.9"
+version = "0.10.0"
 default-features = false
 optional = true
 features = ["password"]

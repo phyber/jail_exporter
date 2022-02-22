@@ -7,9 +7,9 @@ use clap::{
     crate_description,
     crate_name,
     crate_version,
-    App,
     Arg,
     ArgMatches,
+    Command,
 };
 use log::debug;
 use std::net::SocketAddr;
@@ -165,10 +165,10 @@ fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
 }
 
 // Create a clap app
-fn create_app<'a>() -> App<'a> {
+fn create_app<'a>() -> Command<'a> {
     debug!("Creating clap app");
 
-    let app = App::new(crate_name!())
+    let app = Command::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())
         .term_width(80)
@@ -219,7 +219,7 @@ fn create_app<'a>() -> App<'a> {
 
     #[cfg(feature = "bcrypt_cmd")]
     let app = {
-        let bcrypt = App::new("bcrypt")
+        let bcrypt = Command::new("bcrypt")
             .about("Returns bcrypt encrypted passwords suitable for HTTP Basic Auth")
             .arg(
                 Arg::new("COST")
