@@ -9,6 +9,7 @@
   - Update to [actix-web] 4.0.x
   - Remove [mime] crate dependency
   - Replace dev-dependency [lazy-static] with [once_cell]
+  - Bump MSRV to 1.56.1
 
 ## v0.15.1
 
