@@ -6,16 +6,12 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use actix_web::HttpResponse;
-use actix_web::http::header::CONTENT_TYPE;
+use actix_web::http::header::ContentType;
 use actix_web::web::{
     self,
     Data,
 };
 use log::debug;
-use mime::{
-    TEXT_HTML_UTF_8,
-    TEXT_PLAIN_UTF_8,
-};
 use super::AppState;
 
 // Displays the index page. This is a page which simply links to the actual
@@ -27,7 +23,7 @@ pub(in crate::httpd) async fn index(data: Data<AppState>) -> HttpResponse {
     let body = web::Bytes::from(index);
 
     HttpResponse::Ok()
-        .insert_header((CONTENT_TYPE, TEXT_HTML_UTF_8))
+        .insert_header(ContentType::html())
         .body(body)
 }
 
@@ -43,12 +39,12 @@ pub(in crate::httpd) async fn metrics(data: Data<AppState>) -> HttpResponse {
     match exporter.collect() {
         Ok(o) => {
             HttpResponse::Ok()
-                .insert_header((CONTENT_TYPE, TEXT_PLAIN_UTF_8))
+                .insert_header(ContentType::plaintext())
                 .body(o)
         },
         Err(e) => {
             HttpResponse::InternalServerError()
-                .insert_header((CONTENT_TYPE, TEXT_PLAIN_UTF_8))
+                .insert_header(ContentType::plaintext())
                 .body(format!("{}", e))
         },
     }
@@ -63,6 +59,7 @@ mod tests {
         web,
         App,
     };
+    use actix_web::http::header::CONTENT_TYPE;
     use crate::exporter::Exporter;
     use pretty_assertions::assert_eq;
     use std::str;
@@ -97,7 +94,7 @@ mod tests {
             .unwrap()
             .to_str()
             .unwrap();
-        assert_eq!(content_type, TEXT_HTML_UTF_8);
+        assert_eq!(content_type, ContentType::html().to_string());
 
         let request = test::TestRequest::get().uri("/").to_request();
         let bytes = test::call_and_read_body(&mut server, request).await;

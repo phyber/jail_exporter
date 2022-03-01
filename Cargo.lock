@@ -739,7 +739,6 @@ dependencies = [
  "jail",
  "lazy_static",
  "log",
- "mime",
  "pretty_assertions",
  "prometheus",
  "rand",
