@@ -133,7 +133,7 @@ impl Server {
 
             // Order is important in the App config.
             let app = actix_web::App::new()
-                .data(state)
+                .app_data(state)
                 // Enable request logging
                 .wrap(Logger::default());
 

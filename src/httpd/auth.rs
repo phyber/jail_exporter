@@ -165,7 +165,7 @@ mod tests {
 
     use actix_web::{
         dev::Payload,
-        test,
+        test::TestRequest,
         FromRequest,
     };
 
@@ -189,8 +189,8 @@ mod tests {
     }
 
     // Tests that errors are returned when config contains an invalid username
-    #[test]
-    fn basic_user_config_from_yaml_invalid() {
+    #[actix_web::test]
+    async fn basic_user_config_from_yaml_invalid() {
         let path = "test-data/config_invalid.yaml";
         let config = BasicAuthConfig::from_yaml(&path);
 
@@ -198,8 +198,8 @@ mod tests {
     }
 
     // Config is a null auth users entry.
-    #[test]
-    fn basic_user_config_from_yaml_null() {
+    #[actix_web::test]
+    async fn basic_user_config_from_yaml_null() {
         let path = "test-data/config_null.yaml";
         let config = BasicAuthConfig::from_yaml(&path);
 
@@ -207,15 +207,15 @@ mod tests {
     }
 
     // Config consists of valid usernames
-    #[test]
-    fn basic_user_config_from_yaml_ok() {
+    #[actix_web::test]
+    async fn basic_user_config_from_yaml_ok() {
         let path = "test-data/config_ok.yaml";
         let config = BasicAuthConfig::from_yaml(&path);
 
         assert!(config.is_ok());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn validate_credentials_ok() {
         let exporter = Box::new(TestCollector);
         let auth_config = get_users_config();
@@ -227,22 +227,22 @@ mod tests {
         };
 
         // HTTP request using Basic auth with username "foo" password "bar"
-        let req = test::TestRequest::get()
+        let req = TestRequest::get()
             .data(data)
-            .header("Authorization", "Basic Zm9vOmJhcg==")
+            .insert_header(("Authorization", "Basic Zm9vOmJhcg=="))
             .to_http_request();
 
         let credentials = BasicAuth::from_request(&req, &mut Payload::None)
             .await
             .unwrap();
 
-        let req = ServiceRequest::from_request(req).unwrap();
+        let req = ServiceRequest::from_request(req);
         let res = validate_credentials(req, credentials).await;
 
         assert!(res.is_ok());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn validate_credentials_unauthorized() {
         let exporter = Box::new(TestCollector);
         let auth_config = get_users_config();
@@ -254,16 +254,16 @@ mod tests {
         };
 
         // HTTP request using Basic auth with username "bad" password "password"
-        let req = test::TestRequest::get()
+        let req = TestRequest::get()
             .data(data)
-            .header("Authorization", "Basic YmFkOnBhc3N3b3Jk")
+            .insert_header(("Authorization", "Basic YmFkOnBhc3N3b3Jk"))
             .to_http_request();
 
         let credentials = BasicAuth::from_request(&req, &mut Payload::None)
             .await
             .unwrap();
 
-        let req = ServiceRequest::from_request(req).unwrap();
+        let req = ServiceRequest::from_request(req);
         let res = validate_credentials(req, credentials).await;
 
         assert!(res.is_err());
