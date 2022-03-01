@@ -6,6 +6,10 @@
   - Add FreeBSD 12.3 to the test matrix
   - Move `rc_script` functionality to its own file
   - Move `bcrypt` command functionality to its own file
+  - Update to [actix-web] 4.0.x
+  - Remove [mime] crate dependency
+  - Replace dev-dependency [lazy-static] with [once_cell]
+  - Bump MSRV to 1.56.1
 
 ## v0.15.1
 
@@ -184,6 +188,7 @@
 [jail]: https://crates.io/crates/jail
 [lazy_static]: https://crates.io/crates/lazy_static
 [mime]: https://crates.io/crates/mime
+[once_cell]: https://crates.io/crates/once_cell
 [pretty-assertions]: https://crates.io/crates/pretty-assertions
 [prometheus]: https://crates.io/crates/prometheus
 [rctl]: https://crates.io/crates/rctl

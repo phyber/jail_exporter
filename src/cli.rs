@@ -280,16 +280,14 @@ pub fn parse_args() -> ArgMatches {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lazy_static::lazy_static;
+    use once_cell::sync::Lazy;
     use pretty_assertions::assert_eq;
     use std::env;
     use std::panic;
     use std::sync::Mutex;
 
-    lazy_static! {
-        // Used during env_tests
-        static ref LOCK: Mutex<i8> = Mutex::new(0);
-    }
+    // Used during env_tests
+    static LOCK: Lazy<Mutex<i8>> = Lazy::new(|| Mutex::new(0));
 
     // Wraps setting and unsetting of environment variables
     fn env_test<T>(key: &str, var: &str, test: T) -> ()

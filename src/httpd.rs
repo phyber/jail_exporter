@@ -5,10 +5,11 @@
 //
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
-use actix_web::{
-    middleware::Logger,
-    web,
-    HttpServer,
+use actix_web::HttpServer;
+use actix_web::middleware::Logger;
+use actix_web::web::{
+    self,
+    Data,
 };
 use log::{
     debug,
@@ -133,7 +134,7 @@ impl Server {
 
             // Order is important in the App config.
             let app = actix_web::App::new()
-                .data(state)
+                .app_data(Data::new(state))
                 // Enable request logging
                 .wrap(Logger::default());
 
