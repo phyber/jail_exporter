@@ -1,5 +1,5 @@
 //
-// jail_exporter
+// `jail_exporter`
 //
 // This module implements errors used in the rest of the crate.
 //
@@ -7,7 +7,7 @@
 #![forbid(missing_docs)]
 use thiserror::Error;
 
-/// An enum for error types encountered by the jail_exporter.
+/// An enum for error types encountered by the `jail_exporter`.
 #[derive(Error, Debug)]
 pub enum ExporterError {
     /// Raised when a required argument was not set.

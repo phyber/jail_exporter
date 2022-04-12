@@ -1,4 +1,4 @@
-//! jail_exporter library
+//! `jail_exporter` library
 //!
 //! This lib handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
@@ -339,7 +339,7 @@ impl Exporter {
     /// let exporter = jail_exporter::Exporter::new();
     /// ```
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 
     /// Collect and export the rctl metrics.
@@ -510,10 +510,10 @@ impl Exporter {
                         .inc_by(inc);
                 },
                 rctl::Resource::WriteBps => {
-                    self.writebps.with_label_values(labels).set(value)
+                    self.writebps.with_label_values(labels).set(value);
                 },
                 rctl::Resource::WriteIops => {
-                    self.writeiops.with_label_values(labels).set(value)
+                    self.writeiops.with_label_values(labels).set(value);
                 },
             }
         }
@@ -536,7 +536,7 @@ impl Exporter {
             debug!("JID: {}, Name: {:?}", jail.jid, name);
 
             // Add to our vec of seen jails.
-            seen.push(name.to_owned());
+            seen.push(name.clone());
 
             // Process rusage for the named jail, setting time series.
             self.process_rusage(&name, &rusage);
@@ -547,7 +547,7 @@ impl Exporter {
 
         // Get a list of dead jails based on what we've seen, and reap them.
         // Performed in two steps due to Mutex locking issues.
-        let dead = self.dead_jails(seen);
+        let dead = self.dead_jails(&seen);
         self.reap(dead);
 
         Ok(())
@@ -555,13 +555,14 @@ impl Exporter {
 
     // Loop over jail names from the previous run, as determined by book
     // keeping, and create a vector of jail names that no longer exist.
-    fn dead_jails(&self, seen: SeenJails) -> DeadJails {
+    fn dead_jails(&self, seen: &SeenJails) -> DeadJails {
         let book = self.cputime_seconds_total_old.lock().unwrap();
 
         book
             .keys()
             .filter(|n| !seen.contains(n))
-            .map(|n| n.to_owned())
+            //.map(|n| n.clone())
+            .cloned()
             .collect()
     }
 
@@ -612,14 +613,14 @@ impl Exporter {
             &self.wallclock_seconds_total_old,
         ];
 
-        for book in books.iter() {
+        for book in &books {
             let mut book = book.lock().unwrap();
             book.remove(name);
         }
     }
 }
 
-/// Implements the Collector trait used by the HTTPd component.
+/// Implements the Collector trait used by the Httpd component.
 impl Collector for Exporter {
     fn collect(&self) -> Result<Vec<u8>, HttpdError> {
         self.export()

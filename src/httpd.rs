@@ -77,7 +77,7 @@ impl Default for Server {
 impl Server {
     // Returns a new server instance.
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 
     #[cfg(feature = "auth")]
@@ -116,7 +116,7 @@ impl Server {
         // Unwrap the config if we have one, otherwise use a default.
         let basic_auth_config = match self.basic_auth_config {
             Some(config) => config,
-            None         => Default::default(),
+            None         => BasicAuthConfig::default(),
         };
 
         // Route handlers

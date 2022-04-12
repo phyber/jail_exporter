@@ -19,7 +19,7 @@ use super::AppState;
 pub(in crate::httpd) async fn index(data: Data<AppState>) -> HttpResponse {
     debug!("Displaying index page");
 
-    let index = (&data.index_page).to_owned();
+    let index = (&data.index_page).clone();
     let body = web::Bytes::from(index);
 
     HttpResponse::Ok()

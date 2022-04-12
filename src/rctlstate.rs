@@ -36,12 +36,10 @@ impl RctlState {
 
         if let Ok(value) = ctl.value() {
             match value {
-                // FreeBSD 13 returns a U8 as the kernel variable is bool
-                CtlValue::U8(1) => Self::Enabled,
-
+                // FreeBSD 13+ returns a U8 as the kernel variable is bool.
                 // FreeBSD older than 13 returns a Uint as the kernel
-                // variable is an int
-                CtlValue::Uint(1) => Self::Enabled,
+                // variable is an int.
+                CtlValue::U8(1) | CtlValue::Uint(1) => Self::Enabled,
 
                 // Anything else, it's disabled
                 _ => Self::Disabled,

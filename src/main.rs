@@ -1,5 +1,5 @@
 //!
-//! jail_exporter
+//! `jail_exporter`
 //!
 //! An exporter for Prometheus, exporting jail metrics as reported by rctl(8).
 //!
