@@ -694,7 +694,7 @@ mod tests {
         seen.push("test_c".into());
 
         // Workout which jails are dead, it should be b.
-        let dead = exporter.dead_jails(seen);
+        let dead = exporter.dead_jails(&seen);
         let ok: DeadJails = vec![
             "test_b".into(),
         ];
@@ -727,7 +727,7 @@ mod tests {
         assert_eq!(series.get(), 1000);
 
         // Workout which jails are dead, it should be b.
-        let dead = exporter.dead_jails(seen);
+        let dead = exporter.dead_jails(&seen);
         exporter.reap(dead);
 
         // We need a new handle on this. Using the old one will present the old
