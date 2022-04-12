@@ -2,11 +2,12 @@
 name = "jail_exporter"
 version = "0.16.0"
 description = "Prometheus exporter for FreeBSD jails."
-edition = "2018"
+edition = "2021"
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/phyber/jail_exporter"
 repository = "https://github.com/phyber/jail_exporter.git"
+rust-version = "1.56.1"
 resolver = "2"
 authors = [
     "David O'Rourke <david.orourke@gmail.com>",
