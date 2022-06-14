@@ -7,6 +7,7 @@
 #![deny(missing_docs)]
 #![allow(clippy::redundant_field_names)]
 use log::debug;
+use std::path::PathBuf;
 use users::{
     Users,
     UsersCache,
@@ -27,7 +28,10 @@ mod rcscript;
 
 use errors::ExporterError;
 use exporter::Exporter;
-use file::FileExporter;
+use file::{
+    FileExporter,
+    FileExporterOutput,
+};
 use rctlstate::RctlState;
 
 #[cfg(feature = "auth")]
@@ -82,7 +86,7 @@ async fn main() -> Result<(), ExporterError> {
 
     #[cfg(feature = "rc_script")]
     // If we have been asked to dump the rc(8) script, do that, and exit.
-    if matches.is_present("RC_SCRIPT") {
+    if matches.contains_id("RC_SCRIPT") {
         rcscript::output();
 
         ::std::process::exit(0);
@@ -105,10 +109,10 @@ async fn main() -> Result<(), ExporterError> {
 
     // If an output file was specified, we do that. We will never launch the
     // HTTPd when we're passed an OUTPUT_FILE_PATH.
-    if let Some(output_path) = matches.value_of("OUTPUT_FILE_PATH") {
+    if let Some(output_path) = matches.get_one::<FileExporterOutput>("OUTPUT_FILE_PATH") {
         debug!("output.file-path: {}", output_path);
 
-        let exporter = FileExporter::new(output_path);
+        let exporter = FileExporter::new(output_path.to_owned());
 
         return exporter.export();
     }
@@ -116,21 +120,22 @@ async fn main() -> Result<(), ExporterError> {
     // Get the bind_address for the httpd::Server below.
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
-    //let bind_address = matches.value_of("WEB_LISTEN_ADDRESS").ok_or(
-    //    ExporterError::ArgNotSet("web.listen-address".to_owned())
-    //)?.to_owned();
-    let bind_address = matches.value_of("WEB_LISTEN_ADDRESS").ok_or_else(|| {
-        ExporterError::ArgNotSet("web.listen-address".to_owned())
-    })?.to_owned();
+    let bind_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS")
+        .ok_or_else(|| {
+            ExporterError::ArgNotSet("web.listen-address".to_owned())
+        })?
+        .to_owned();
     debug!("web.listen-address: {}", bind_address);
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
     // into the httpd::Server below.
     // We shouldn't hit the error conditions here after the validation of the
     // CLI arguments passed.
-    let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH").ok_or_else(|| {
-        ExporterError::ArgNotSet("web.telemetry-path".to_owned())
-    })?.to_owned();
+    let telemetry_path = matches.get_one::<String>("WEB_TELEMETRY_PATH")
+        .ok_or_else(|| {
+            ExporterError::ArgNotSet("web.telemetry-path".to_owned())
+        })?
+        .to_owned();
     debug!("web.telemetry-path: {}", telemetry_path);
 
     // Start configuring HTTP server.
@@ -144,7 +149,7 @@ async fn main() -> Result<(), ExporterError> {
     #[cfg(feature = "auth")]
     // Set the configuration file for HTTP Basic Auth
     {
-        if let Some(path) = matches.value_of("WEB_AUTH_CONFIG") {
+        if let Some(path) = matches.get_one::<PathBuf>("WEB_AUTH_CONFIG") {
             let config = BasicAuthConfig::from_yaml(path)?;
 
             server = server.auth_config(config);

@@ -3,6 +3,7 @@
 //!
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+use crate::file::FileExporterOutput;
 use clap::{
     crate_description,
     crate_name,
@@ -13,12 +14,15 @@ use clap::{
 };
 use log::debug;
 use std::net::SocketAddr;
-use std::path::Path;
+use std::path::{
+    Path,
+    PathBuf,
+};
 use std::str::FromStr;
 
 #[cfg(feature = "auth")]
 // Basic checks for valid filesystem path for web.auth-config existing.
-fn is_valid_basic_auth_config_path(s: &str) -> Result<(), String> {
+fn is_valid_basic_auth_config_path(s: &str) -> Result<PathBuf, String> {
     debug!("Ensuring that web.auth-config is valid");
 
     // Get a Path from our string and start checking
@@ -28,12 +32,12 @@ fn is_valid_basic_auth_config_path(s: &str) -> Result<(), String> {
         return Err("web.auth-config doesn't doesn't exist".to_owned());
     }
 
-    Ok(())
+    Ok(path.to_path_buf())
 }
 
 #[cfg(feature = "bcrypt_cmd")]
 // Ensures that a given bcrypt cost is valid
-fn is_valid_bcrypt_cost(s: &str) -> Result<(), String> {
+fn is_valid_bcrypt_cost(s: &str) -> Result<u32, String> {
     debug!("Ensuring that bcrypt cost is valid");
 
     let cost = match s.parse::<u32>() {
@@ -47,12 +51,12 @@ fn is_valid_bcrypt_cost(s: &str) -> Result<(), String> {
         return Err("cost cannot be less than 4 or more than 31".to_owned());
     }
 
-    Ok(())
+    Ok(cost)
 }
 
 #[cfg(feature = "bcrypt_cmd")]
 // Validates that the incoming value can be used as a password length
-fn is_valid_length(s: &str) -> Result<(), String> {
+fn is_valid_length(s: &str) -> Result<usize, String> {
     debug!("Ensuring that bcrypt --length is valid");
 
     let length = match s.parse::<usize>() {
@@ -64,16 +68,16 @@ fn is_valid_length(s: &str) -> Result<(), String> {
         return Err("--length cannot be less than 1".into());
     }
 
-    Ok(())
+    Ok(length)
 }
 
 // Basic checks for valid filesystem path for .prom output file
-fn is_valid_output_file_path(s: &str) -> Result<(), String> {
+fn is_valid_output_file_path(s: &str) -> Result<FileExporterOutput, String> {
     debug!("Ensuring that output.file-path is valid");
 
     // - is special and is a request for us to output to stdout
     if s == "-" {
-        return Ok(())
+        return Ok(FileExporterOutput::Stdout)
     }
 
     // Get a Path from our string and start checking
@@ -113,12 +117,12 @@ fn is_valid_output_file_path(s: &str) -> Result<(), String> {
         return Err("output.file-path directory must exist".to_owned());
     }
 
-    Ok(())
+    Ok(FileExporterOutput::File(path.to_path_buf()))
 }
 
 #[cfg(feature = "bcrypt_cmd")]
 // Checks that a password is valid with some basic checks.
-fn is_valid_password(s: &str) -> Result<(), String> {
+fn is_valid_password(s: &str) -> Result<String, String> {
     debug!("Ensuring that password is valid");
 
     let length = s.chars().count();
@@ -127,15 +131,18 @@ fn is_valid_password(s: &str) -> Result<(), String> {
         return Err("password cannot be empty".into());
     }
 
-    Ok(())
+   Ok(s.to_string())
 }
 
 // Used as a validator for the argument parsing.
-fn is_valid_socket_addr(s: &str) -> Result<(), String> {
+// We validate the parse to SocketAddr here but still continue to return a
+// string. HttpServer::bind is fine with taking a string there.
+// We might change this behaviour later.
+fn is_valid_socket_addr(s: &str) -> Result<String, String> {
     debug!("Ensuring that web.listen-address is valid");
 
     match SocketAddr::from_str(s) {
-        Ok(_)  => Ok(()),
+        Ok(_)  => Ok(s.to_string()),
         Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
     }
 }
@@ -143,7 +150,7 @@ fn is_valid_socket_addr(s: &str) -> Result<(), String> {
 // Checks that the telemetry_path is valid.
 // This check is extremely basic, and there may still be invalid paths that
 // could be passed.
-fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
+fn is_valid_telemetry_path(s: &str) -> Result<String, String> {
     debug!("Ensuring that web.telemetry-path is valid");
 
     // Ensure s isn't empty.
@@ -161,7 +168,7 @@ fn is_valid_telemetry_path(s: &str) -> Result<(), String> {
         return Err("path must not be /".to_owned());
     }
 
-    Ok(())
+    Ok(s.to_string())
 }
 
 // Create a clap app
@@ -180,7 +187,7 @@ fn create_app<'a>() -> Command<'a> {
                 .value_name("FILE")
                 .help("File to output metrics to.")
                 .takes_value(true)
-                .validator(is_valid_output_file_path)
+                .value_parser(is_valid_output_file_path)
         )
         .arg(
             Arg::new("WEB_LISTEN_ADDRESS")
@@ -191,7 +198,7 @@ fn create_app<'a>() -> Command<'a> {
                 .help("Address on which to expose metrics and web interface.")
                 .takes_value(true)
                 .default_value("127.0.0.1:9452")
-                .validator(is_valid_socket_addr)
+                .value_parser(is_valid_socket_addr)
         )
         .arg(
             Arg::new("WEB_TELEMETRY_PATH")
@@ -202,7 +209,7 @@ fn create_app<'a>() -> Command<'a> {
                 .help("Path under which to expose metrics.")
                 .takes_value(true)
                 .default_value("/metrics")
-                .validator(is_valid_telemetry_path)
+                .value_parser(is_valid_telemetry_path)
         );
 
     #[cfg(feature = "auth")]
@@ -214,7 +221,7 @@ fn create_app<'a>() -> Command<'a> {
             .value_name("CONFIG")
             .help("Path to HTTP Basic Authentication configuration")
             .takes_value(true)
-            .validator(is_valid_basic_auth_config_path)
+            .value_parser(is_valid_basic_auth_config_path)
     );
 
     #[cfg(feature = "bcrypt_cmd")]
@@ -229,7 +236,7 @@ fn create_app<'a>() -> Command<'a> {
                     .help("Computes the hash using the given cost")
                     .takes_value(true)
                     .default_value("12")
-                    .validator(is_valid_bcrypt_cost)
+                    .value_parser(is_valid_bcrypt_cost)
             )
             .arg(
                 Arg::new("LENGTH")
@@ -238,7 +245,7 @@ fn create_app<'a>() -> Command<'a> {
                     .help("Specify the random password length")
                     .takes_value(true)
                     .default_value("32")
-                    .validator(is_valid_length)
+                    .value_parser(is_valid_length)
             )
             .arg(
                 Arg::new("RANDOM")
@@ -253,7 +260,7 @@ fn create_app<'a>() -> Command<'a> {
                     .help("The password to hash using bcrypt, a prompt is \
                            provided if this is not specified")
                     .takes_value(true)
-                    .validator(is_valid_password)
+                    .value_parser(is_valid_password)
             );
 
         app.subcommand(bcrypt)
@@ -315,9 +322,9 @@ mod tests {
 
         let argv = vec!["jail_exporter"];
         let matches = create_app().get_matches_from(argv);
-        let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+        let listen_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS");
 
-        assert_eq!(listen_address, Some("127.0.0.1:9452"));
+        assert_eq!(listen_address, Some(&"127.0.0.1:9452".into()));
     }
 
     #[test]
@@ -328,9 +335,9 @@ mod tests {
 
         let argv = vec!["jail_exporter"];
         let matches = create_app().get_matches_from(argv);
-        let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
+        let telemetry_path = matches.get_one::<String>("WEB_TELEMETRY_PATH");
 
-        assert_eq!(telemetry_path, Some("/metrics"));
+        assert_eq!(telemetry_path, Some(&"/metrics".into()));
     }
 
     #[test]
@@ -341,9 +348,9 @@ mod tests {
         ];
 
         let matches = create_app().get_matches_from(argv);
-        let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+        let listen_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS");
 
-        assert_eq!(listen_address, Some("127.0.1.2:9452"));
+        assert_eq!(listen_address, Some(&"127.0.1.2:9452".into()));
     }
 
     #[test]
@@ -355,9 +362,9 @@ mod tests {
             ];
 
             let matches = create_app().get_matches_from(argv);
-            let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+            let listen_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS");
 
-            assert_eq!(listen_address, Some("127.0.1.3:9452"));
+            assert_eq!(listen_address, Some(&"127.0.1.3:9452".into()));
         });
     }
 
@@ -370,9 +377,9 @@ mod tests {
             ];
 
             let matches = create_app().get_matches_from(argv);
-            let listen_address = matches.value_of("WEB_TELEMETRY_PATH");
+            let listen_address = matches.get_one::<String>("WEB_TELEMETRY_PATH");
 
-            assert_eq!(listen_address, Some("/clioverride"));
+            assert_eq!(listen_address, Some(&"/clioverride".into()));
         });
     }
 
@@ -384,9 +391,9 @@ mod tests {
         ];
 
         let matches = create_app().get_matches_from(argv);
-        let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
+        let telemetry_path = matches.get_one::<String>("WEB_TELEMETRY_PATH");
 
-        assert_eq!(telemetry_path, Some("/test"));
+        assert_eq!(telemetry_path, Some(&"/test".into()));
     }
 
     #[test]
@@ -394,9 +401,9 @@ mod tests {
         env_test("WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
             let argv = vec!["jail_exporter"];
             let matches = create_app().get_matches_from(argv);
-            let listen_address = matches.value_of("WEB_LISTEN_ADDRESS");
+            let listen_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS");
 
-            assert_eq!(listen_address, Some("127.0.1.2:9452"));
+            assert_eq!(listen_address, Some(&"127.0.1.2:9452".into()));
         });
     }
 
@@ -405,9 +412,9 @@ mod tests {
         env_test("WEB_TELEMETRY_PATH", "/test", || {
             let argv = vec!["jail_exporter"];
             let matches = create_app().get_matches_from(argv);
-            let telemetry_path = matches.value_of("WEB_TELEMETRY_PATH");
+            let telemetry_path = matches.get_one::<String>("WEB_TELEMETRY_PATH");
 
-            assert_eq!(telemetry_path, Some("/test"));
+            assert_eq!(telemetry_path, Some(&"/test".into()));
         });
     }
 

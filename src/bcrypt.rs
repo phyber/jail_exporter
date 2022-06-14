@@ -14,24 +14,20 @@ use rand::{
 pub fn generate_from(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
     // Cost argument is validated and has a default, we can unwrap right
     // away.
-    let cost: u32 = matches.value_of("COST")
-        .expect("no bcrypt cost given")
-        .parse()
-        .expect("couldn't parse cost as u32");
-    let random = matches.is_present("RANDOM");
+    let cost: u32 = *matches.get_one("COST")
+        .expect("no bcrypt cost given");
+    let random = matches.contains_id("RANDOM");
 
     // If a password was given on the CLI, just unwrap it. If none was given,
     // we either generate a random password or interactively prompt for it.
-    let password = match matches.value_of("PASSWORD") {
+    let password = match matches.get_one::<String>("PASSWORD") {
         Some(password) => password.into(),
         None           => {
             if random {
                 // length was validated by the CLI, we should be safe to
                 // unwrap and parse to usize here.
-                let length: usize = matches.value_of("LENGTH")
-                    .expect("no password length given")
-                    .parse()
-                    .expect("couldn't parse length as usize");
+                let length: usize = *matches.get_one("LENGTH")
+                    .expect("no password length given");
 
                 thread_rng()
                     .sample_iter(&Alphanumeric)

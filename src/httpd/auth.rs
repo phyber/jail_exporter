@@ -49,8 +49,7 @@ pub struct BasicAuthConfig {
 
 impl BasicAuthConfig {
     // Loads a YAML config from the given path returning the BasicAuthConfig
-    pub fn from_yaml(path: &str) -> Result<Self, ExporterError> {
-        let path = Path::new(&path);
+    pub fn from_yaml(path: &Path) -> Result<Self, ExporterError> {
         let file = File::open(&path)?;
         let reader = BufReader::new(file);
         let config: Self = serde_yaml::from_reader(reader)?;
@@ -191,7 +190,7 @@ mod tests {
     // Tests that errors are returned when config contains an invalid username
     #[actix_web::test]
     async fn basic_user_config_from_yaml_invalid() {
-        let path = "test-data/config_invalid.yaml";
+        let path = Path::new("test-data/config_invalid.yaml");
         let config = BasicAuthConfig::from_yaml(&path);
 
         assert!(config.is_err());
@@ -200,7 +199,7 @@ mod tests {
     // Config is a null auth users entry.
     #[actix_web::test]
     async fn basic_user_config_from_yaml_null() {
-        let path = "test-data/config_null.yaml";
+        let path = Path::new("test-data/config_null.yaml");
         let config = BasicAuthConfig::from_yaml(&path);
 
         assert!(config.is_ok());
@@ -209,7 +208,7 @@ mod tests {
     // Config consists of valid usernames
     #[actix_web::test]
     async fn basic_user_config_from_yaml_ok() {
-        let path = "test-data/config_ok.yaml";
+        let path = Path::new("test-data/config_ok.yaml");
         let config = BasicAuthConfig::from_yaml(&path);
 
         assert!(config.is_ok());

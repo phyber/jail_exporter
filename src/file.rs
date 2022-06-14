@@ -4,38 +4,44 @@
 use crate::errors::ExporterError;
 use crate::exporter::Exporter;
 use log::debug;
+use std::fmt;
 use std::io::{
     self,
     Write,
 };
-use std::path::{
-    Path,
-    PathBuf,
-};
+use std::path::PathBuf;
 use tempfile::NamedTempFile;
 
-enum Output {
+#[derive(Clone, Debug)]
+pub enum FileExporterOutput {
     File(PathBuf),
     Stdout,
 }
 
+impl fmt::Display for FileExporterOutput {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::File(path) => write!(f, "{}", path.to_str().unwrap()),
+            Self::Stdout     => write!(f, "-"),
+        }
+    }
+}
+
 pub struct FileExporter {
-    dest: Output,
+    dest: FileExporterOutput,
 }
 
 impl FileExporter {
-    pub fn new(path: &str) -> Self {
-        // "-" is a special case and has us write to stdout.
-        let output = if path == "-" {
-            debug!("New FileExporter outputting to stdout");
-
-            Output::Stdout
-        }
-        else {
-            debug!("New FileExporter outputting to {}", path);
-
-            let path = Path::new(&path);
-            Output::File(path.into())
+    pub fn new(output: FileExporterOutput) -> Self {
+        match &output {
+            FileExporterOutput::File(path) => {
+                // This was already checked during command line parsing.
+                let path = path.to_str().unwrap();
+                debug!("New FileExporter outputting to {}", path);
+            },
+            FileExporterOutput::Stdout => {
+                debug!("New FileExporter outputting to stdout");
+            },
         };
 
         Self {
@@ -46,12 +52,12 @@ impl FileExporter {
     // Handles choosing the correct output type based on path
     fn write(&self, metrics: Vec<u8>) -> Result<(), ExporterError> {
         match &self.dest {
-            Output::Stdout => {
+            FileExporterOutput::Stdout => {
                 debug!("Writing metrics to stdout");
 
                 io::stdout().write_all(&metrics)?;
             },
-            Output::File(path) => {
+            FileExporterOutput::File(path) => {
                 debug!("Writing metrics to {:?}", path);
 
                 // We already vetted the parent in the CLI validator, so unwrap
