@@ -3,9 +3,9 @@ task:
     name: 'Cargo Test'
     freebsd_instance:
         matrix:
+            - image: 'freebsd-13-1-release-amd64'
             - image: 'freebsd-13-0-release-amd64'
             - image: 'freebsd-12-3-release-amd64'
-            - image: 'freebsd-12-2-release-amd64'
     env:
         CARGO_HOME: '${HOME}/.cargo'
         CIRRUS_SHELL: '/bin/sh'
