@@ -100,7 +100,7 @@ impl BasicAuthConfig {
 pub async fn validate_credentials(
     req: ServiceRequest,
     credentials: BasicAuth,
-) -> Result<ServiceRequest, Error> {
+) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     debug!("Validating credentials");
 
     let state = req.app_data::<Data<AppState>>()
@@ -123,7 +123,7 @@ pub async fn validate_credentials(
     let user_id = credentials.user_id().as_ref();
     if !auth_users.contains_key(user_id) {
         debug!("user_id doesn't match any configured user");
-        return Err(ErrorUnauthorized("Unauthorized"));
+        return Err((ErrorUnauthorized("Unauthorised"), req));
     }
 
     // We know the user_id exists in the hash, get the hashed password for it.
@@ -133,7 +133,7 @@ pub async fn validate_credentials(
     // passwords properly, so a little unwrapping is necessary
     let password = match credentials.password() {
         Some(password) => password.as_ref(),
-        None           => return Err(ErrorUnauthorized("Unauthorized")),
+        None           => return Err((ErrorUnauthorized("Unauthorized"), req)),
     };
 
     let validated = match bcrypt::verify(password, hashed_password) {
@@ -148,7 +148,7 @@ pub async fn validate_credentials(
 
     if !validated {
         debug!("password doesn't match auth_password, denying access");
-        return Err(ErrorUnauthorized("Unauthorized"));
+        return Err((ErrorUnauthorized("Unauthorized"), req));
     };
 
     Ok(req)
