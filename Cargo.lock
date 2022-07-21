@@ -179,9 +179,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web-httpauth"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08c25a48b4684f90520183cd1a688e5f4f7e9905835fa75d02c0fe4f60fcdbe6"
+checksum = "a6dc1123f18b3548b9fe90c15e9bd77819701b047c6b62c152230aa39243d40d"
 dependencies = [
  "actix-service",
  "actix-utils",
@@ -369,9 +369,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.2.13"
+version = "3.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac2bd7a1eb07da9ac757c923f69373deb7bc2ba5efc951b873bcb5e693992dca"
+checksum = "54635806b078b7925d6e36810b1755f2a4b5b4d57560432c1ecf60bcbe10602b"
 dependencies = [
  "bitflags",
  "clap_lex",
@@ -1613,6 +1613,6 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.5.6"
+version = "1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20b578acffd8516a6c3f2a1bdefc1ec37e547bb4e0fb8b6b01a4cafc886b4442"
+checksum = "c394b5bd0c6f669e7275d9c20aa90ae064cb22e75a1cad54e1b34088034b149f"
