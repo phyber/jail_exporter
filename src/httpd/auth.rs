@@ -120,7 +120,7 @@ pub async fn validate_credentials(
     };
 
     // Get the incoming user_id and check for an entry in the users hash
-    let user_id = credentials.user_id().as_ref();
+    let user_id = credentials.user_id();
     if !auth_users.contains_key(user_id) {
         debug!("user_id doesn't match any configured user");
         return Err((ErrorUnauthorized("Unauthorised"), req));
@@ -132,7 +132,7 @@ pub async fn validate_credentials(
     // We need to get the reference to the Cow str to compare
     // passwords properly, so a little unwrapping is necessary
     let password = match credentials.password() {
-        Some(password) => password.as_ref(),
+        Some(password) => password,
         None           => return Err((ErrorUnauthorized("Unauthorized"), req)),
     };
 
