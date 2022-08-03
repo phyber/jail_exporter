@@ -116,7 +116,7 @@ features = [
 ]
 
 [dependencies.serde_yaml]
-version = "0.8"
+version = "0.9"
 optional = true
 
 [dependencies.users]
