@@ -10,22 +10,31 @@ use crate::httpd::{
 };
 use jail::RunningJail;
 use log::debug;
-use prometheus::{
-    register_int_counter_vec_with_registry,
-    register_int_gauge_vec_with_registry,
-    register_int_gauge_with_registry,
-    Encoder,
-    IntCounterVec,
-    IntGauge,
-    IntGaugeVec,
-    Registry,
-    TextEncoder,
+use prometheus_client::encoding::text::{
+    Encode,
+    encode,
 };
+use prometheus_client::metrics::counter::Counter;
+use prometheus_client::metrics::family::Family;
+use prometheus_client::metrics::gauge::Gauge;
+use prometheus_client::registry::Registry;
 use std::collections::HashMap;
 use std::sync::{
     Arc,
     Mutex,
 };
+
+#[derive(Clone, Hash, PartialEq, Eq, Encode)]
+struct NameLabel {
+    // Jail name.
+    name: String,
+}
+
+#[derive(Clone, Hash, PartialEq, Eq, Encode)]
+struct VersionLabels {
+    rustversion: String,
+    version: String,
+}
 
 /// Metrics that use bookkeeping
 enum BookKept {
@@ -49,47 +58,81 @@ type SeenJails = Vec<String>;
 type ExportedMetrics = Vec<u8>;
 
 /// Exporter structure containing the time series that are being tracked.
-#[derive(Clone)]
 pub struct Exporter {
     // Exporter Registry
     registry: Registry,
 
     // Prometheus time series
     // These come from rctl
-    coredumpsize_bytes:      IntGaugeVec,
-    cputime_seconds_total:   IntCounterVec,
-    datasize_bytes:          IntGaugeVec,
-    memorylocked_bytes:      IntGaugeVec,
-    memoryuse_bytes:         IntGaugeVec,
-    msgqsize_bytes:          IntGaugeVec,
-    maxproc:                 IntGaugeVec,
-    msgqqueued:              IntGaugeVec,
-    nmsgq:                   IntGaugeVec,
-    nsem:                    IntGaugeVec,
-    nsemop:                  IntGaugeVec,
-    nshm:                    IntGaugeVec,
-    nthr:                    IntGaugeVec,
-    openfiles:               IntGaugeVec,
-    pcpu_used:               IntGaugeVec,
-    pseudoterminals:         IntGaugeVec,
-    readbps:                 IntGaugeVec,
-    readiops:                IntGaugeVec,
-    shmsize_bytes:           IntGaugeVec,
-    stacksize_bytes:         IntGaugeVec,
-    swapuse_bytes:           IntGaugeVec,
-    vmemoryuse_bytes:        IntGaugeVec,
-    wallclock_seconds_total: IntCounterVec,
-    writebps:                IntGaugeVec,
-    writeiops:               IntGaugeVec,
+    coredumpsize_bytes:      Family<NameLabel, Gauge>,
+    cputime_seconds_total:   Family<NameLabel, Counter>,
+    datasize_bytes:          Family<NameLabel, Gauge>,
+    memorylocked_bytes:      Family<NameLabel, Gauge>,
+    memoryuse_bytes:         Family<NameLabel, Gauge>,
+    msgqsize_bytes:          Family<NameLabel, Gauge>,
+    maxproc:                 Family<NameLabel, Gauge>,
+    msgqqueued:              Family<NameLabel, Gauge>,
+    nmsgq:                   Family<NameLabel, Gauge>,
+    nsem:                    Family<NameLabel, Gauge>,
+    nsemop:                  Family<NameLabel, Gauge>,
+    nshm:                    Family<NameLabel, Gauge>,
+    nthr:                    Family<NameLabel, Gauge>,
+    openfiles:               Family<NameLabel, Gauge>,
+    pcpu_used:               Family<NameLabel, Gauge>,
+    pseudoterminals:         Family<NameLabel, Gauge>,
+    readbps:                 Family<NameLabel, Gauge>,
+    readiops:                Family<NameLabel, Gauge>,
+    shmsize_bytes:           Family<NameLabel, Gauge>,
+    stacksize_bytes:         Family<NameLabel, Gauge>,
+    swapuse_bytes:           Family<NameLabel, Gauge>,
+    vmemoryuse_bytes:        Family<NameLabel, Gauge>,
+    wallclock_seconds_total: Family<NameLabel, Counter>,
+    writebps:                Family<NameLabel, Gauge>,
+    writeiops:               Family<NameLabel, Gauge>,
 
     // Metrics this library generates
-    build_info: IntGaugeVec,
-    jail_id:    IntGaugeVec,
-    jail_total: IntGauge,
+    build_info: Family<VersionLabels, Gauge>,
+    jail_id:    Family<NameLabel, Gauge>,
+    jail_total: Gauge,
 
     // Counter bookkeeping
     cputime_seconds_total_old:   Arc<Mutex<CounterBookKeeper>>,
     wallclock_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
+}
+
+/// Register a Counter Family with the Registry
+#[macro_export]
+macro_rules! register_int_counter_vec_with_registry {
+    ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
+        let family = Family::<$LABELS, Counter>::default();
+
+        $REGISTRY.register($NAME, $HELP, Box::new(family.clone()));
+
+        family
+    }};
+}
+
+/// Register a Gauge with the Registry
+#[macro_export]
+macro_rules! register_int_gauge_with_registry {
+    ($NAME:expr, $HELP:expr, $REGISTRY:ident $(,)?) => {{
+        let gauge = Gauge::default();
+
+        $REGISTRY.register($NAME, $HELP, Box::new(gauge.clone()));
+
+        gauge
+    }};
+}
+/// Register a Gauge Family with the Registry
+#[macro_export]
+macro_rules! register_int_gauge_vec_with_registry {
+    ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
+        let family = Family::<$LABELS, Gauge>::default();
+
+        $REGISTRY.register($NAME, $HELP, Box::new(family.clone()));
+
+        family
+    }};
 }
 
 impl Default for Exporter {
@@ -97,212 +140,205 @@ impl Default for Exporter {
     fn default() -> Self {
         // We want to set this as a field in the returned struct, as well as
         // pass it to the macros.
-        // This shouldn't fail so we use expect and panic if it does.
-        let registry = Registry::new_custom(
-            Some("jail".into()), // metric prefix
-            None,                // global labels
-        ).expect("new registry");
-
-        // Convenience variable
-        let labels: &[&str] = &["name"];
+        let mut registry = <Registry>::with_prefix("jail");
 
         let metrics = Self {
             coredumpsize_bytes: register_int_gauge_vec_with_registry!(
                 "coredumpsize_bytes",
                 "core dump size, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             cputime_seconds_total: register_int_counter_vec_with_registry!(
                 "cputime_seconds_total",
                 "CPU time, in seconds",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             datasize_bytes: register_int_gauge_vec_with_registry!(
                 "datasize_bytes",
                 "data size, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             maxproc: register_int_gauge_vec_with_registry!(
                 "maxproc",
                 "number of processes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             memorylocked_bytes: register_int_gauge_vec_with_registry!(
                 "memorylocked_bytes",
                 "locked memory, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             memoryuse_bytes: register_int_gauge_vec_with_registry!(
                 "memoryuse_bytes",
                 "resident set size, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             msgqqueued: register_int_gauge_vec_with_registry!(
                 "msgqqueued",
                 "number of queued SysV messages",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             msgqsize_bytes: register_int_gauge_vec_with_registry!(
                 "msgqsize_bytes",
                 "SysV message queue size, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             nmsgq: register_int_gauge_vec_with_registry!(
                 "nmsgq",
                 "number of SysV message queues",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             nsem: register_int_gauge_vec_with_registry!(
                 "nsem",
                 "number of SysV semaphores",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             nsemop: register_int_gauge_vec_with_registry!(
                 "nsemop",
                 "number of SysV semaphores modified in a single semop(2) call",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             nshm: register_int_gauge_vec_with_registry!(
                 "nshm",
                 "number of SysV shared memory segments",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             nthr: register_int_gauge_vec_with_registry!(
                 "nthr",
                 "number of threads",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             openfiles: register_int_gauge_vec_with_registry!(
                 "openfiles",
                 "file descriptor table size",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             pcpu_used: register_int_gauge_vec_with_registry!(
                 "pcpu_used",
                 "%CPU, in percents of a single CPU core",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             pseudoterminals: register_int_gauge_vec_with_registry!(
                 "pseudoterminals",
                 "number of PTYs",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             readbps: register_int_gauge_vec_with_registry!(
                 "readbps",
                 "filesystem reads, in bytes per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             readiops: register_int_gauge_vec_with_registry!(
                 "readiops",
                 "filesystem reads, in operations per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             shmsize_bytes: register_int_gauge_vec_with_registry!(
                 "shmsize_bytes",
                 "SysV shared memory size, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             stacksize_bytes: register_int_gauge_vec_with_registry!(
                 "stacksize_bytes",
                 "stack size, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             swapuse_bytes: register_int_gauge_vec_with_registry!(
                 "swapuse_bytes",
                 "swap space that may be reserved or used, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             vmemoryuse_bytes: register_int_gauge_vec_with_registry!(
                 "vmemoryuse_bytes",
                 "address space limit, in bytes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             wallclock_seconds_total: register_int_counter_vec_with_registry!(
                 "wallclock_seconds_total",
                 "wallclock time, in seconds",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             writebps: register_int_gauge_vec_with_registry!(
                 "writebps",
                 "filesystem writes, in bytes per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             writeiops: register_int_gauge_vec_with_registry!(
                 "writeiops",
                 "filesystem writes, in operations per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             // Metrics created by the exporter
             build_info: register_int_gauge_vec_with_registry!(
                 "exporter_build_info",
                 "A metric with a constant '1' value labelled by version \
                  from which jail_exporter was built",
-                &["rustversion", "version"],
+                VersionLabels,
                 registry,
-            ).unwrap(),
+            ),
 
             jail_id: register_int_gauge_vec_with_registry!(
                 "id",
                 "ID of the named jail.",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             jail_total: register_int_gauge_with_registry!(
                 "num",
                 "Current number of running jails.",
                 registry,
-            ).unwrap(),
+            ),
 
             // Registry must be added after the macros making use of it
             registry: registry,
@@ -316,12 +352,12 @@ impl Default for Exporter {
             )),
         };
 
-        let build_info_labels = [
-            env!("RUSTC_VERSION"),
-            env!("CARGO_PKG_VERSION"),
-        ];
+        let build_info_labels = &VersionLabels {
+            rustversion: env!("RUSTC_VERSION").to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        };
 
-        metrics.build_info.with_label_values(&build_info_labels).set(1);
+        metrics.build_info.get_or_create(build_info_labels).set(1);
 
         metrics
     }
@@ -358,12 +394,13 @@ impl Exporter {
         self.get_jail_metrics()?;
 
         // Gather them
-        let metric_families = self.registry.gather();
+        //let metric_families = self.registry.gather();
 
         // Collect them in a buffer
         let mut buffer = vec![];
-        let encoder = TextEncoder::new();
-        encoder.encode(&metric_families, &mut buffer)?;
+        //let encoder = TextEncoder::new();
+        //encoder.encode(&metric_families, &mut buffer)?;
+        encode(&mut buffer, &self.registry).expect("encode");
 
         // Return the exported metrics
         Ok(buffer)
@@ -412,19 +449,21 @@ impl Exporter {
         debug!("process_metrics_hash");
 
         // Convenience variable
-        let labels: &[&str] = &[name];
+        let labels = &NameLabel {
+            name: name.to_string(),
+        };
 
         for (key, value) in metrics {
             // Convert the usize to an i64 as the majority of metrics take
             // this.
             // Counters cast this back to a u64, which should be safe as it
             // was a usize originally.
-            let value = *value as i64;
+            let value = *value as u64;
 
             match key {
                 rctl::Resource::CoreDumpSize => {
                     self.coredumpsize_bytes
-                        .with_label_values(labels)
+                        .get_or_create(labels)
                         .set(value);
                 },
                 rctl::Resource::CpuTime => {
@@ -434,70 +473,70 @@ impl Exporter {
                     );
 
                     self.cputime_seconds_total
-                        .with_label_values(labels)
+                        .get_or_create(labels)
                         .inc_by(inc);
                 },
                 rctl::Resource::DataSize => {
-                    self.datasize_bytes.with_label_values(labels).set(value);
+                    self.datasize_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::MaxProcesses => {
-                    self.maxproc.with_label_values(labels).set(value);
+                    self.maxproc.get_or_create(labels).set(value);
                 },
                 rctl::Resource::MemoryLocked => {
                     self.memorylocked_bytes
-                        .with_label_values(labels)
+                        .get_or_create(labels)
                         .set(value);
                 },
                 rctl::Resource::MemoryUse => {
-                    self.memoryuse_bytes.with_label_values(labels).set(value);
+                    self.memoryuse_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::MsgqQueued => {
-                    self.msgqqueued.with_label_values(labels).set(value);
+                    self.msgqqueued.get_or_create(labels).set(value);
                 },
                 rctl::Resource::MsgqSize => {
-                    self.msgqsize_bytes.with_label_values(labels).set(value);
+                    self.msgqsize_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::NMsgq => {
-                    self.nmsgq.with_label_values(labels).set(value);
+                    self.nmsgq.get_or_create(labels).set(value);
                 },
                 rctl::Resource::Nsem => {
-                    self.nsem.with_label_values(labels).set(value);
+                    self.nsem.get_or_create(labels).set(value);
                 },
                 rctl::Resource::NSemop => {
-                    self.nsemop.with_label_values(labels).set(value);
+                    self.nsemop.get_or_create(labels).set(value);
                 },
                 rctl::Resource::NShm => {
-                    self.nshm.with_label_values(labels).set(value);
+                    self.nshm.get_or_create(labels).set(value);
                 },
                 rctl::Resource::NThreads => {
-                    self.nthr.with_label_values(labels).set(value);
+                    self.nthr.get_or_create(labels).set(value);
                 },
                 rctl::Resource::OpenFiles => {
-                    self.openfiles.with_label_values(labels).set(value);
+                    self.openfiles.get_or_create(labels).set(value);
                 },
                 rctl::Resource::PercentCpu => {
-                    self.pcpu_used.with_label_values(labels).set(value);
+                    self.pcpu_used.get_or_create(labels).set(value);
                 },
                 rctl::Resource::PseudoTerminals => {
-                    self.pseudoterminals.with_label_values(labels).set(value);
+                    self.pseudoterminals.get_or_create(labels).set(value);
                 },
                 rctl::Resource::ReadBps => {
-                    self.readbps.with_label_values(labels).set(value);
+                    self.readbps.get_or_create(labels).set(value);
                 },
                 rctl::Resource::ReadIops => {
-                    self.readiops.with_label_values(labels).set(value);
+                    self.readiops.get_or_create(labels).set(value);
                 },
                 rctl::Resource::ShmSize => {
-                    self.shmsize_bytes.with_label_values(labels).set(value);
+                    self.shmsize_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::StackSize => {
-                    self.stacksize_bytes.with_label_values(labels).set(value);
+                    self.stacksize_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::SwapUse => {
-                    self.swapuse_bytes.with_label_values(labels).set(value);
+                    self.swapuse_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::VMemoryUse => {
-                    self.vmemoryuse_bytes.with_label_values(labels).set(value);
+                    self.vmemoryuse_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::Wallclock => {
                     let inc = self.update_metric_book(
@@ -506,14 +545,14 @@ impl Exporter {
                     );
 
                     self.wallclock_seconds_total
-                        .with_label_values(labels)
+                        .get_or_create(labels)
                         .inc_by(inc);
                 },
                 rctl::Resource::WriteBps => {
-                    self.writebps.with_label_values(labels).set(value);
+                    self.writebps.get_or_create(labels).set(value);
                 },
                 rctl::Resource::WriteIops => {
-                    self.writeiops.with_label_values(labels).set(value);
+                    self.writeiops.get_or_create(labels).set(value);
                 },
             }
         }
@@ -541,7 +580,11 @@ impl Exporter {
             // Process rusage for the named jail, setting time series.
             self.process_rusage(&name, &rusage);
 
-            self.jail_id.with_label_values(&[&name]).set(i64::from(jail.jid));
+            let labels = &NameLabel {
+                name: name,
+            };
+
+            self.jail_id.get_or_create(labels).set(jail.jid as u64);
             self.jail_total.set(self.jail_total.get() + 1);
         }
 
@@ -575,37 +618,39 @@ impl Exporter {
 
     fn remove_jail_metrics(&self, name: &str) {
         // Convenience variable
-        let labels: &[&str] = &[name];
+        let _labels = &NameLabel {
+            name: name.to_string(),
+        };
 
         // Remove the jail metrics
-        self.coredumpsize_bytes.remove_label_values(labels).ok();
-        self.cputime_seconds_total.remove_label_values(labels).ok();
-        self.datasize_bytes.remove_label_values(labels).ok();
-        self.maxproc.remove_label_values(labels).ok();
-        self.memorylocked_bytes.remove_label_values(labels).ok();
-        self.memoryuse_bytes.remove_label_values(labels).ok();
-        self.msgqqueued.remove_label_values(labels).ok();
-        self.msgqsize_bytes.remove_label_values(labels).ok();
-        self.nmsgq.remove_label_values(labels).ok();
-        self.nsem.remove_label_values(labels).ok();
-        self.nsemop.remove_label_values(labels).ok();
-        self.nshm.remove_label_values(labels).ok();
-        self.nthr.remove_label_values(labels).ok();
-        self.openfiles.remove_label_values(labels).ok();
-        self.pcpu_used.remove_label_values(labels).ok();
-        self.pseudoterminals.remove_label_values(labels).ok();
-        self.readbps.remove_label_values(labels).ok();
-        self.readiops.remove_label_values(labels).ok();
-        self.shmsize_bytes.remove_label_values(labels).ok();
-        self.stacksize_bytes.remove_label_values(labels).ok();
-        self.swapuse_bytes.remove_label_values(labels).ok();
-        self.vmemoryuse_bytes.remove_label_values(labels).ok();
-        self.wallclock_seconds_total.remove_label_values(labels).ok();
-        self.writebps.remove_label_values(labels).ok();
-        self.writeiops.remove_label_values(labels).ok();
+        //self.coredumpsize_bytes.remove_label_set(labels).ok();
+        //self.cputime_seconds_total.remove_label_set(labels).ok();
+        //self.datasize_bytes.remove_label_set(labels).ok();
+        //self.maxproc.remove_label_set(labels).ok();
+        //self.memorylocked_bytes.remove_label_set(labels).ok();
+        //self.memoryuse_bytes.remove_label_set(labels).ok();
+        //self.msgqqueued.remove_label_set(labels).ok();
+        //self.msgqsize_bytes.remove_label_set(labels).ok();
+        //self.nmsgq.remove_label_set(labels).ok();
+        //self.nsem.remove_label_set(labels).ok();
+        //self.nsemop.remove_label_set(labels).ok();
+        //self.nshm.remove_label_set(labels).ok();
+        //self.nthr.remove_label_set(labels).ok();
+        //self.openfiles.remove_label_set(labels).ok();
+        //self.pcpu_used.remove_label_set(labels).ok();
+        //self.pseudoterminals.remove_label_set(labels).ok();
+        //self.readbps.remove_label_set(labels).ok();
+        //self.readiops.remove_label_set(labels).ok();
+        //self.shmsize_bytes.remove_label_set(labels).ok();
+        //self.stacksize_bytes.remove_label_set(labels).ok();
+        //self.swapuse_bytes.remove_label_set(labels).ok();
+        //self.vmemoryuse_bytes.remove_label_set(labels).ok();
+        //self.wallclock_seconds_total.remove_label_set(labels).ok();
+        //self.writebps.remove_label_set(labels).ok();
+        //self.writeiops.remove_label_set(labels).ok();
 
-        // Reset metrics we generated.
-        self.jail_id.remove_label_values(labels).ok();
+        //// Reset metrics we generated.
+        //self.jail_id.remove_label_set(labels).ok();
 
         // Kill the books for dead jails.
         let books = [

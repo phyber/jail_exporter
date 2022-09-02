@@ -51,8 +51,8 @@ pub enum ExporterError {
     PersistError(#[from] tempfile::PersistError),
 
     /// Raised if there are errors originating within the `prometheus` crate.
-    #[error("error within Prometheus library")]
-    PrometheusError(#[from] prometheus::Error),
+    //#[error("error within Prometheus library")]
+    //PrometheusError(#[from] prometheus::Error),
 
     /// Raised if there are issues with RACCT/RCTL support.
     #[error("RACCT/RCTL: {0}")]

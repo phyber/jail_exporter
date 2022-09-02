@@ -156,7 +156,7 @@ async fn main() -> Result<(), ExporterError> {
         }
     }
 
-    let exporter = Box::new(Exporter::new());
+    let exporter = Exporter::new();
     server.run(exporter).await?;
 
     Ok(())

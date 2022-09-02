@@ -15,6 +15,7 @@ use log::{
     debug,
     info,
 };
+use std::sync::Mutex;
 
 #[cfg(feature = "auth")]
 use actix_web::middleware::Condition;
@@ -40,15 +41,21 @@ use handlers::{
 use templates::render_index_page;
 pub use collector::Collector;
 pub use errors::HttpdError;
+use super::Exporter;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
+#[derive(Clone)]
 pub(self) struct AppState {
-    exporter:   Box<dyn Collector>,
+    //exporter:   Box<dyn Collector>,
     index_page: String,
 
     #[cfg(feature = "auth")]
     basic_auth_config: BasicAuthConfig,
+}
+
+struct AppExporter {
+    exporter: Exporter,
 }
 
 // Used for the httpd builder
@@ -106,8 +113,7 @@ impl Server {
     }
 
     // Run the HTTP server.
-    pub async fn run<C: Collector>(self, exporter: Box<C>) -> Result<(), HttpdError>
-    where C: 'static + Clone + Send + Sync {
+    pub async fn run(self, exporter: Exporter) -> Result<(), HttpdError> {
         let bind_address   = self.bind_address;
         let index_page     = render_index_page(&self.telemetry_path)?;
         let telemetry_path = self.telemetry_path.clone();
@@ -119,22 +125,30 @@ impl Server {
             None         => BasicAuthConfig::default(),
         };
 
+        // These states are shared between threads and allows us to pass
+        // arbitrary items to request handlers.
+        let app_exporter = AppExporter {
+            exporter: exporter,
+        };
+
+        let app_exporter = Data::new(Mutex::new(app_exporter));
+
+        let state = AppState {
+            index_page: index_page.clone(),
+
+            #[cfg(feature = "auth")]
+            basic_auth_config: basic_auth_config.clone(),
+        };
+
+        let state = Data::new(state);
+
         // Route handlers
         debug!("Creating HTTP server app");
         let app = move || {
-            // This state is shared between threads and allows us to pass
-            // arbitrary items to request handlers.
-            let state = AppState {
-                exporter:   exporter.clone(),
-                index_page: index_page.clone(),
-
-                #[cfg(feature = "auth")]
-                basic_auth_config: basic_auth_config.clone(),
-            };
-
             // Order is important in the App config.
             let app = actix_web::App::new()
-                .app_data(Data::new(state))
+                .app_data(app_exporter.clone())
+                .app_data(state.clone())
                 // Enable request logging
                 .wrap(Logger::default());
 
@@ -158,13 +172,14 @@ impl Server {
                 .route(&telemetry_path, web::get().to(metrics))
         };
 
+
         // Create the server
         debug!("Attempting to bind to: {}", bind_address);
         let server = HttpServer::new(app)
-            .bind(&bind_address)
-            .map_err(|e| {
-                HttpdError::BindAddress(format!("{}: {}", bind_address, e))
-            })?;
+        .bind(&bind_address)
+        .map_err(|e| {
+            HttpdError::BindAddress(format!("{}: {}", bind_address, e))
+        })?;
 
         // Run it!
         info!("Starting HTTP server on {}", bind_address);

@@ -12,7 +12,12 @@ use actix_web::web::{
     Data,
 };
 use log::debug;
-use super::AppState;
+use std::sync::Mutex;
+use super::{
+    AppState,
+    AppExporter,
+};
+use super::Collector;
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
@@ -29,8 +34,10 @@ pub(in crate::httpd) async fn index(data: Data<AppState>) -> HttpResponse {
 
 // Returns a HttpResponse containing the Prometheus Exporter output, or an
 // InternalServerError if things fail for some reason.
-pub(in crate::httpd) async fn metrics(data: Data<AppState>) -> HttpResponse {
+pub(in crate::httpd) async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
     debug!("Processing metrics request");
+
+    let data = data.lock().unwrap();
 
     // Get the exporter from the state
     let exporter = &(data.exporter);

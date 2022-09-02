@@ -100,9 +100,9 @@ default-features = false
 optional = true
 features = ["password"]
 
-[dependencies.prometheus]
-version = "0.13.0"
-default-features = false
+[dependencies.prometheus-client]
+git = "https://github.com/prometheus/client_rust"
+branch = "master"
 
 [dependencies.rand]
 version = "0.8"
