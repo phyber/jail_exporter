@@ -14,9 +14,12 @@ use prometheus_client::encoding::text::{
     Encode,
     encode,
 };
-use prometheus_client::metrics::counter::Counter;
-use prometheus_client::metrics::family::Family;
-use prometheus_client::metrics::gauge::Gauge;
+use prometheus_client::metrics::{
+    counter::Counter,
+    family::Family,
+    gauge::Gauge,
+    info::Info,
+};
 use prometheus_client::registry::Registry;
 use std::collections::HashMap;
 use std::sync::{
@@ -91,7 +94,6 @@ pub struct Exporter {
     writeiops:               Family<NameLabel, Gauge>,
 
     // Metrics this library generates
-    build_info: Family<VersionLabels, Gauge>,
     jail_id:    Family<NameLabel, Gauge>,
     jail_total: Gauge,
 
@@ -123,6 +125,7 @@ macro_rules! register_int_gauge_with_registry {
         gauge
     }};
 }
+
 /// Register a Gauge Family with the Registry
 #[macro_export]
 macro_rules! register_int_gauge_vec_with_registry {
@@ -135,12 +138,34 @@ macro_rules! register_int_gauge_vec_with_registry {
     }};
 }
 
+/// Register an Info metric with the Registry
+#[macro_export]
+macro_rules! register_info_with_registry {
+    ($NAME:expr, $HELP:expr, $LABELS:expr, $REGISTRY:ident $(,)?) => {{
+        let info = Info::new($LABELS);
+
+        $REGISTRY.register($NAME, $HELP, Box::new(info));
+    }};
+}
+
 impl Default for Exporter {
     // Descriptions of these metrics are taken from rctl(8) where possible.
     fn default() -> Self {
         // We want to set this as a field in the returned struct, as well as
         // pass it to the macros.
         let mut registry = <Registry>::with_prefix("jail");
+
+        // Static info metric, doesn't need to be in the struct.
+        register_info_with_registry!(
+            "exporter_build",
+            "A metric with constant '1' value labelled by version \
+             from which jail_exporter was built",
+             VersionLabels {
+                rustversion: env!("RUSTC_VERSION").to_string(),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+             },
+             registry,
+        );
 
         let metrics = Self {
             coredumpsize_bytes: register_int_gauge_vec_with_registry!(
@@ -319,14 +344,6 @@ impl Default for Exporter {
             ),
 
             // Metrics created by the exporter
-            build_info: register_int_gauge_vec_with_registry!(
-                "exporter_build_info",
-                "A metric with a constant '1' value labelled by version \
-                 from which jail_exporter was built",
-                VersionLabels,
-                registry,
-            ),
-
             jail_id: register_int_gauge_vec_with_registry!(
                 "id",
                 "ID of the named jail.",
@@ -351,13 +368,6 @@ impl Default for Exporter {
                 CounterBookKeeper::new()
             )),
         };
-
-        let build_info_labels = &VersionLabels {
-            rustversion: env!("RUSTC_VERSION").to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-        };
-
-        metrics.build_info.get_or_create(build_info_labels).set(1);
 
         metrics
     }
@@ -393,13 +403,8 @@ impl Exporter {
         // Collect metrics
         self.get_jail_metrics()?;
 
-        // Gather them
-        //let metric_families = self.registry.gather();
-
         // Collect them in a buffer
         let mut buffer = vec![];
-        //let encoder = TextEncoder::new();
-        //encoder.encode(&metric_families, &mut buffer)?;
         encode(&mut buffer, &self.registry).expect("encode");
 
         // Return the exported metrics
