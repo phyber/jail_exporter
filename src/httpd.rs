@@ -122,6 +122,11 @@ impl Server {
             None         => BasicAuthConfig::default(),
         };
 
+        #[cfg(feature = "auth")]
+        // If there are no users configured, we don't need authentication
+        // enabling.
+        let enable_http_auth = basic_auth_config.has_users();
+
         // These states are shared between threads and allows us to pass
         // arbitrary items to request handlers.
         let app_exporter = AppExporter {
@@ -134,7 +139,7 @@ impl Server {
             index_page: index_page,
 
             #[cfg(feature = "auth")]
-            basic_auth_config: basic_auth_config.clone(),
+            basic_auth_config: basic_auth_config,
         };
 
         let state = Data::new(state);
@@ -154,10 +159,12 @@ impl Server {
             let app = {
                 // Only enable the authentication if there are some users to
                 // check.
-                app.wrap(Condition::new(
-                    basic_auth_config.basic_auth_users.is_some(),
+                let auth = Condition::new(
+                    enable_http_auth,
                     HttpAuthentication::basic(auth::validate_credentials),
-                ))
+                );
+
+                app.wrap(auth)
             };
 
             // Finally add routes

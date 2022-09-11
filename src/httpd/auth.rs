@@ -59,6 +59,11 @@ impl BasicAuthConfig {
         Ok(config)
     }
 
+    // Returns a boolean indicating if we have any users configured.
+    pub fn has_users(&self) -> bool {
+        self.basic_auth_users.is_some()
+    }
+
     // Validates that usernames don't contain invalid characters.
     fn validate(&self) -> Result<(), ExporterError> {
         // Not having users is perfectly valid.
