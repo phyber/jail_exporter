@@ -167,7 +167,7 @@ impl Default for Exporter {
              registry,
         );
 
-        let metrics = Self {
+        Self {
             coredumpsize_bytes: register_int_gauge_vec_with_registry!(
                 "coredumpsize_bytes",
                 "core dump size, in bytes",
@@ -367,9 +367,7 @@ impl Default for Exporter {
             wallclock_seconds_total_old: Arc::new(Mutex::new(
                 CounterBookKeeper::new()
             )),
-        };
-
-        metrics
+        }
     }
 }
 
