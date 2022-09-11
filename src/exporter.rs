@@ -35,7 +35,10 @@ struct NameLabel {
 
 #[derive(Clone, Hash, PartialEq, Eq, Encode)]
 struct VersionLabels {
+    // Version of Rust that the exporter was compiled with.
     rustversion: String,
+
+    // Version of the exporter.
     version: String,
 }
 
@@ -609,7 +612,6 @@ impl Exporter {
         book
             .keys()
             .filter(|n| !seen.contains(n))
-            //.map(|n| n.clone())
             .cloned()
             .collect()
     }
