@@ -113,9 +113,7 @@ impl Server {
 
     // Run the HTTP server.
     pub async fn run(self, exporter: Exporter) -> Result<(), HttpdError> {
-        let bind_address   = self.bind_address;
-        let index_page     = render_index_page(&self.telemetry_path)?;
-        let telemetry_path = self.telemetry_path.clone();
+        let index_page = render_index_page(&self.telemetry_path)?;
 
         #[cfg(feature = "auth")]
         // Unwrap the config if we have one, otherwise use a default.
@@ -133,7 +131,7 @@ impl Server {
         let app_exporter = Data::new(Mutex::new(app_exporter));
 
         let state = AppState {
-            index_page: index_page.clone(),
+            index_page: index_page,
 
             #[cfg(feature = "auth")]
             basic_auth_config: basic_auth_config.clone(),
@@ -168,20 +166,22 @@ impl Server {
                 // link to the metrics page.
                 .route("/", web::get().to(index))
                 // Path serving up the metrics.
-                .route(&telemetry_path, web::get().to(metrics))
+                .route(&self.telemetry_path, web::get().to(metrics))
         };
 
 
         // Create the server
-        debug!("Attempting to bind to: {}", bind_address);
+        debug!("Attempting to bind to: {}", &self.bind_address);
         let server = HttpServer::new(app)
-            .bind(&bind_address)
+            .bind(&self.bind_address)
             .map_err(|e| {
-                HttpdError::BindAddress(format!("{}: {}", bind_address, e))
+                HttpdError::BindAddress(
+                    format!("{}: {}", &self.bind_address, e)
+                )
             })?;
 
         // Run it!
-        info!("Starting HTTP server on {}", bind_address);
+        info!("Starting HTTP server on {}", &self.bind_address);
         server.run().await?;
 
         Ok(())
