@@ -47,7 +47,6 @@ use super::Exporter;
 // function.
 #[derive(Clone)]
 pub(self) struct AppState {
-    //exporter:   Box<dyn Collector>,
     index_page: String,
 
     #[cfg(feature = "auth")]
@@ -176,10 +175,10 @@ impl Server {
         // Create the server
         debug!("Attempting to bind to: {}", bind_address);
         let server = HttpServer::new(app)
-        .bind(&bind_address)
-        .map_err(|e| {
-            HttpdError::BindAddress(format!("{}: {}", bind_address, e))
-        })?;
+            .bind(&bind_address)
+            .map_err(|e| {
+                HttpdError::BindAddress(format!("{}: {}", bind_address, e))
+            })?;
 
         // Run it!
         info!("Starting HTTP server on {}", bind_address);
