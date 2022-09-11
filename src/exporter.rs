@@ -692,9 +692,13 @@ mod tests {
         let exporter = Exporter::new();
 
         for name in names.iter() {
+            let labels = &NameLabel {
+                name: name.to_string(),
+            };
+
             let series = exporter
                 .cputime_seconds_total
-                .with_label_values(&[&name]);
+                .get_or_create(labels);
 
             // Initial check, should be zero. We didn't set anything yet.
             assert_eq!(series.get(), 0);
@@ -770,9 +774,13 @@ mod tests {
         seen.push("test_c".into());
 
         let dead_jail = "test_b";
+        let labels = &NameLabel {
+            name: dead_jail.to_string(),
+        };
+
         let series = exporter
             .cputime_seconds_total
-            .with_label_values(&[dead_jail]);
+            .get_or_create(labels);
 
         assert_eq!(series.get(), 1000);
 
@@ -784,7 +792,7 @@ mod tests {
         // value.
         let series = exporter
             .cputime_seconds_total
-            .with_label_values(&[dead_jail]);
+            .get_or_create(labels);
 
         assert_eq!(series.get(), 0);
     }
@@ -796,9 +804,13 @@ mod tests {
         let exporter = Exporter::new();
 
         for name in names.iter() {
+            let labels = &NameLabel {
+                name: name.to_string(),
+            };
+
             let series = exporter
                 .wallclock_seconds_total
-                .with_label_values(&[&name]);
+                .get_or_create(labels);
 
             // Initial check, should be zero. We didn't set anything yet.
             assert_eq!(series.get(), 0);

@@ -67,16 +67,12 @@ mod tests {
         App,
     };
     use actix_web::http::header::CONTENT_TYPE;
-    use crate::exporter::Exporter;
     use pretty_assertions::assert_eq;
     use std::str;
 
     #[actix_web::test]
     async fn index_ok() {
-        let exporter = Box::new(Exporter::new());
-
         let state = AppState {
-            exporter:   exporter.clone(),
             index_page: "Test Body".into(),
 
             #[cfg(feature = "auth")]

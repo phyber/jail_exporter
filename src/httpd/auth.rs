@@ -157,23 +157,11 @@ pub async fn validate_credentials(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::httpd::{
-        collector::Collector,
-        errors::HttpdError,
-    };
-
     use actix_web::{
         dev::Payload,
         test::TestRequest,
         FromRequest,
     };
-
-    struct TestCollector;
-    impl Collector for TestCollector {
-        fn collect(&self) -> Result<Vec<u8>, HttpdError> {
-            Ok("collector".as_bytes().to_vec())
-        }
-    }
 
     fn get_users_config() -> BasicAuthConfig {
         let mut users: HashMap<String, String> = HashMap::new();
@@ -216,12 +204,10 @@ mod tests {
 
     #[actix_web::test]
     async fn validate_credentials_ok() {
-        let exporter = Box::new(TestCollector);
         let auth_config = get_users_config();
 
         let data = AppState {
             basic_auth_config: auth_config,
-            exporter:          exporter,
             index_page:        "test".into(),
         };
 
@@ -243,12 +229,10 @@ mod tests {
 
     #[actix_web::test]
     async fn validate_credentials_unauthorized() {
-        let exporter = Box::new(TestCollector);
         let auth_config = get_users_config();
 
         let data = AppState {
             basic_auth_config: auth_config,
-            exporter:          exporter,
             index_page:        "test".into(),
         };
 
