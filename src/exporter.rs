@@ -155,16 +155,18 @@ impl Default for Exporter {
         // pass it to the macros.
         let mut registry = <Registry>::with_prefix("jail");
 
+        let version_labels = VersionLabels {
+            rustversion: env!("RUSTC_VERSION").to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+         };
+
         // Static info metric, doesn't need to be in the struct.
         register_info_with_registry!(
             "exporter_build",
             "A metric with constant '1' value labelled by version \
              from which jail_exporter was built",
-             VersionLabels {
-                rustversion: env!("RUSTC_VERSION").to_string(),
-                version: env!("CARGO_PKG_VERSION").to_string(),
-             },
-             registry,
+            version_labels,
+            registry,
         );
 
         Self {
