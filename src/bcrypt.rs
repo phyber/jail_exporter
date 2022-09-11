@@ -1,6 +1,7 @@
 // bcrypt: Handle bcrypt password creation
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+use clap::ArgMatches;
 use crate::errors::ExporterError;
 use dialoguer::Password;
 use rand::{
@@ -11,7 +12,7 @@ use rand::{
 
 // Handles hashing and outputting bcrypted passwords for the bcrypt sub
 // command.
-pub fn generate_from(matches: &clap::ArgMatches) -> Result<(), ExporterError> {
+pub fn generate_from(matches: &ArgMatches) -> Result<(), ExporterError> {
     // Cost argument is validated and has a default, we can unwrap right
     // away.
     let cost: u32 = *matches.get_one("COST")
