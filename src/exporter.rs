@@ -111,7 +111,7 @@ macro_rules! register_int_counter_vec_with_registry {
 
 /// Register a Gauge with the Registry
 #[macro_export]
-macro_rules! register_int_gauge_with_registry {
+macro_rules! register_gauge_with_registry {
     ($NAME:expr, $HELP:expr, $REGISTRY:ident $(,)?) => {{
         let gauge = Gauge::default();
 
@@ -119,11 +119,7 @@ macro_rules! register_int_gauge_with_registry {
 
         gauge
     }};
-}
 
-/// Register a Gauge Family with the Registry
-#[macro_export]
-macro_rules! register_int_gauge_vec_with_registry {
     ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
         let family = Family::<$LABELS, Gauge>::default();
 
@@ -165,7 +161,7 @@ impl Default for Exporter {
         );
 
         Self {
-            coredumpsize_bytes: register_int_gauge_vec_with_registry!(
+            coredumpsize_bytes: register_gauge_with_registry!(
                 "coredumpsize_bytes",
                 "core dump size, in bytes",
                 NameLabel,
@@ -179,140 +175,140 @@ impl Default for Exporter {
                 registry,
             ),
 
-            datasize_bytes: register_int_gauge_vec_with_registry!(
+            datasize_bytes: register_gauge_with_registry!(
                 "datasize_bytes",
                 "data size, in bytes",
                 NameLabel,
                 registry,
             ),
 
-            maxproc: register_int_gauge_vec_with_registry!(
+            maxproc: register_gauge_with_registry!(
                 "maxproc",
                 "number of processes",
                 NameLabel,
                 registry,
             ),
 
-            memorylocked_bytes: register_int_gauge_vec_with_registry!(
+            memorylocked_bytes: register_gauge_with_registry!(
                 "memorylocked_bytes",
                 "locked memory, in bytes",
                 NameLabel,
                 registry,
             ),
 
-            memoryuse_bytes: register_int_gauge_vec_with_registry!(
+            memoryuse_bytes: register_gauge_with_registry!(
                 "memoryuse_bytes",
                 "resident set size, in bytes",
                 NameLabel,
                 registry,
             ),
 
-            msgqqueued: register_int_gauge_vec_with_registry!(
+            msgqqueued: register_gauge_with_registry!(
                 "msgqqueued",
                 "number of queued SysV messages",
                 NameLabel,
                 registry,
             ),
 
-            msgqsize_bytes: register_int_gauge_vec_with_registry!(
+            msgqsize_bytes: register_gauge_with_registry!(
                 "msgqsize_bytes",
                 "SysV message queue size, in bytes",
                 NameLabel,
                 registry,
             ),
 
-            nmsgq: register_int_gauge_vec_with_registry!(
+            nmsgq: register_gauge_with_registry!(
                 "nmsgq",
                 "number of SysV message queues",
                 NameLabel,
                 registry,
             ),
 
-            nsem: register_int_gauge_vec_with_registry!(
+            nsem: register_gauge_with_registry!(
                 "nsem",
                 "number of SysV semaphores",
                 NameLabel,
                 registry,
             ),
 
-            nsemop: register_int_gauge_vec_with_registry!(
+            nsemop: register_gauge_with_registry!(
                 "nsemop",
                 "number of SysV semaphores modified in a single semop(2) call",
                 NameLabel,
                 registry,
             ),
 
-            nshm: register_int_gauge_vec_with_registry!(
+            nshm: register_gauge_with_registry!(
                 "nshm",
                 "number of SysV shared memory segments",
                 NameLabel,
                 registry,
             ),
 
-            nthr: register_int_gauge_vec_with_registry!(
+            nthr: register_gauge_with_registry!(
                 "nthr",
                 "number of threads",
                 NameLabel,
                 registry,
             ),
 
-            openfiles: register_int_gauge_vec_with_registry!(
+            openfiles: register_gauge_with_registry!(
                 "openfiles",
                 "file descriptor table size",
                 NameLabel,
                 registry,
             ),
 
-            pcpu_used: register_int_gauge_vec_with_registry!(
+            pcpu_used: register_gauge_with_registry!(
                 "pcpu_used",
                 "%CPU, in percents of a single CPU core",
                 NameLabel,
                 registry,
             ),
 
-            pseudoterminals: register_int_gauge_vec_with_registry!(
+            pseudoterminals: register_gauge_with_registry!(
                 "pseudoterminals",
                 "number of PTYs",
                 NameLabel,
                 registry,
             ),
 
-            readbps: register_int_gauge_vec_with_registry!(
+            readbps: register_gauge_with_registry!(
                 "readbps",
                 "filesystem reads, in bytes per second",
                 NameLabel,
                 registry,
             ),
 
-            readiops: register_int_gauge_vec_with_registry!(
+            readiops: register_gauge_with_registry!(
                 "readiops",
                 "filesystem reads, in operations per second",
                 NameLabel,
                 registry,
             ),
 
-            shmsize_bytes: register_int_gauge_vec_with_registry!(
+            shmsize_bytes: register_gauge_with_registry!(
                 "shmsize_bytes",
                 "SysV shared memory size, in bytes",
                 NameLabel,
                 registry,
             ),
 
-            stacksize_bytes: register_int_gauge_vec_with_registry!(
+            stacksize_bytes: register_gauge_with_registry!(
                 "stacksize_bytes",
                 "stack size, in bytes",
                 NameLabel,
                 registry,
             ),
 
-            swapuse_bytes: register_int_gauge_vec_with_registry!(
+            swapuse_bytes: register_gauge_with_registry!(
                 "swapuse_bytes",
                 "swap space that may be reserved or used, in bytes",
                 NameLabel,
                 registry,
             ),
 
-            vmemoryuse_bytes: register_int_gauge_vec_with_registry!(
+            vmemoryuse_bytes: register_gauge_with_registry!(
                 "vmemoryuse_bytes",
                 "address space limit, in bytes",
                 NameLabel,
@@ -326,14 +322,14 @@ impl Default for Exporter {
                 registry,
             ),
 
-            writebps: register_int_gauge_vec_with_registry!(
+            writebps: register_gauge_with_registry!(
                 "writebps",
                 "filesystem writes, in bytes per second",
                 NameLabel,
                 registry,
             ),
 
-            writeiops: register_int_gauge_vec_with_registry!(
+            writeiops: register_gauge_with_registry!(
                 "writeiops",
                 "filesystem writes, in operations per second",
                 NameLabel,
@@ -341,14 +337,14 @@ impl Default for Exporter {
             ),
 
             // Metrics created by the exporter
-            jail_id: register_int_gauge_vec_with_registry!(
+            jail_id: register_gauge_with_registry!(
                 "id",
                 "ID of the named jail.",
                 NameLabel,
                 registry,
             ),
 
-            jail_total: register_int_gauge_with_registry!(
+            jail_total: register_gauge_with_registry!(
                 "num",
                 "Current number of running jails.",
                 registry,
