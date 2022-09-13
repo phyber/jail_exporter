@@ -110,6 +110,19 @@ macro_rules! register_counter_with_registry {
 
         family
     }};
+
+    ($NAME:expr, $HELP:expr, $LABELS:ty, $UNIT:expr, $REGISTRY:ident $(,)?) => {{
+        let family = Family::<$LABELS, Counter>::default();
+
+        $REGISTRY.register_with_unit(
+            $NAME,
+            $HELP,
+            $UNIT,
+            Box::new(family.clone()),
+        );
+
+        family
+    }};
 }
 
 /// Register a Gauge with the Registry
@@ -186,9 +199,10 @@ impl Default for Exporter {
             ),
 
             cputime_seconds_total: register_counter_with_registry!(
-                "cputime_seconds",
+                "cputime",
                 "CPU time, in seconds",
                 NameLabel,
+                Unit::Seconds,
                 registry,
             ),
 
@@ -341,9 +355,10 @@ impl Default for Exporter {
             ),
 
             wallclock_seconds_total: register_counter_with_registry!(
-                "wallclock_seconds",
+                "wallclock",
                 "wallclock time, in seconds",
                 NameLabel,
+                Unit::Seconds,
                 registry,
             ),
 
