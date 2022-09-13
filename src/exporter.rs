@@ -24,6 +24,7 @@ use prometheus_client::registry::{
     Registry,
     Unit,
 };
+use rctl::Resource;
 use std::collections::{
     HashMap,
     HashSet,
@@ -49,7 +50,8 @@ struct VersionLabels {
     version: String,
 }
 
-type Rusage = HashMap<rctl::Resource, usize>;
+// Type alias for our resource usage metrics coming from the rctl library.
+type Rusage = HashMap<Resource, usize>;
 
 /// Set of String representing jails that we have seen during the current
 /// scrape.
@@ -394,6 +396,9 @@ impl Default for Exporter {
             registry: registry,
 
             // Jail name tracking
+            // We keep a set of jails that we saw on the run, so that on the
+            // next run, we can tell which jails have disappeared (if any) and
+            // delete those metric families.
             jail_names: Arc::new(Mutex::new(HashSet::new())),
         }
     }
@@ -457,12 +462,12 @@ impl Exporter {
             let value = *value as u64;
 
             match key {
-                rctl::Resource::CoreDumpSize => {
+                Resource::CoreDumpSize => {
                     self.coredumpsize_bytes
                         .get_or_create(labels)
                         .set(value);
                 },
-                rctl::Resource::CpuTime => {
+                Resource::CpuTime => {
                     // CPU time should only ever increase. Store the value from
                     // the OS directly.
                     self.cputime_seconds_total
@@ -470,69 +475,69 @@ impl Exporter {
                         .inner()
                         .store(value, Ordering::Relaxed);
                 },
-                rctl::Resource::DataSize => {
+                Resource::DataSize => {
                     self.datasize_bytes.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MaxProcesses => {
+                Resource::MaxProcesses => {
                     self.maxproc.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MemoryLocked => {
+                Resource::MemoryLocked => {
                     self.memorylocked_bytes
                         .get_or_create(labels)
                         .set(value);
                 },
-                rctl::Resource::MemoryUse => {
+                Resource::MemoryUse => {
                     self.memoryuse_bytes.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MsgqQueued => {
+                Resource::MsgqQueued => {
                     self.msgqqueued.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MsgqSize => {
+                Resource::MsgqSize => {
                     self.msgqsize_bytes.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NMsgq => {
+                Resource::NMsgq => {
                     self.nmsgq.get_or_create(labels).set(value);
                 },
-                rctl::Resource::Nsem => {
+                Resource::Nsem => {
                     self.nsem.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NSemop => {
+                Resource::NSemop => {
                     self.nsemop.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NShm => {
+                Resource::NShm => {
                     self.nshm.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NThreads => {
+                Resource::NThreads => {
                     self.nthr.get_or_create(labels).set(value);
                 },
-                rctl::Resource::OpenFiles => {
+                Resource::OpenFiles => {
                     self.openfiles.get_or_create(labels).set(value);
                 },
-                rctl::Resource::PercentCpu => {
+                Resource::PercentCpu => {
                     self.pcpu_used.get_or_create(labels).set(value);
                 },
-                rctl::Resource::PseudoTerminals => {
+                Resource::PseudoTerminals => {
                     self.pseudoterminals.get_or_create(labels).set(value);
                 },
-                rctl::Resource::ReadBps => {
+                Resource::ReadBps => {
                     self.readbps.get_or_create(labels).set(value);
                 },
-                rctl::Resource::ReadIops => {
+                Resource::ReadIops => {
                     self.readiops.get_or_create(labels).set(value);
                 },
-                rctl::Resource::ShmSize => {
+                Resource::ShmSize => {
                     self.shmsize_bytes.get_or_create(labels).set(value);
                 },
-                rctl::Resource::StackSize => {
+                Resource::StackSize => {
                     self.stacksize_bytes.get_or_create(labels).set(value);
                 },
-                rctl::Resource::SwapUse => {
+                Resource::SwapUse => {
                     self.swapuse_bytes.get_or_create(labels).set(value);
                 },
-                rctl::Resource::VMemoryUse => {
+                Resource::VMemoryUse => {
                     self.vmemoryuse_bytes.get_or_create(labels).set(value);
                 },
-                rctl::Resource::Wallclock => {
+                Resource::Wallclock => {
                     // Wallclock should only ever increase, store the value
                     // from the OS directly.
                     self.wallclock_seconds_total
@@ -540,10 +545,10 @@ impl Exporter {
                         .inner()
                         .store(value, Ordering::Relaxed)
                 },
-                rctl::Resource::WriteBps => {
+                Resource::WriteBps => {
                     self.writebps.get_or_create(labels).set(value);
                 },
-                rctl::Resource::WriteIops => {
+                Resource::WriteIops => {
                     self.writeiops.get_or_create(labels).set(value);
                 },
             }
@@ -682,27 +687,27 @@ mod tests {
             assert_eq!(series.get(), 0);
 
             // First run, adds 1000, total 1000.
-            hash.insert(rctl::Resource::CpuTime, 1000);
+            hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
-            hash.insert(rctl::Resource::CpuTime, 1020);
+            hash.insert(Resource::CpuTime, 1020);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
-            hash.insert(rctl::Resource::CpuTime, 10);
+            hash.insert(Resource::CpuTime, 10);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 10);
 
             // Fourth, adds 40, total 1070.
-            hash.insert(rctl::Resource::CpuTime, 50);
+            hash.insert(Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 50);
 
             // Fifth, add 0, total 1070
-            hash.insert(rctl::Resource::CpuTime, 50);
+            hash.insert(Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 50);
         }
@@ -716,7 +721,7 @@ mod tests {
 
         // Create some metrics for test_{a,b,c}.
         for name in names.iter() {
-            hash.insert(rctl::Resource::CpuTime, 1000);
+            hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
         }
 
@@ -742,7 +747,7 @@ mod tests {
 
         // Create some metrics for test_{a,b,c}.
         for name in names.iter() {
-            hash.insert(rctl::Resource::CpuTime, 1000);
+            hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
         }
 
@@ -794,27 +799,27 @@ mod tests {
             assert_eq!(series.get(), 0);
 
             // First run, adds 1000, total 1000.
-            hash.insert(rctl::Resource::Wallclock, 1000);
+            hash.insert(Resource::Wallclock, 1000);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1000);
 
             // Second, adds 20, total 1020
-            hash.insert(rctl::Resource::Wallclock, 1020);
+            hash.insert(Resource::Wallclock, 1020);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
-            hash.insert(rctl::Resource::Wallclock, 10);
+            hash.insert(Resource::Wallclock, 10);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 10);
 
             // Fourth, adds 40, total 1070.
-            hash.insert(rctl::Resource::Wallclock, 50);
+            hash.insert(Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 50);
 
             // Fifth, add 0, total 1070
-            hash.insert(rctl::Resource::Wallclock, 50);
+            hash.insert(Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
             assert_eq!(series.get(), 50);
         }
