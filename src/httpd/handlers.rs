@@ -8,7 +8,7 @@
 use actix_web::HttpResponse;
 use actix_web::http::header::ContentType;
 use actix_web::web::{
-    self,
+    Bytes,
     Data,
 };
 use log::debug;
@@ -25,7 +25,7 @@ pub(in crate::httpd) async fn index(data: Data<AppState>) -> HttpResponse {
     debug!("Displaying index page");
 
     let index = (&data.index_page).clone();
-    let body = web::Bytes::from(index);
+    let body = Bytes::from(index);
 
     HttpResponse::Ok()
         .insert_header(ContentType::html())
