@@ -21,11 +21,15 @@ use prometheus_client::metrics::{
     info::Info,
 };
 use prometheus_client::registry::Registry;
-use std::collections::HashMap;
+use std::collections::{
+    HashMap,
+    HashSet,
+};
 use std::sync::{
     Arc,
     Mutex,
 };
+use std::sync::atomic::Ordering;
 
 #[derive(Clone, Hash, PartialEq, Eq, Encode)]
 struct NameLabel {
@@ -42,23 +46,11 @@ struct VersionLabels {
     version: String,
 }
 
-/// Metrics that use bookkeeping
-enum BookKept {
-    CpuTime(u64),
-    Wallclock(u64),
-}
-
-/// Book keeping for the jail counters.
-type CounterBookKeeper = HashMap<String, u64>;
 type Rusage = HashMap<rctl::Resource, usize>;
 
-/// Vector of String representing jails that have disappeared since the last
+/// Set of String representing jails that we have seen during the current
 /// scrape.
-type DeadJails = Vec<String>;
-
-/// Vector of String representing jails that we have seen during the current
-/// scrape.
-type SeenJails = Vec<String>;
+type SeenJails = HashSet<String>;
 
 /// Vector of u8 representing gathered metrics.
 type ExportedMetrics = Vec<u8>;
@@ -100,9 +92,9 @@ pub struct Exporter {
     jail_id:    Family<NameLabel, Gauge>,
     jail_total: Gauge,
 
-    // Counter bookkeeping
-    cputime_seconds_total_old:   Arc<Mutex<CounterBookKeeper>>,
-    wallclock_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
+    // This keeps a record of which jails we saw on the last run. We use this
+    // to reap old jails (remove their label sets).
+    jail_names: Arc<Mutex<HashSet<String>>>,
 }
 
 /// Register a Counter Family with the Registry
@@ -365,13 +357,8 @@ impl Default for Exporter {
             // Registry must be added after the macros making use of it
             registry: registry,
 
-            // Book keeping
-            cputime_seconds_total_old: Arc::new(Mutex::new(
-                CounterBookKeeper::new()
-            )),
-            wallclock_seconds_total_old: Arc::new(Mutex::new(
-                CounterBookKeeper::new()
-            )),
+            // Jail name tracking
+            jail_names: Arc::new(Mutex::new(HashSet::new())),
         }
     }
 }
@@ -414,47 +401,12 @@ impl Exporter {
         Ok(buffer)
     }
 
-    /// Updates the book for the given metric and returns the amount the value
-    /// has increased by.
-    fn update_metric_book(&self, name: &str, resource: &BookKept) -> u64 {
-        // Get the Book of Old Values and the current value.
-        let (mut book, value) = match *resource {
-            BookKept::CpuTime(v) => {
-                let book = self.cputime_seconds_total_old.lock().unwrap();
-                (book, v)
-            },
-            BookKept::Wallclock(v) => {
-                let book = self.wallclock_seconds_total_old.lock().unwrap();
-                (book, v)
-            },
-        };
-
-        // Get the old value for this jail, if there isn't one, use 0.
-        let old_value = match book.get(name) {
-            None    => 0,
-            Some(v) => *v,
-        };
-
-        // Work out what our increase should be.
-        // If old_value <= value, OS counter has continued to increment,
-        // otherwise it has reset.
-        let inc = if old_value <= value {
-            value - old_value
-        }
-        else {
-            value
-        };
-
-        // Update book keeping.
-        book.insert(name.to_owned(), value);
-
-        // Return computed increase
-        inc
-    }
-
     /// Processes the Rusage setting the appripriate time series.
     fn process_rusage(&self, name: &str, metrics: &Rusage) {
         debug!("process_metrics_hash");
+
+        // Add the jail name to seen jails.
+        self.add_seen_jail(name);
 
         // Convenience variable
         let labels = &NameLabel {
@@ -475,14 +427,12 @@ impl Exporter {
                         .set(value);
                 },
                 rctl::Resource::CpuTime => {
-                    let inc = self.update_metric_book(
-                        name,
-                        &BookKept::CpuTime(value as u64)
-                    );
-
+                    // CPU time should only ever increase. Store the value from
+                    // the OS directly.
                     self.cputime_seconds_total
                         .get_or_create(labels)
-                        .inc_by(inc);
+                        .inner()
+                        .store(value, Ordering::Relaxed);
                 },
                 rctl::Resource::DataSize => {
                     self.datasize_bytes.get_or_create(labels).set(value);
@@ -547,14 +497,12 @@ impl Exporter {
                     self.vmemoryuse_bytes.get_or_create(labels).set(value);
                 },
                 rctl::Resource::Wallclock => {
-                    let inc = self.update_metric_book(
-                        name,
-                        &BookKept::Wallclock(value as u64)
-                    );
-
+                    // Wallclock should only ever increase, store the value
+                    // from the OS directly.
                     self.wallclock_seconds_total
                         .get_or_create(labels)
-                        .inc_by(inc);
+                        .inner()
+                        .store(value, Ordering::Relaxed)
                 },
                 rctl::Resource::WriteBps => {
                     self.writebps.get_or_create(labels).set(value);
@@ -583,7 +531,7 @@ impl Exporter {
             debug!("JID: {}, Name: {:?}", jail.jid, name);
 
             // Add to our vec of seen jails.
-            seen.push(name.clone());
+            seen.insert(name.clone());
 
             // Process rusage for the named jail, setting time series.
             self.process_rusage(&name, &rusage);
@@ -604,20 +552,23 @@ impl Exporter {
         Ok(())
     }
 
-    // Loop over jail names from the previous run, as determined by book
-    // keeping, and create a vector of jail names that no longer exist.
-    fn dead_jails(&self, seen: &SeenJails) -> DeadJails {
-        let book = self.cputime_seconds_total_old.lock().unwrap();
-
-        book
-            .keys()
-            .filter(|n| !seen.contains(n))
-            .cloned()
-            .collect()
+    fn add_seen_jail(&self, seen: &str) {
+        let mut names = self.jail_names.lock().expect("jail names lock");
+        names.insert(seen.to_string());
     }
 
-    // Loop over DeadJails removing old labels and killing old book keeping.
-    fn reap(&self, dead: DeadJails) {
+    // Loop over jail names from the previous run, as determined by book
+    // keeping, and create a vector of jail names that no longer exist.
+    fn dead_jails(&self, seen: &SeenJails) -> HashSet<String> {
+        let names = self.jail_names.lock().unwrap();
+        &*names - seen
+    }
+
+    // Loop over dead jails removing old labels and killing old book keeping.
+    fn reap(&self, dead: SeenJails) {
+        let mut names = self.jail_names.lock().unwrap();
+        *names = &*names - &dead;
+
         for name in dead {
             self.remove_jail_metrics(&name);
         }
@@ -630,45 +581,34 @@ impl Exporter {
         };
 
         // Remove the jail metrics
-        //self.coredumpsize_bytes.remove_label_set(labels).ok();
-        //self.cputime_seconds_total.remove_label_set(labels).ok();
-        //self.datasize_bytes.remove_label_set(labels).ok();
-        //self.maxproc.remove_label_set(labels).ok();
-        //self.memorylocked_bytes.remove_label_set(labels).ok();
-        //self.memoryuse_bytes.remove_label_set(labels).ok();
-        //self.msgqqueued.remove_label_set(labels).ok();
-        //self.msgqsize_bytes.remove_label_set(labels).ok();
-        //self.nmsgq.remove_label_set(labels).ok();
-        //self.nsem.remove_label_set(labels).ok();
-        //self.nsemop.remove_label_set(labels).ok();
-        //self.nshm.remove_label_set(labels).ok();
-        //self.nthr.remove_label_set(labels).ok();
-        //self.openfiles.remove_label_set(labels).ok();
-        //self.pcpu_used.remove_label_set(labels).ok();
-        //self.pseudoterminals.remove_label_set(labels).ok();
-        //self.readbps.remove_label_set(labels).ok();
-        //self.readiops.remove_label_set(labels).ok();
-        //self.shmsize_bytes.remove_label_set(labels).ok();
-        //self.stacksize_bytes.remove_label_set(labels).ok();
-        //self.swapuse_bytes.remove_label_set(labels).ok();
-        //self.vmemoryuse_bytes.remove_label_set(labels).ok();
-        //self.wallclock_seconds_total.remove_label_set(labels).ok();
-        //self.writebps.remove_label_set(labels).ok();
-        //self.writeiops.remove_label_set(labels).ok();
+        //self.coredumpsize_bytes.remove(labels);
+        //self.cputime_seconds_total.remove(labels);
+        //self.datasize_bytes.remove(labels);
+        //self.maxproc.remove(labels);
+        //self.memorylocked_bytes.remove(labels);
+        //self.memoryuse_bytes.remove(labels);
+        //self.msgqqueued.remove(labels);
+        //self.msgqsize_bytes.remove(labels);
+        //self.nmsgq.remove(labels);
+        //self.nsem.remove(labels);
+        //self.nsemop.remove(labels);
+        //self.nshm.remove(labels);
+        //self.nthr.remove(labels);
+        //self.openfiles.remove(labels);
+        //self.pcpu_used.remove(labels);
+        //self.pseudoterminals.remove(labels);
+        //self.readbps.remove(labels);
+        //self.readiops.remove(labels);
+        //self.shmsize_bytes.remove(labels);
+        //self.stacksize_bytes.remove(labels);
+        //self.swapuse_bytes.remove(labels);
+        //self.vmemoryuse_bytes.remove(labels);
+        //self.wallclock_seconds_total.remove(labels);
+        //self.writebps.remove(labels);
+        //self.writeiops.remove(labels);
 
         //// Reset metrics we generated.
-        //self.jail_id.remove_label_set(labels).ok();
-
-        // Kill the books for dead jails.
-        let books = [
-            &self.cputime_seconds_total_old,
-            &self.wallclock_seconds_total_old,
-        ];
-
-        for book in &books {
-            let mut book = book.lock().unwrap();
-            book.remove(name);
-        }
+        //self.jail_id.remove(labels);
     }
 }
 
@@ -718,17 +658,17 @@ mod tests {
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::CpuTime, 10);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1030);
+            assert_eq!(series.get(), 10);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(series.get(), 50);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(series.get(), 50);
         }
     }
 
@@ -746,14 +686,14 @@ mod tests {
 
         // Now, create a seen array containing only a and c.
         let mut seen = SeenJails::new();
-        seen.push("test_a".into());
-        seen.push("test_c".into());
+        seen.insert("test_a".into());
+        seen.insert("test_c".into());
 
         // Workout which jails are dead, it should be b.
         let dead = exporter.dead_jails(&seen);
-        let ok: DeadJails = vec![
+        let ok: SeenJails = HashSet::from([
             "test_b".into(),
-        ];
+        ]);
 
         assert_eq!(ok, dead);
     }
@@ -772,8 +712,8 @@ mod tests {
 
         // Now, create a seen array containing only a and c.
         let mut seen = SeenJails::new();
-        seen.push("test_a".into());
-        seen.push("test_c".into());
+        seen.insert("test_a".into());
+        seen.insert("test_c".into());
 
         let dead_jail = "test_b";
         let labels = &NameLabel {
@@ -830,17 +770,17 @@ mod tests {
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(rctl::Resource::Wallclock, 10);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1030);
+            assert_eq!(series.get(), 10);
 
             // Fourth, adds 40, total 1070.
             hash.insert(rctl::Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(series.get(), 50);
 
             // Fifth, add 0, total 1070
             hash.insert(rctl::Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(series.get(), 50);
         }
     }
 }
