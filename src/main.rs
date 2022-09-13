@@ -114,7 +114,7 @@ async fn main() -> Result<(), ExporterError> {
     if let Some(output_path) = matches.get_one::<FileExporterOutput>("OUTPUT_FILE_PATH") {
         debug!("output.file-path: {}", output_path);
 
-        let exporter = FileExporter::new(output_path.to_owned());
+        let exporter = FileExporter::new(output_path.clone());
 
         return exporter.export();
     }
@@ -125,8 +125,7 @@ async fn main() -> Result<(), ExporterError> {
     let bind_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS")
         .ok_or_else(|| {
             ExporterError::ArgNotSet("web.listen-address".to_owned())
-        })?
-        .to_owned();
+        })?.clone();
     debug!("web.listen-address: {}", bind_address);
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
@@ -136,8 +135,8 @@ async fn main() -> Result<(), ExporterError> {
     let telemetry_path = matches.get_one::<String>("WEB_TELEMETRY_PATH")
         .ok_or_else(|| {
             ExporterError::ArgNotSet("web.telemetry-path".to_owned())
-        })?
-        .to_owned();
+        })?.clone();
+
     debug!("web.telemetry-path: {}", telemetry_path);
 
     // Start configuring HTTP server.

@@ -172,6 +172,7 @@ macro_rules! register_info_with_registry {
 
 impl Default for Exporter {
     // Descriptions of these metrics are taken from rctl(8) where possible.
+    #![allow(clippy::too_many_lines)]
     fn default() -> Self {
         // We want to set this as a field in the returned struct, as well as
         // pass it to the macros.
@@ -543,7 +544,7 @@ impl Exporter {
                     self.wallclock_seconds_total
                         .get_or_create(labels)
                         .inner()
-                        .store(value, Ordering::Relaxed)
+                        .store(value, Ordering::Relaxed);
                 },
                 Resource::WriteBps => {
                     self.writebps.get_or_create(labels).set(value);
