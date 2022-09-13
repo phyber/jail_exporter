@@ -20,7 +20,10 @@ use prometheus_client::metrics::{
     gauge::Gauge,
     info::Info,
 };
-use prometheus_client::registry::Registry;
+use prometheus_client::registry::{
+    Registry,
+    Unit,
+};
 use std::collections::{
     HashMap,
     HashSet,
@@ -124,6 +127,19 @@ macro_rules! register_gauge_with_registry {
         let family = Family::<$LABELS, Gauge>::default();
 
         $REGISTRY.register($NAME, $HELP, Box::new(family.clone()));
+
+        family
+    }};
+
+    ($NAME:expr, $HELP:expr, $LABELS:ty, $UNIT:expr, $REGISTRY:ident $(,)?) => {{
+        let family = Family::<$LABELS, Gauge>::default();
+
+        $REGISTRY.register_with_unit(
+            $NAME,
+            $HELP,
+            $UNIT,
+            Box::new(family.clone()),
+        );
 
         family
     }};
