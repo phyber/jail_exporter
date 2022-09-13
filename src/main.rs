@@ -7,11 +7,13 @@
 #![deny(missing_docs)]
 #![allow(clippy::redundant_field_names)]
 use log::debug;
-use std::path::PathBuf;
 use users::{
     Users,
     UsersCache,
 };
+
+#[cfg(feature = "auth")]
+use std::path::PathBuf;
 
 mod cli;
 mod errors;
