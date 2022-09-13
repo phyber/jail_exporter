@@ -102,7 +102,7 @@ pub struct Exporter {
 
 /// Register a Counter Family with the Registry
 #[macro_export]
-macro_rules! register_int_counter_vec_with_registry {
+macro_rules! register_counter_with_registry {
     ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
         let family = Family::<$LABELS, Counter>::default();
 
@@ -178,23 +178,25 @@ impl Default for Exporter {
 
         Self {
             coredumpsize_bytes: register_gauge_with_registry!(
-                "coredumpsize_bytes",
+                "coredumpsize",
                 "core dump size, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
-            cputime_seconds_total: register_int_counter_vec_with_registry!(
-                "cputime_seconds_total",
+            cputime_seconds_total: register_counter_with_registry!(
+                "cputime_seconds",
                 "CPU time, in seconds",
                 NameLabel,
                 registry,
             ),
 
             datasize_bytes: register_gauge_with_registry!(
-                "datasize_bytes",
+                "datasize",
                 "data size, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
@@ -206,16 +208,18 @@ impl Default for Exporter {
             ),
 
             memorylocked_bytes: register_gauge_with_registry!(
-                "memorylocked_bytes",
+                "memorylocked",
                 "locked memory, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
             memoryuse_bytes: register_gauge_with_registry!(
-                "memoryuse_bytes",
+                "memoryuse",
                 "resident set size, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
@@ -227,9 +231,10 @@ impl Default for Exporter {
             ),
 
             msgqsize_bytes: register_gauge_with_registry!(
-                "msgqsize_bytes",
+                "msgqsize",
                 "SysV message queue size, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
@@ -304,35 +309,39 @@ impl Default for Exporter {
             ),
 
             shmsize_bytes: register_gauge_with_registry!(
-                "shmsize_bytes",
+                "shmsize",
                 "SysV shared memory size, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
             stacksize_bytes: register_gauge_with_registry!(
-                "stacksize_bytes",
+                "stacksize",
                 "stack size, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
             swapuse_bytes: register_gauge_with_registry!(
-                "swapuse_bytes",
+                "swapuse",
                 "swap space that may be reserved or used, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
             vmemoryuse_bytes: register_gauge_with_registry!(
-                "vmemoryuse_bytes",
+                "vmemoryuse",
                 "address space limit, in bytes",
                 NameLabel,
+                Unit::Bytes,
                 registry,
             ),
 
-            wallclock_seconds_total: register_int_counter_vec_with_registry!(
-                "wallclock_seconds_total",
+            wallclock_seconds_total: register_counter_with_registry!(
+                "wallclock_seconds",
                 "wallclock time, in seconds",
                 NameLabel,
                 registry,
