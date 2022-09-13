@@ -598,6 +598,11 @@ impl Exporter {
         names.insert(seen.to_string());
     }
 
+    fn remove_dead_jails(&self, dead: &SeenJails) {
+        let mut names = self.jail_names.lock().unwrap();
+        *names = &*names - dead;
+    }
+
     // Loop over jail names from the previous run, as determined by book
     // keeping, and create a vector of jail names that no longer exist.
     fn dead_jails(&self, seen: &SeenJails) -> HashSet<String> {
@@ -607,8 +612,7 @@ impl Exporter {
 
     // Loop over dead jails removing old labels and killing old book keeping.
     fn reap(&self, dead: SeenJails) {
-        let mut names = self.jail_names.lock().unwrap();
-        *names = &*names - &dead;
+        self.remove_dead_jails(&dead);
 
         for name in dead {
             self.remove_jail_metrics(&name);
