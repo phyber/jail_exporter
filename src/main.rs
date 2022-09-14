@@ -149,12 +149,10 @@ async fn main() -> Result<(), ExporterError> {
 
     #[cfg(feature = "auth")]
     // Set the configuration file for HTTP Basic Auth
-    {
-        if let Some(path) = matches.get_one::<PathBuf>("WEB_AUTH_CONFIG") {
-            let config = BasicAuthConfig::from_yaml(path)?;
+    if let Some(path) = matches.get_one::<PathBuf>("WEB_AUTH_CONFIG") {
+        let config = BasicAuthConfig::from_yaml(path)?;
 
-            server = server.auth_config(config);
-        }
+        server = server.auth_config(config);
     }
 
     let exporter = Exporter::new();
