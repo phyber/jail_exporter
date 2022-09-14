@@ -165,16 +165,15 @@ async fn main() -> Result<(), ExporterError> {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+    use users::mock::{
+        Group,
+        MockUsers,
+        User,
+    };
+    use users::os::unix::UserExt;
 
     #[test]
     fn is_running_as_root_ok() {
-        use users::mock::{
-            Group,
-            MockUsers,
-            User,
-        };
-        use users::os::unix::UserExt;
-
         let mut users = MockUsers::with_current_uid(0);
         let user = User::new(0, "root", 0).with_home_dir("/root");
         users.add_user(user);
@@ -188,13 +187,6 @@ mod tests {
 
     #[test]
     fn is_running_as_non_root() {
-        use users::mock::{
-            Group,
-            MockUsers,
-            User,
-        };
-        use users::os::unix::UserExt;
-
         let mut users = MockUsers::with_current_uid(10000);
         let user = User::new(10000, "ferris", 10000).with_home_dir("/ferris");
         users.add_user(user);
