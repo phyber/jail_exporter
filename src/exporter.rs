@@ -103,8 +103,8 @@ pub struct Exporter {
 }
 
 /// Register a Counter Family with the Registry
-#[macro_export]
 macro_rules! register_counter_with_registry {
+    // Counter family with no specific unit
     ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
         let family = Family::<$LABELS, Counter>::default();
 
@@ -113,6 +113,7 @@ macro_rules! register_counter_with_registry {
         family
     }};
 
+    // Counter family with a specified unit
     ($NAME:expr, $HELP:expr, $LABELS:ty, $UNIT:expr, $REGISTRY:ident $(,)?) => {{
         let family = Family::<$LABELS, Counter>::default();
 
@@ -128,8 +129,8 @@ macro_rules! register_counter_with_registry {
 }
 
 /// Register a Gauge with the Registry
-#[macro_export]
 macro_rules! register_gauge_with_registry {
+    // Single gauge with no specified unit
     ($NAME:expr, $HELP:expr, $REGISTRY:ident $(,)?) => {{
         let gauge = Gauge::default();
 
@@ -138,6 +139,7 @@ macro_rules! register_gauge_with_registry {
         gauge
     }};
 
+    // Gauge family with no specified unit
     ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
         let family = Family::<$LABELS, Gauge>::default();
 
@@ -146,6 +148,7 @@ macro_rules! register_gauge_with_registry {
         family
     }};
 
+    // Gauge family with a specified unit
     ($NAME:expr, $HELP:expr, $LABELS:ty, $UNIT:expr, $REGISTRY:ident $(,)?) => {{
         let family = Family::<$LABELS, Gauge>::default();
 
@@ -161,8 +164,8 @@ macro_rules! register_gauge_with_registry {
 }
 
 /// Register an Info metric with the Registry
-#[macro_export]
 macro_rules! register_info_with_registry {
+    // Single info metric with specified labels.
     ($NAME:expr, $HELP:expr, $LABELS:expr, $REGISTRY:ident $(,)?) => {{
         let info = Info::new($LABELS);
 
