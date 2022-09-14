@@ -9,6 +9,7 @@ use actix_web::HttpServer;
 use actix_web::middleware::Logger;
 use actix_web::web::{
     self,
+    Bytes,
     Data,
 };
 use log::{
@@ -47,7 +48,7 @@ use super::Exporter;
 // function.
 #[derive(Clone)]
 pub(self) struct AppState {
-    index_page: String,
+    index_page: Bytes,
 
     #[cfg(feature = "auth")]
     basic_auth_config: BasicAuthConfig,

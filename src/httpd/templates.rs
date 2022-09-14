@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use super::errors::HttpdError;
+use actix_web::web::Bytes;
 use askama::Template;
 use log::{
     debug,
@@ -24,7 +25,7 @@ struct IndexTemplate<'a> {
 // Renders the index page template.
 pub(in crate::httpd)
 fn render_index_page(telemetry_path: &str)
--> Result<String, HttpdError> {
+-> Result<Bytes, HttpdError> {
     debug!("Rendering index template");
 
     let index_template = IndexTemplate {
@@ -32,6 +33,7 @@ fn render_index_page(telemetry_path: &str)
     };
 
     let rendered = index_template.render()?;
+    let rendered = Bytes::from(rendered);
 
     Ok(rendered)
 }

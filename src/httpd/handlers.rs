@@ -7,10 +7,7 @@
 #![deny(missing_docs)]
 use actix_web::HttpResponse;
 use actix_web::http::header::ContentType;
-use actix_web::web::{
-    Bytes,
-    Data,
-};
+use actix_web::web::Data;
 use log::debug;
 use std::sync::Mutex;
 use super::{
@@ -24,17 +21,15 @@ use super::Collector;
 pub(in crate::httpd) async fn index(data: Data<AppState>) -> HttpResponse {
     debug!("Displaying index page");
 
-    let index = (&data.index_page).clone();
-    let body = Bytes::from(index);
-
     HttpResponse::Ok()
         .insert_header(ContentType::html())
-        .body(body)
+        .body(data.index_page.clone())
 }
 
 // Returns a HttpResponse containing the Prometheus Exporter output, or an
 // InternalServerError if things fail for some reason.
-pub(in crate::httpd) async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
+pub(in crate::httpd)
+async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
     debug!("Processing metrics request");
 
     let data = data.lock().unwrap();
