@@ -67,35 +67,35 @@ pub struct Exporter {
 
     // Prometheus time series
     // These come from rctl
-    coredumpsize_bytes:      Family<NameLabel, Gauge>,
-    cputime_seconds_total:   Family<NameLabel, Counter>,
-    datasize_bytes:          Family<NameLabel, Gauge>,
-    memorylocked_bytes:      Family<NameLabel, Gauge>,
-    memoryuse_bytes:         Family<NameLabel, Gauge>,
-    msgqsize_bytes:          Family<NameLabel, Gauge>,
-    maxproc:                 Family<NameLabel, Gauge>,
-    msgqqueued:              Family<NameLabel, Gauge>,
-    nmsgq:                   Family<NameLabel, Gauge>,
-    nsem:                    Family<NameLabel, Gauge>,
-    nsemop:                  Family<NameLabel, Gauge>,
-    nshm:                    Family<NameLabel, Gauge>,
-    nthr:                    Family<NameLabel, Gauge>,
-    openfiles:               Family<NameLabel, Gauge>,
-    pcpu_used:               Family<NameLabel, Gauge>,
-    pseudoterminals:         Family<NameLabel, Gauge>,
-    readbps:                 Family<NameLabel, Gauge>,
-    readiops:                Family<NameLabel, Gauge>,
-    shmsize_bytes:           Family<NameLabel, Gauge>,
-    stacksize_bytes:         Family<NameLabel, Gauge>,
-    swapuse_bytes:           Family<NameLabel, Gauge>,
-    vmemoryuse_bytes:        Family<NameLabel, Gauge>,
-    wallclock_seconds_total: Family<NameLabel, Counter>,
-    writebps:                Family<NameLabel, Gauge>,
-    writeiops:               Family<NameLabel, Gauge>,
+    coredumpsize:    Family<NameLabel, Gauge>,
+    cputime:         Family<NameLabel, Counter>,
+    datasize:        Family<NameLabel, Gauge>,
+    memorylocked:    Family<NameLabel, Gauge>,
+    memoryuse:       Family<NameLabel, Gauge>,
+    msgqsize:        Family<NameLabel, Gauge>,
+    maxproc:         Family<NameLabel, Gauge>,
+    msgqqueued:      Family<NameLabel, Gauge>,
+    nmsgq:           Family<NameLabel, Gauge>,
+    nsem:            Family<NameLabel, Gauge>,
+    nsemop:          Family<NameLabel, Gauge>,
+    nshm:            Family<NameLabel, Gauge>,
+    nthr:            Family<NameLabel, Gauge>,
+    openfiles:       Family<NameLabel, Gauge>,
+    pcpu_used:       Family<NameLabel, Gauge>,
+    pseudoterminals: Family<NameLabel, Gauge>,
+    readbps:         Family<NameLabel, Gauge>,
+    readiops:        Family<NameLabel, Gauge>,
+    shmsize:         Family<NameLabel, Gauge>,
+    stacksize:       Family<NameLabel, Gauge>,
+    swapuse:         Family<NameLabel, Gauge>,
+    vmemoryuse:      Family<NameLabel, Gauge>,
+    wallclock:       Family<NameLabel, Counter>,
+    writebps:        Family<NameLabel, Gauge>,
+    writeiops:       Family<NameLabel, Gauge>,
 
     // Metrics this library generates
-    jail_id:    Family<NameLabel, Gauge>,
-    jail_total: Gauge,
+    jail_id:  Family<NameLabel, Gauge>,
+    jail_num: Gauge,
 
     // This keeps a record of which jails we saw on the last run. We use this
     // to reap old jails (remove their label sets).
@@ -193,7 +193,7 @@ impl Default for Exporter {
         );
 
         Self {
-            coredumpsize_bytes: register_gauge_with_registry!(
+            coredumpsize: register_gauge_with_registry!(
                 "coredumpsize",
                 "core dump size, in bytes",
                 NameLabel,
@@ -201,7 +201,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            cputime_seconds_total: register_counter_with_registry!(
+            cputime: register_counter_with_registry!(
                 "cputime",
                 "CPU time, in seconds",
                 NameLabel,
@@ -209,7 +209,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            datasize_bytes: register_gauge_with_registry!(
+            datasize: register_gauge_with_registry!(
                 "datasize",
                 "data size, in bytes",
                 NameLabel,
@@ -224,7 +224,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            memorylocked_bytes: register_gauge_with_registry!(
+            memorylocked: register_gauge_with_registry!(
                 "memorylocked",
                 "locked memory, in bytes",
                 NameLabel,
@@ -232,7 +232,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            memoryuse_bytes: register_gauge_with_registry!(
+            memoryuse: register_gauge_with_registry!(
                 "memoryuse",
                 "resident set size, in bytes",
                 NameLabel,
@@ -247,7 +247,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            msgqsize_bytes: register_gauge_with_registry!(
+            msgqsize: register_gauge_with_registry!(
                 "msgqsize",
                 "SysV message queue size, in bytes",
                 NameLabel,
@@ -325,7 +325,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            shmsize_bytes: register_gauge_with_registry!(
+            shmsize: register_gauge_with_registry!(
                 "shmsize",
                 "SysV shared memory size, in bytes",
                 NameLabel,
@@ -333,7 +333,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            stacksize_bytes: register_gauge_with_registry!(
+            stacksize: register_gauge_with_registry!(
                 "stacksize",
                 "stack size, in bytes",
                 NameLabel,
@@ -341,7 +341,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            swapuse_bytes: register_gauge_with_registry!(
+            swapuse: register_gauge_with_registry!(
                 "swapuse",
                 "swap space that may be reserved or used, in bytes",
                 NameLabel,
@@ -349,7 +349,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            vmemoryuse_bytes: register_gauge_with_registry!(
+            vmemoryuse: register_gauge_with_registry!(
                 "vmemoryuse",
                 "address space limit, in bytes",
                 NameLabel,
@@ -357,7 +357,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            wallclock_seconds_total: register_counter_with_registry!(
+            wallclock: register_counter_with_registry!(
                 "wallclock",
                 "wallclock time, in seconds",
                 NameLabel,
@@ -387,7 +387,7 @@ impl Default for Exporter {
                 registry,
             ),
 
-            jail_total: register_gauge_with_registry!(
+            jail_num: register_gauge_with_registry!(
                 "num",
                 "Current number of running jails.",
                 registry,
@@ -464,37 +464,33 @@ impl Exporter {
 
             match key {
                 Resource::CoreDumpSize => {
-                    self.coredumpsize_bytes
-                        .get_or_create(labels)
-                        .set(value);
+                    self.coredumpsize.get_or_create(labels).set(value);
                 },
                 Resource::CpuTime => {
                     // CPU time should only ever increase. Store the value from
                     // the OS directly.
-                    self.cputime_seconds_total
+                    self.cputime
                         .get_or_create(labels)
                         .inner()
                         .store(value, Ordering::Relaxed);
                 },
                 Resource::DataSize => {
-                    self.datasize_bytes.get_or_create(labels).set(value);
+                    self.datasize.get_or_create(labels).set(value);
                 },
                 Resource::MaxProcesses => {
                     self.maxproc.get_or_create(labels).set(value);
                 },
                 Resource::MemoryLocked => {
-                    self.memorylocked_bytes
-                        .get_or_create(labels)
-                        .set(value);
+                    self.memorylocked.get_or_create(labels).set(value);
                 },
                 Resource::MemoryUse => {
-                    self.memoryuse_bytes.get_or_create(labels).set(value);
+                    self.memoryuse.get_or_create(labels).set(value);
                 },
                 Resource::MsgqQueued => {
                     self.msgqqueued.get_or_create(labels).set(value);
                 },
                 Resource::MsgqSize => {
-                    self.msgqsize_bytes.get_or_create(labels).set(value);
+                    self.msgqsize.get_or_create(labels).set(value);
                 },
                 Resource::NMsgq => {
                     self.nmsgq.get_or_create(labels).set(value);
@@ -527,21 +523,21 @@ impl Exporter {
                     self.readiops.get_or_create(labels).set(value);
                 },
                 Resource::ShmSize => {
-                    self.shmsize_bytes.get_or_create(labels).set(value);
+                    self.shmsize.get_or_create(labels).set(value);
                 },
                 Resource::StackSize => {
-                    self.stacksize_bytes.get_or_create(labels).set(value);
+                    self.stacksize.get_or_create(labels).set(value);
                 },
                 Resource::SwapUse => {
-                    self.swapuse_bytes.get_or_create(labels).set(value);
+                    self.swapuse.get_or_create(labels).set(value);
                 },
                 Resource::VMemoryUse => {
-                    self.vmemoryuse_bytes.get_or_create(labels).set(value);
+                    self.vmemoryuse.get_or_create(labels).set(value);
                 },
                 Resource::Wallclock => {
                     // Wallclock should only ever increase, store the value
                     // from the OS directly.
-                    self.wallclock_seconds_total
+                    self.wallclock
                         .get_or_create(labels)
                         .inner()
                         .store(value, Ordering::Relaxed);
@@ -560,7 +556,7 @@ impl Exporter {
         debug!("get_jail_metrics");
 
         // Set jail_total to zero before gathering.
-        self.jail_total.set(0);
+        self.jail_num.set(0);
 
         // Get a new vec of seen jails.
         let mut seen = SeenJails::new();
@@ -583,7 +579,7 @@ impl Exporter {
             };
 
             self.jail_id.get_or_create(labels).set(jail.jid as u64);
-            self.jail_total.set(self.jail_total.get() + 1);
+            self.jail_num.set(self.jail_num.get() + 1);
         }
 
         // Get a list of dead jails based on what we've seen, and reap them.
@@ -627,14 +623,14 @@ impl Exporter {
         };
 
         // Remove the jail metrics
-        //self.coredumpsize_bytes.remove(labels);
-        //self.cputime_seconds_total.remove(labels);
-        //self.datasize_bytes.remove(labels);
+        //self.coredumpsize.remove(labels);
+        //self.cputime.remove(labels);
+        //self.datasize.remove(labels);
         //self.maxproc.remove(labels);
-        //self.memorylocked_bytes.remove(labels);
-        //self.memoryuse_bytes.remove(labels);
+        //self.memorylocked.remove(labels);
+        //self.memoryuse.remove(labels);
         //self.msgqqueued.remove(labels);
-        //self.msgqsize_bytes.remove(labels);
+        //self.msgqsize.remove(labels);
         //self.nmsgq.remove(labels);
         //self.nsem.remove(labels);
         //self.nsemop.remove(labels);
@@ -645,11 +641,11 @@ impl Exporter {
         //self.pseudoterminals.remove(labels);
         //self.readbps.remove(labels);
         //self.readiops.remove(labels);
-        //self.shmsize_bytes.remove(labels);
-        //self.stacksize_bytes.remove(labels);
-        //self.swapuse_bytes.remove(labels);
-        //self.vmemoryuse_bytes.remove(labels);
-        //self.wallclock_seconds_total.remove(labels);
+        //self.shmsize.remove(labels);
+        //self.stacksize.remove(labels);
+        //self.swapuse.remove(labels);
+        //self.vmemoryuse.remove(labels);
+        //self.wallclock.remove(labels);
         //self.writebps.remove(labels);
         //self.writeiops.remove(labels);
 
@@ -684,9 +680,7 @@ mod tests {
                 name: name.to_string(),
             };
 
-            let series = exporter
-                .cputime_seconds_total
-                .get_or_create(labels);
+            let series = exporter.cputime.get_or_create(labels);
 
             // Initial check, should be zero. We didn't set anything yet.
             assert_eq!(series.get(), 0);
@@ -766,9 +760,7 @@ mod tests {
             name: dead_jail.to_string(),
         };
 
-        let series = exporter
-            .cputime_seconds_total
-            .get_or_create(labels);
+        let series = exporter.cputime.get_or_create(labels);
 
         assert_eq!(series.get(), 1000);
 
@@ -778,9 +770,7 @@ mod tests {
 
         // We need a new handle on this. Using the old one will present the old
         // value.
-        let series = exporter
-            .cputime_seconds_total
-            .get_or_create(labels);
+        let series = exporter.cputime.get_or_create(labels);
 
         assert_eq!(series.get(), 0);
     }
@@ -796,9 +786,7 @@ mod tests {
                 name: name.to_string(),
             };
 
-            let series = exporter
-                .wallclock_seconds_total
-                .get_or_create(labels);
+            let series = exporter.wallclock.get_or_create(labels);
 
             // Initial check, should be zero. We didn't set anything yet.
             assert_eq!(series.get(), 0);
