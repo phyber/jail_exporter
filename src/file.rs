@@ -21,8 +21,11 @@ pub enum FileExporterOutput {
 impl fmt::Display for FileExporterOutput {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::File(path) => write!(f, "{}", path.to_str().unwrap()),
-            Self::Stdout     => write!(f, "-"),
+            Self::File(path) => {
+                let path = path.to_str().expect("path to str");
+                write!(f, "{}", path)
+            },
+            Self::Stdout => write!(f, "-"),
         }
     }
 }
@@ -36,7 +39,7 @@ impl FileExporter {
         match &output {
             FileExporterOutput::File(path) => {
                 // This was already checked during command line parsing.
-                let path = path.to_str().unwrap();
+                let path = path.to_str().expect("path to str");
                 debug!("New FileExporter outputting to {}", path);
             },
             FileExporterOutput::Stdout => {
@@ -62,7 +65,7 @@ impl FileExporter {
 
                 // We already vetted the parent in the CLI validator, so unwrap
                 // here should be fine.
-                let parent = path.parent().unwrap();
+                let parent = path.parent().expect("path to have a parent");
 
                 // We do this since we need the temporary file to be on the
                 // same filesystem as the final persisted file.

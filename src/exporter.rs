@@ -599,14 +599,14 @@ impl Exporter {
     }
 
     fn remove_dead_jails(&self, dead: &SeenJails) {
-        let mut names = self.jail_names.lock().unwrap();
+        let mut names = self.jail_names.lock().expect("jail names lock");
         *names = &*names - dead;
     }
 
     // Loop over jail names from the previous run, as determined by book
     // keeping, and create a vector of jail names that no longer exist.
     fn dead_jails(&self, seen: &SeenJails) -> HashSet<String> {
-        let names = self.jail_names.lock().unwrap();
+        let names = self.jail_names.lock().expect("jail names lock");
         &*names - seen
     }
 

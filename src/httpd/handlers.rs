@@ -32,7 +32,7 @@ pub(in crate::httpd)
 async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
     debug!("Processing metrics request");
 
-    let data = data.lock().unwrap();
+    let data = data.lock().expect("data lock");
 
     // Get the exporter from the state
     let exporter = &(data.exporter);
