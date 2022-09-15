@@ -46,7 +46,6 @@ use super::Exporter;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
-#[derive(Clone)]
 pub(self) struct AppState {
     index_page: Bytes,
 
