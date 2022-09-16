@@ -22,6 +22,9 @@ mod file;
 mod httpd;
 mod rctlstate;
 
+#[macro_use]
+mod macros;
+
 #[cfg(feature = "bcrypt_cmd")]
 mod bcrypt;
 

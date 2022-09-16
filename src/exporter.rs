@@ -3,6 +3,11 @@
 //! This lib handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+use crate::{
+    register_counter_with_registry,
+    register_gauge_with_registry,
+    register_info_with_registry,
+};
 use crate::errors::ExporterError;
 use crate::httpd::{
     Collector,
@@ -16,7 +21,6 @@ use prometheus_client::metrics::{
     counter::Counter,
     family::Family,
     gauge::Gauge,
-    info::Info,
 };
 use prometheus_client::registry::{
     Registry,
@@ -98,77 +102,6 @@ pub struct Exporter {
     // This keeps a record of which jails we saw on the last run. We use this
     // to reap old jails (remove their label sets).
     jail_names: Arc<Mutex<HashSet<String>>>,
-}
-
-/// Register a Counter Family with the Registry
-macro_rules! register_counter_with_registry {
-    // Counter family with no specific unit
-    ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
-        let family = Family::<$LABELS, Counter>::default();
-
-        $REGISTRY.register($NAME, $HELP, Box::new(family.clone()));
-
-        family
-    }};
-
-    // Counter family with a specified unit
-    ($NAME:expr, $HELP:expr, $LABELS:ty, $UNIT:expr, $REGISTRY:ident $(,)?) => {{
-        let family = Family::<$LABELS, Counter>::default();
-
-        $REGISTRY.register_with_unit(
-            $NAME,
-            $HELP,
-            $UNIT,
-            Box::new(family.clone()),
-        );
-
-        family
-    }};
-}
-
-/// Register a Gauge with the Registry
-macro_rules! register_gauge_with_registry {
-    // Single gauge with no specified unit
-    ($NAME:expr, $HELP:expr, $REGISTRY:ident $(,)?) => {{
-        let gauge = Gauge::default();
-
-        $REGISTRY.register($NAME, $HELP, Box::new(gauge.clone()));
-
-        gauge
-    }};
-
-    // Gauge family with no specified unit
-    ($NAME:expr, $HELP:expr, $LABELS:ty, $REGISTRY:ident $(,)?) => {{
-        let family = Family::<$LABELS, Gauge>::default();
-
-        $REGISTRY.register($NAME, $HELP, Box::new(family.clone()));
-
-        family
-    }};
-
-    // Gauge family with a specified unit
-    ($NAME:expr, $HELP:expr, $LABELS:ty, $UNIT:expr, $REGISTRY:ident $(,)?) => {{
-        let family = Family::<$LABELS, Gauge>::default();
-
-        $REGISTRY.register_with_unit(
-            $NAME,
-            $HELP,
-            $UNIT,
-            Box::new(family.clone()),
-        );
-
-        family
-    }};
-}
-
-/// Register an Info metric with the Registry
-macro_rules! register_info_with_registry {
-    // Single info metric with specified labels.
-    ($NAME:expr, $HELP:expr, $LABELS:expr, $REGISTRY:ident $(,)?) => {{
-        let info = Info::new($LABELS);
-
-        $REGISTRY.register($NAME, $HELP, Box::new(info));
-    }};
 }
 
 impl Default for Exporter {
