@@ -52,15 +52,12 @@ struct VersionLabels {
     version: String,
 }
 
-// Type alias for our resource usage metrics coming from the rctl library.
+/// Type alias for our resource usage metrics coming from the rctl library.
 type Rusage = HashMap<Resource, usize>;
 
 /// Set of String representing jails that we have seen during the current
 /// scrape.
 type SeenJails = HashSet<String>;
-
-/// Vector of u8 representing gathered metrics.
-type ExportedMetrics = Vec<u8>;
 
 /// Exporter structure containing the time series that are being tracked.
 pub struct Exporter {
@@ -365,7 +362,7 @@ impl Exporter {
     /// # let exporter = jail_exporter::Exporter::new();
     /// let output = exporter.export();
     /// ```
-    pub fn export(&self) -> Result<ExportedMetrics, ExporterError> {
+    pub fn export(&self) -> Result<Vec<u8>, ExporterError> {
         // Collect metrics
         self.get_jail_metrics()?;
 
