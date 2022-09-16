@@ -167,7 +167,6 @@ async fn main() -> Result<(), ExporterError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
     use users::mock::{
         Group,
         MockUsers,
@@ -182,10 +181,9 @@ mod tests {
         users.add_user(user);
         users.add_group(Group::new(0, "root"));
 
-        let is_root = is_running_as_root(&mut users).unwrap();
-        let ok = ();
+        let is_root = is_running_as_root(&mut users);
 
-        assert_eq!(is_root, ok);
+        assert!(is_root.is_ok());
     }
 
     #[test]
