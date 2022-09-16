@@ -681,35 +681,33 @@ mod tests {
                 name: name.to_string(),
             };
 
-            let series = exporter.cputime.get_or_create(labels);
-
             // Initial check, should be zero. We didn't set anything yet.
-            assert_eq!(series.get(), 0);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 0);
 
             // First run, adds 1000, total 1000.
             hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1000);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(Resource::CpuTime, 1020);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1020);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(Resource::CpuTime, 10);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 10);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 10);
 
             // Fourth, adds 40, total 1070.
             hash.insert(Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 50);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 50);
 
             // Fifth, add 0, total 1070
             hash.insert(Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 50);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 50);
         }
     }
 
@@ -781,35 +779,33 @@ mod tests {
                 name: name.to_string(),
             };
 
-            let series = exporter.wallclock.get_or_create(labels);
-
             // Initial check, should be zero. We didn't set anything yet.
-            assert_eq!(series.get(), 0);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 0);
 
             // First run, adds 1000, total 1000.
             hash.insert(Resource::Wallclock, 1000);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1000);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(Resource::Wallclock, 1020);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1020);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(Resource::Wallclock, 10);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 10);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 10);
 
             // Fourth, adds 40, total 1070.
             hash.insert(Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 50);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 50);
 
             // Fifth, add 0, total 1070
             hash.insert(Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 50);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 50);
         }
     }
 }
