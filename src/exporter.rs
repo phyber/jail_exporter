@@ -10,10 +10,8 @@ use crate::httpd::{
 };
 use jail::RunningJail;
 use log::debug;
-use prometheus_client::encoding::text::{
-    Encode,
-    encode,
-};
+use prometheus_client::encoding::Encode;
+use prometheus_client::encoding::text::encode;
 use prometheus_client::metrics::{
     counter::Counter,
     family::Family,
@@ -621,39 +619,39 @@ impl Exporter {
 
     fn remove_jail_metrics(&self, name: &str) {
         // Convenience variable
-        let _labels = &NameLabel {
+        let labels = &NameLabel {
             name: name.to_string(),
         };
 
         // Remove the jail metrics
-        //self.coredumpsize.remove(labels);
-        //self.cputime.remove(labels);
-        //self.datasize.remove(labels);
-        //self.maxproc.remove(labels);
-        //self.memorylocked.remove(labels);
-        //self.memoryuse.remove(labels);
-        //self.msgqqueued.remove(labels);
-        //self.msgqsize.remove(labels);
-        //self.nmsgq.remove(labels);
-        //self.nsem.remove(labels);
-        //self.nsemop.remove(labels);
-        //self.nshm.remove(labels);
-        //self.nthr.remove(labels);
-        //self.openfiles.remove(labels);
-        //self.pcpu_used.remove(labels);
-        //self.pseudoterminals.remove(labels);
-        //self.readbps.remove(labels);
-        //self.readiops.remove(labels);
-        //self.shmsize.remove(labels);
-        //self.stacksize.remove(labels);
-        //self.swapuse.remove(labels);
-        //self.vmemoryuse.remove(labels);
-        //self.wallclock.remove(labels);
-        //self.writebps.remove(labels);
-        //self.writeiops.remove(labels);
+        self.coredumpsize.remove(labels);
+        self.cputime.remove(labels);
+        self.datasize.remove(labels);
+        self.maxproc.remove(labels);
+        self.memorylocked.remove(labels);
+        self.memoryuse.remove(labels);
+        self.msgqqueued.remove(labels);
+        self.msgqsize.remove(labels);
+        self.nmsgq.remove(labels);
+        self.nsem.remove(labels);
+        self.nsemop.remove(labels);
+        self.nshm.remove(labels);
+        self.nthr.remove(labels);
+        self.openfiles.remove(labels);
+        self.pcpu_used.remove(labels);
+        self.pseudoterminals.remove(labels);
+        self.readbps.remove(labels);
+        self.readiops.remove(labels);
+        self.shmsize.remove(labels);
+        self.stacksize.remove(labels);
+        self.swapuse.remove(labels);
+        self.vmemoryuse.remove(labels);
+        self.wallclock.remove(labels);
+        self.writebps.remove(labels);
+        self.writeiops.remove(labels);
 
         //// Reset metrics we generated.
-        //self.jail_id.remove(labels);
+        self.jail_id.remove(labels);
     }
 }
 
@@ -763,19 +761,13 @@ mod tests {
             name: dead_jail.to_string(),
         };
 
-        let series = exporter.cputime.get_or_create(labels);
-
-        assert_eq!(series.get(), 1000);
+        assert_eq!(exporter.cputime.get_or_create(labels).get(), 1000);
 
         // Workout which jails are dead, it should be b.
         let dead = exporter.dead_jails(&seen);
         exporter.reap(dead);
 
-        // We need a new handle on this. Using the old one will present the old
-        // value.
-        let series = exporter.cputime.get_or_create(labels);
-
-        assert_eq!(series.get(), 0);
+        assert_eq!(exporter.cputime.get_or_create(labels).get(), 0);
     }
 
     #[test]
