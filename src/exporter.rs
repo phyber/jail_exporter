@@ -313,14 +313,14 @@ impl Default for Exporter {
             // Metrics created by the exporter
             jail_id: register_gauge_with_registry!(
                 "id",
-                "ID of the named jail.",
+                "ID of the named jail",
                 NameLabel,
                 registry,
             ),
 
             jail_num: register_gauge_with_registry!(
                 "num",
-                "Current number of running jails.",
+                "Current number of running jails",
                 registry,
             ),
 
