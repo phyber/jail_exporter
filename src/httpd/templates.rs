@@ -1,8 +1,4 @@
-//
-// jail_exporter
-//
-// This module deals with httpd templates
-//
+// templates: This module deals with httpd templates
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use super::errors::HttpdError;

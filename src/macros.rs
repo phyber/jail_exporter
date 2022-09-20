@@ -1,6 +1,5 @@
-//! `jail_exporter` library
-//!
-//! This lib handles the gathering and exporting of jail metrics.
+// macros: This module contains macros for registering metrics with the
+//         registry.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 

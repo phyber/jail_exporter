@@ -1,8 +1,4 @@
-//
-// jail_exporter
-//
-// This module deals with httpd related tasks.
-//
+// httpd: This module deals with httpd related tasks.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use actix_web::HttpServer;

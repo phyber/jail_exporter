@@ -1,8 +1,4 @@
-//
-// jail_exporter
-//
-// This module deal httpd basic authentication.
-//
+// auth: This module deal httpd basic authentication.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use super::AppState;

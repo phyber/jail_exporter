@@ -1,6 +1,4 @@
-//!
-//! Command line interface parsing
-//!
+// cli: Command line interface parsing
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use crate::file::FileExporterOutput;

@@ -1,6 +1,4 @@
-//! `jail_exporter` library
-//!
-//! This lib handles the gathering and exporting of jail metrics.
+// exporter: This module handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use crate::{

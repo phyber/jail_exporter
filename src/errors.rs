@@ -1,8 +1,4 @@
-//
-// `jail_exporter`
-//
-// This module implements errors used in the rest of the crate.
-//
+// errors: This module implements errors used in the rest of the crate.
 #![forbid(unsafe_code)]
 #![forbid(missing_docs)]
 use thiserror::Error;

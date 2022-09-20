@@ -1,6 +1,6 @@
-// Module that quickly checks if rctl is available.
-// This should be temporary while the upstream rctl module doesn't have
-// FreeBSD 13 support.
+// rctlstate: Module that quickly checks if rctl is available.
+//            This should be temporary while the upstream rctl module doesn't
+//            have FreeBSD 13 support.
 use sysctl::{
     Ctl,
     CtlValue,
