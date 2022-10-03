@@ -59,7 +59,6 @@ mod tests {
     };
     use actix_web::http::header::CONTENT_TYPE;
     use pretty_assertions::assert_eq;
-    use std::str;
 
     #[actix_web::test]
     async fn index_ok() {
@@ -91,8 +90,7 @@ mod tests {
         assert_eq!(content_type, ContentType::html().to_string());
 
         let request = test::TestRequest::get().uri("/").to_request();
-        let bytes = test::call_and_read_body(&mut server, request).await;
-        let body = str::from_utf8(&bytes).unwrap();
-        assert_eq!(body, "Test Body");
+        let body = test::call_and_read_body(&mut server, request).await;
+        assert_eq!(body, "Test Body".as_bytes());
     }
 }

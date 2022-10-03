@@ -601,10 +601,11 @@ mod tests {
     #[test]
     fn cputime_counter_increase() {
         let names = ["test", "test2"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         for name in names.iter() {
+            let mut hash = Rusage::new();
+
             let labels = &NameLabel {
                 name: name.to_string(),
             };
@@ -642,23 +643,24 @@ mod tests {
     #[test]
     fn dead_jails_ok() {
         let names = ["test_a", "test_b", "test_c"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         // Create some metrics for test_{a,b,c}.
         for name in names.iter() {
+            let mut hash = Rusage::new();
             hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
         }
 
         // Now, create a seen array containing only a and c.
-        let mut seen = SeenJails::new();
-        seen.insert("test_a".into());
-        seen.insert("test_c".into());
+        let seen = SeenJails::from([
+            "test_a".into(),
+            "test_c".into(),
+        ]);
 
         // Workout which jails are dead, it should be b.
         let dead = exporter.dead_jails(&seen);
-        let ok: SeenJails = HashSet::from([
+        let ok = SeenJails::from([
             "test_b".into(),
         ]);
 
@@ -668,19 +670,20 @@ mod tests {
     #[test]
     fn reap_ok() {
         let names = ["test_a", "test_b", "test_c"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         // Create some metrics for test_{a,b,c}.
         for name in names.iter() {
+            let mut hash = Rusage::new();
             hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
         }
 
         // Now, create a seen array containing only a and c.
-        let mut seen = SeenJails::new();
-        seen.insert("test_a".into());
-        seen.insert("test_c".into());
+        let seen = SeenJails::from([
+            "test_a".into(),
+            "test_c".into(),
+        ]);
 
         let dead_jail = "test_b";
         let labels = &NameLabel {
@@ -699,10 +702,11 @@ mod tests {
     #[test]
     fn wallclock_counter_increase() {
         let names = ["test", "test2"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         for name in names.iter() {
+            let mut hash = Rusage::new();
+
             let labels = &NameLabel {
                 name: name.to_string(),
             };

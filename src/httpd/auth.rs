@@ -165,11 +165,10 @@ mod tests {
     };
 
     fn get_users_config() -> BasicAuthConfig {
-        let mut users: HashMap<String, String> = HashMap::new();
-        users.insert(
-            "foo".into(),
-            "$2b$04$nFPE4cwFjOFGUmdp.o2NTuh/blJDaEwikX1qoitVe144TsS2l5whS".into(),
-        );
+        let users = HashMap::from([(
+            "foo".to_string(),
+            "$2b$04$nFPE4cwFjOFGUmdp.o2NTuh/blJDaEwikX1qoitVe144TsS2l5whS".to_string(),
+        )]);
 
         BasicAuthConfig {
             basic_auth_users: Some(users),
