@@ -44,12 +44,12 @@ impl FileExporter {
     }
 
     // Handles choosing the correct output type based on path
-    fn write(&self, metrics: Vec<u8>) -> Result<(), ExporterError> {
+    fn write(&self, metrics: &[u8]) -> Result<(), ExporterError> {
         debug!("Writing metrics to: {}", self.dest);
 
         match &self.dest {
             FileExporterOutput::Stdout => {
-                io::stdout().write_all(&metrics)?;
+                io::stdout().write_all(metrics)?;
             },
             FileExporterOutput::File(path) => {
                 // We already vetted the parent in the CLI validator, so unwrap
@@ -59,7 +59,7 @@ impl FileExporter {
                 // We do this since we need the temporary file to be on the
                 // same filesystem as the final persisted file.
                 let mut file = NamedTempFile::new_in(&parent)?;
-                file.write_all(&metrics)?;
+                file.write_all(metrics)?;
                 file.persist(&path)?;
             },
         }
@@ -75,7 +75,7 @@ impl FileExporter {
         let metrics  = exporter.export()?;
 
         // Write metrics
-        self.write(metrics)?;
+        self.write(&metrics)?;
 
         Ok(())
     }
