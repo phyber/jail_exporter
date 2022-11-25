@@ -58,7 +58,7 @@ bcrypt_cmd = [
 rc_script = []
 
 [dependencies]
-env_logger = "0.9"
+env_logger = "0.10"
 jail = "0.2.0"
 log = "0.4"
 rctl = "0.2.0"
