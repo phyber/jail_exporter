@@ -2,5 +2,5 @@
 use super::errors::HttpdError;
 
 pub trait Collector {
-    fn collect(&self) -> Result<Vec<u8>, HttpdError>;
+    fn collect(&self) -> Result<String, HttpdError>;
 }

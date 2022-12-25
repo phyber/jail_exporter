@@ -13,7 +13,10 @@ use crate::httpd::{
 };
 use jail::RunningJail;
 use log::debug;
-use prometheus_client::encoding::Encode;
+use prometheus_client::encoding::{
+    EncodeLabelSet,
+    EncodeLabelValue,
+};
 use prometheus_client::encoding::text::encode;
 use prometheus_client::metrics::{
     counter::Counter,
@@ -35,13 +38,13 @@ use std::sync::{
 };
 use std::sync::atomic::Ordering;
 
-#[derive(Clone, Hash, PartialEq, Eq, Encode)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 struct NameLabel {
     // Jail name.
     name: String,
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Encode)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 struct VersionLabels {
     // Version of Rust that the exporter was compiled with.
     rustversion: String,
@@ -360,12 +363,12 @@ impl Exporter {
     /// # let exporter = jail_exporter::Exporter::new();
     /// let output = exporter.export();
     /// ```
-    pub fn export(&self) -> Result<Vec<u8>, ExporterError> {
+    pub fn export(&self) -> Result<String, ExporterError> {
         // Collect metrics
         self.get_jail_metrics()?;
 
         // Collect them in a buffer
-        let mut buffer = vec![];
+        let mut buffer = String::new(); //vec![];
         encode(&mut buffer, &self.registry).expect("encode");
 
         // Return the exported metrics
@@ -389,7 +392,7 @@ impl Exporter {
             // this.
             // Counters cast this back to a u64, which should be safe as it
             // was a usize originally.
-            let value = *value as u64;
+            let value = *value as i64;
 
             match key {
                 Resource::CoreDumpSize => {
@@ -401,7 +404,7 @@ impl Exporter {
                     self.cputime
                         .get_or_create(labels)
                         .inner()
-                        .store(value, Ordering::Relaxed);
+                        .store(value as u64, Ordering::Relaxed);
                 },
                 Resource::DataSize => {
                     self.datasize.get_or_create(labels).set(value);
@@ -469,7 +472,7 @@ impl Exporter {
                     self.wallclock
                         .get_or_create(labels)
                         .inner()
-                        .store(value, Ordering::Relaxed);
+                        .store(value as u64, Ordering::Relaxed);
                 },
                 Resource::WriteBps => {
                     self.writebps.get_or_create(labels).set(value);
@@ -507,7 +510,7 @@ impl Exporter {
                 name: name,
             };
 
-            self.jail_id.get_or_create(labels).set(jail.jid as u64);
+            self.jail_id.get_or_create(labels).set(jail.jid as i64);
             self.jail_num.set(self.jail_num.get() + 1);
         }
 
@@ -585,7 +588,7 @@ impl Exporter {
 
 /// Implements the Collector trait used by the Httpd component.
 impl Collector for Exporter {
-    fn collect(&self) -> Result<Vec<u8>, HttpdError> {
+    fn collect(&self) -> Result<String, HttpdError> {
         self.export()
             .map_err(|e| HttpdError::CollectorError(e.to_string()))
     }

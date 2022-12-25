@@ -15,7 +15,7 @@ macro_rules! register_counter_with_registry {
 
         let family = Family::<$LABELS, Counter>::default();
 
-        $REGISTRY.register($NAME, $HELP, Box::new(family.clone()));
+        $REGISTRY.register($NAME, $HELP, family.clone());
 
         family
     }};
@@ -33,7 +33,7 @@ macro_rules! register_counter_with_registry {
             $NAME,
             $HELP,
             $UNIT,
-            Box::new(family.clone()),
+            family.clone(),
         );
 
         family
@@ -49,7 +49,7 @@ macro_rules! register_gauge_with_registry {
 
         let gauge = Gauge::default();
 
-        $REGISTRY.register($NAME, $HELP, Box::new(gauge.clone()));
+        $REGISTRY.register($NAME, $HELP, gauge.clone());
 
         gauge
     }};
@@ -63,7 +63,7 @@ macro_rules! register_gauge_with_registry {
 
         let family = Family::<$LABELS, Gauge>::default();
 
-        $REGISTRY.register($NAME, $HELP, Box::new(family.clone()));
+        $REGISTRY.register($NAME, $HELP, family.clone());
 
         family
     }};
@@ -81,7 +81,7 @@ macro_rules! register_gauge_with_registry {
             $NAME,
             $HELP,
             $UNIT,
-            Box::new(family.clone()),
+            family.clone(),
         );
 
         family
@@ -97,6 +97,6 @@ macro_rules! register_info_with_registry {
 
         let info = Info::new($LABELS);
 
-        $REGISTRY.register($NAME, $HELP, Box::new(info));
+        $REGISTRY.register($NAME, $HELP, info);
     }};
 }
