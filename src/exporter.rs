@@ -13,10 +13,7 @@ use crate::httpd::{
 };
 use jail::RunningJail;
 use log::debug;
-use prometheus_client::encoding::{
-    EncodeLabelSet,
-    EncodeLabelValue,
-};
+use prometheus_client::encoding::EncodeLabelSet;
 use prometheus_client::encoding::text::encode;
 use prometheus_client::metrics::{
     counter::Counter,

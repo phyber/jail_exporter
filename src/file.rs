@@ -58,9 +58,9 @@ impl FileExporter {
 
                 // We do this since we need the temporary file to be on the
                 // same filesystem as the final persisted file.
-                let mut file = NamedTempFile::new_in(&parent)?;
+                let mut file = NamedTempFile::new_in(parent)?;
                 file.write_all(metrics.as_bytes())?;
-                file.persist(&path)?;
+                file.persist(path)?;
             },
         }
 

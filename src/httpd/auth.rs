@@ -46,7 +46,7 @@ pub struct BasicAuthConfig {
 impl BasicAuthConfig {
     // Loads a YAML config from the given path returning the BasicAuthConfig
     pub fn from_yaml(path: &Path) -> Result<Self, ExporterError> {
-        let file = File::open(&path)?;
+        let file = File::open(path)?;
         let reader = BufReader::new(file);
         let config: Self = serde_yaml::from_reader(reader)?;
 
