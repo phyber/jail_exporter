@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/phyber/jail_exporter"
 repository = "https://github.com/phyber/jail_exporter.git"
-rust-version = "1.57.0"
+rust-version = "1.60.0"
 resolver = "2"
 authors = [
     "David O'Rourke <david.orourke@gmail.com>",

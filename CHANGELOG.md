@@ -9,8 +9,9 @@
   - Update to [actix-web] 4.0.x
   - Remove [mime] crate dependency
   - Replace dev-dependency [lazy-static] with [once_cell]
-  - Bump MSRV to 1.57.0
+  - Bump MSRV to 1.60.0
   - Move to official [prometheus-client] Rust crate
+  - Update to [clap] 4.0
 
 ## v0.15.1
 
@@ -181,6 +182,7 @@
 <!-- links -->
 [actix-web]: https://crates.io/crates/actix-web
 [askama]: https://crates.io/crates/askama
+[clap]: https://crates.io/crates/clap
 [clippy]: https://github.com/rust-lang/rust-clippy
 [crates.io]: https://crates.io/
 [env_logger]: https://crates.io/crates/env_logger
