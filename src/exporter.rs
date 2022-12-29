@@ -1,8 +1,11 @@
-//! `jail_exporter` library
-//!
-//! This lib handles the gathering and exporting of jail metrics.
+// exporter: This module handles the gathering and exporting of jail metrics.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+use crate::{
+    register_counter_with_registry,
+    register_gauge_with_registry,
+    register_info_with_registry,
+};
 use crate::errors::ExporterError;
 use crate::httpd::{
     Collector,
@@ -10,320 +13,327 @@ use crate::httpd::{
 };
 use jail::RunningJail;
 use log::debug;
-use prometheus::{
-    register_int_counter_vec_with_registry,
-    register_int_gauge_vec_with_registry,
-    register_int_gauge_with_registry,
-    Encoder,
-    IntCounterVec,
-    IntGauge,
-    IntGaugeVec,
-    Registry,
-    TextEncoder,
+use prometheus_client::encoding::{
+    EncodeLabelSet,
+    EncodeLabelValue,
 };
-use std::collections::HashMap;
+use prometheus_client::encoding::text::encode;
+use prometheus_client::metrics::{
+    counter::Counter,
+    family::Family,
+    gauge::Gauge,
+};
+use prometheus_client::registry::{
+    Registry,
+    Unit,
+};
+use rctl::Resource;
+use std::collections::{
+    HashMap,
+    HashSet,
+};
 use std::sync::{
     Arc,
     Mutex,
 };
+use std::sync::atomic::Ordering;
 
-/// Metrics that use bookkeeping
-enum BookKept {
-    CpuTime(u64),
-    Wallclock(u64),
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+struct NameLabel {
+    // Jail name.
+    name: String,
 }
 
-/// Book keeping for the jail counters.
-type CounterBookKeeper = HashMap<String, u64>;
-type Rusage = HashMap<rctl::Resource, usize>;
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+struct VersionLabels {
+    // Version of Rust that the exporter was compiled with.
+    rustversion: String,
 
-/// Vector of String representing jails that have disappeared since the last
+    // Version of the exporter.
+    version: String,
+}
+
+/// Type alias for our resource usage metrics coming from the rctl library.
+type Rusage = HashMap<Resource, usize>;
+
+/// Set of String representing jails that we have seen during the current
 /// scrape.
-type DeadJails = Vec<String>;
-
-/// Vector of String representing jails that we have seen during the current
-/// scrape.
-type SeenJails = Vec<String>;
-
-/// Vector of u8 representing gathered metrics.
-type ExportedMetrics = Vec<u8>;
+type SeenJails = HashSet<String>;
 
 /// Exporter structure containing the time series that are being tracked.
-#[derive(Clone)]
 pub struct Exporter {
     // Exporter Registry
     registry: Registry,
 
     // Prometheus time series
     // These come from rctl
-    coredumpsize_bytes:      IntGaugeVec,
-    cputime_seconds_total:   IntCounterVec,
-    datasize_bytes:          IntGaugeVec,
-    memorylocked_bytes:      IntGaugeVec,
-    memoryuse_bytes:         IntGaugeVec,
-    msgqsize_bytes:          IntGaugeVec,
-    maxproc:                 IntGaugeVec,
-    msgqqueued:              IntGaugeVec,
-    nmsgq:                   IntGaugeVec,
-    nsem:                    IntGaugeVec,
-    nsemop:                  IntGaugeVec,
-    nshm:                    IntGaugeVec,
-    nthr:                    IntGaugeVec,
-    openfiles:               IntGaugeVec,
-    pcpu_used:               IntGaugeVec,
-    pseudoterminals:         IntGaugeVec,
-    readbps:                 IntGaugeVec,
-    readiops:                IntGaugeVec,
-    shmsize_bytes:           IntGaugeVec,
-    stacksize_bytes:         IntGaugeVec,
-    swapuse_bytes:           IntGaugeVec,
-    vmemoryuse_bytes:        IntGaugeVec,
-    wallclock_seconds_total: IntCounterVec,
-    writebps:                IntGaugeVec,
-    writeiops:               IntGaugeVec,
+    coredumpsize:    Family<NameLabel, Gauge>,
+    cputime:         Family<NameLabel, Counter>,
+    datasize:        Family<NameLabel, Gauge>,
+    memorylocked:    Family<NameLabel, Gauge>,
+    memoryuse:       Family<NameLabel, Gauge>,
+    msgqsize:        Family<NameLabel, Gauge>,
+    maxproc:         Family<NameLabel, Gauge>,
+    msgqqueued:      Family<NameLabel, Gauge>,
+    nmsgq:           Family<NameLabel, Gauge>,
+    nsem:            Family<NameLabel, Gauge>,
+    nsemop:          Family<NameLabel, Gauge>,
+    nshm:            Family<NameLabel, Gauge>,
+    nthr:            Family<NameLabel, Gauge>,
+    openfiles:       Family<NameLabel, Gauge>,
+    pcpu_used:       Family<NameLabel, Gauge>,
+    pseudoterminals: Family<NameLabel, Gauge>,
+    readbps:         Family<NameLabel, Gauge>,
+    readiops:        Family<NameLabel, Gauge>,
+    shmsize:         Family<NameLabel, Gauge>,
+    stacksize:       Family<NameLabel, Gauge>,
+    swapuse:         Family<NameLabel, Gauge>,
+    vmemoryuse:      Family<NameLabel, Gauge>,
+    wallclock:       Family<NameLabel, Counter>,
+    writebps:        Family<NameLabel, Gauge>,
+    writeiops:       Family<NameLabel, Gauge>,
 
     // Metrics this library generates
-    build_info: IntGaugeVec,
-    jail_id:    IntGaugeVec,
-    jail_total: IntGauge,
+    jail_id:  Family<NameLabel, Gauge>,
+    jail_num: Gauge,
 
-    // Counter bookkeeping
-    cputime_seconds_total_old:   Arc<Mutex<CounterBookKeeper>>,
-    wallclock_seconds_total_old: Arc<Mutex<CounterBookKeeper>>,
+    // This keeps a record of which jails we saw on the last run. We use this
+    // to reap old jails (remove their label sets).
+    jail_names: Arc<Mutex<HashSet<String>>>,
 }
 
 impl Default for Exporter {
     // Descriptions of these metrics are taken from rctl(8) where possible.
+    #![allow(clippy::too_many_lines)]
     fn default() -> Self {
         // We want to set this as a field in the returned struct, as well as
         // pass it to the macros.
-        // This shouldn't fail so we use expect and panic if it does.
-        let registry = Registry::new_custom(
-            Some("jail".into()), // metric prefix
-            None,                // global labels
-        ).expect("new registry");
+        let mut registry = <Registry>::with_prefix("jail");
 
-        // Convenience variable
-        let labels: &[&str] = &["name"];
+        let version_labels = VersionLabels {
+            rustversion: env!("RUSTC_VERSION").to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+         };
 
-        let metrics = Self {
-            coredumpsize_bytes: register_int_gauge_vec_with_registry!(
-                "coredumpsize_bytes",
+        // Static info metric, doesn't need to be in the struct.
+        register_info_with_registry!(
+            "exporter_build",
+            "A metric with constant '1' value labelled by version \
+             from which jail_exporter was built",
+            version_labels,
+            registry,
+        );
+
+        Self {
+            coredumpsize: register_gauge_with_registry!(
+                "coredumpsize",
                 "core dump size, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            cputime_seconds_total: register_int_counter_vec_with_registry!(
-                "cputime_seconds_total",
+            cputime: register_counter_with_registry!(
+                "cputime",
                 "CPU time, in seconds",
-                labels,
+                NameLabel,
+                Unit::Seconds,
                 registry,
-            ).unwrap(),
+            ),
 
-            datasize_bytes: register_int_gauge_vec_with_registry!(
-                "datasize_bytes",
+            datasize: register_gauge_with_registry!(
+                "datasize",
                 "data size, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            maxproc: register_int_gauge_vec_with_registry!(
+            maxproc: register_gauge_with_registry!(
                 "maxproc",
                 "number of processes",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            memorylocked_bytes: register_int_gauge_vec_with_registry!(
-                "memorylocked_bytes",
+            memorylocked: register_gauge_with_registry!(
+                "memorylocked",
                 "locked memory, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            memoryuse_bytes: register_int_gauge_vec_with_registry!(
-                "memoryuse_bytes",
+            memoryuse: register_gauge_with_registry!(
+                "memoryuse",
                 "resident set size, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            msgqqueued: register_int_gauge_vec_with_registry!(
+            msgqqueued: register_gauge_with_registry!(
                 "msgqqueued",
                 "number of queued SysV messages",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            msgqsize_bytes: register_int_gauge_vec_with_registry!(
-                "msgqsize_bytes",
+            msgqsize: register_gauge_with_registry!(
+                "msgqsize",
                 "SysV message queue size, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            nmsgq: register_int_gauge_vec_with_registry!(
+            nmsgq: register_gauge_with_registry!(
                 "nmsgq",
                 "number of SysV message queues",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            nsem: register_int_gauge_vec_with_registry!(
+            nsem: register_gauge_with_registry!(
                 "nsem",
                 "number of SysV semaphores",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            nsemop: register_int_gauge_vec_with_registry!(
+            nsemop: register_gauge_with_registry!(
                 "nsemop",
                 "number of SysV semaphores modified in a single semop(2) call",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            nshm: register_int_gauge_vec_with_registry!(
+            nshm: register_gauge_with_registry!(
                 "nshm",
                 "number of SysV shared memory segments",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            nthr: register_int_gauge_vec_with_registry!(
+            nthr: register_gauge_with_registry!(
                 "nthr",
                 "number of threads",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            openfiles: register_int_gauge_vec_with_registry!(
+            openfiles: register_gauge_with_registry!(
                 "openfiles",
                 "file descriptor table size",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            pcpu_used: register_int_gauge_vec_with_registry!(
+            pcpu_used: register_gauge_with_registry!(
                 "pcpu_used",
                 "%CPU, in percents of a single CPU core",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            pseudoterminals: register_int_gauge_vec_with_registry!(
+            pseudoterminals: register_gauge_with_registry!(
                 "pseudoterminals",
                 "number of PTYs",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            readbps: register_int_gauge_vec_with_registry!(
+            readbps: register_gauge_with_registry!(
                 "readbps",
                 "filesystem reads, in bytes per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            readiops: register_int_gauge_vec_with_registry!(
+            readiops: register_gauge_with_registry!(
                 "readiops",
                 "filesystem reads, in operations per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            shmsize_bytes: register_int_gauge_vec_with_registry!(
-                "shmsize_bytes",
+            shmsize: register_gauge_with_registry!(
+                "shmsize",
                 "SysV shared memory size, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            stacksize_bytes: register_int_gauge_vec_with_registry!(
-                "stacksize_bytes",
+            stacksize: register_gauge_with_registry!(
+                "stacksize",
                 "stack size, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            swapuse_bytes: register_int_gauge_vec_with_registry!(
-                "swapuse_bytes",
+            swapuse: register_gauge_with_registry!(
+                "swapuse",
                 "swap space that may be reserved or used, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            vmemoryuse_bytes: register_int_gauge_vec_with_registry!(
-                "vmemoryuse_bytes",
+            vmemoryuse: register_gauge_with_registry!(
+                "vmemoryuse",
                 "address space limit, in bytes",
-                labels,
+                NameLabel,
+                Unit::Bytes,
                 registry,
-            ).unwrap(),
+            ),
 
-            wallclock_seconds_total: register_int_counter_vec_with_registry!(
-                "wallclock_seconds_total",
+            wallclock: register_counter_with_registry!(
+                "wallclock",
                 "wallclock time, in seconds",
-                labels,
+                NameLabel,
+                Unit::Seconds,
                 registry,
-            ).unwrap(),
+            ),
 
-            writebps: register_int_gauge_vec_with_registry!(
+            writebps: register_gauge_with_registry!(
                 "writebps",
                 "filesystem writes, in bytes per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            writeiops: register_int_gauge_vec_with_registry!(
+            writeiops: register_gauge_with_registry!(
                 "writeiops",
                 "filesystem writes, in operations per second",
-                labels,
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
             // Metrics created by the exporter
-            build_info: register_int_gauge_vec_with_registry!(
-                "exporter_build_info",
-                "A metric with a constant '1' value labelled by version \
-                 from which jail_exporter was built",
-                &["rustversion", "version"],
-                registry,
-            ).unwrap(),
-
-            jail_id: register_int_gauge_vec_with_registry!(
+            jail_id: register_gauge_with_registry!(
                 "id",
-                "ID of the named jail.",
-                labels,
+                "ID of the named jail",
+                NameLabel,
                 registry,
-            ).unwrap(),
+            ),
 
-            jail_total: register_int_gauge_with_registry!(
+            jail_num: register_gauge_with_registry!(
                 "num",
-                "Current number of running jails.",
+                "Current number of running jails",
                 registry,
-            ).unwrap(),
+            ),
 
             // Registry must be added after the macros making use of it
             registry: registry,
 
-            // Book keeping
-            cputime_seconds_total_old: Arc::new(Mutex::new(
-                CounterBookKeeper::new()
-            )),
-            wallclock_seconds_total_old: Arc::new(Mutex::new(
-                CounterBookKeeper::new()
-            )),
-        };
-
-        let build_info_labels = [
-            env!("RUSTC_VERSION"),
-            env!("CARGO_PKG_VERSION"),
-        ];
-
-        metrics.build_info.with_label_values(&build_info_labels).set(1);
-
-        metrics
+            // Jail name tracking
+            // We keep a set of jails that we saw on the run, so that on the
+            // next run, we can tell which jails have disappeared (if any) and
+            // delete those metric families.
+            jail_names: Arc::new(Mutex::new(HashSet::new())),
+        }
     }
 }
 
@@ -353,66 +363,29 @@ impl Exporter {
     /// # let exporter = jail_exporter::Exporter::new();
     /// let output = exporter.export();
     /// ```
-    pub fn export(&self) -> Result<ExportedMetrics, ExporterError> {
+    pub fn export(&self) -> Result<String, ExporterError> {
         // Collect metrics
         self.get_jail_metrics()?;
 
-        // Gather them
-        let metric_families = self.registry.gather();
-
         // Collect them in a buffer
-        let mut buffer = vec![];
-        let encoder = TextEncoder::new();
-        encoder.encode(&metric_families, &mut buffer)?;
+        let mut buffer = String::new(); //vec![];
+        encode(&mut buffer, &self.registry).expect("encode");
 
         // Return the exported metrics
         Ok(buffer)
-    }
-
-    /// Updates the book for the given metric and returns the amount the value
-    /// has increased by.
-    fn update_metric_book(&self, name: &str, resource: &BookKept) -> u64 {
-        // Get the Book of Old Values and the current value.
-        let (mut book, value) = match *resource {
-            BookKept::CpuTime(v) => {
-                let book = self.cputime_seconds_total_old.lock().unwrap();
-                (book, v)
-            },
-            BookKept::Wallclock(v) => {
-                let book = self.wallclock_seconds_total_old.lock().unwrap();
-                (book, v)
-            },
-        };
-
-        // Get the old value for this jail, if there isn't one, use 0.
-        let old_value = match book.get(name) {
-            None    => 0,
-            Some(v) => *v,
-        };
-
-        // Work out what our increase should be.
-        // If old_value <= value, OS counter has continued to increment,
-        // otherwise it has reset.
-        let inc = if old_value <= value {
-            value - old_value
-        }
-        else {
-            value
-        };
-
-        // Update book keeping.
-        book.insert(name.to_owned(), value);
-
-        // Return computed increase
-        inc
     }
 
     /// Processes the Rusage setting the appripriate time series.
     fn process_rusage(&self, name: &str, metrics: &Rusage) {
         debug!("process_metrics_hash");
 
+        // Add the jail name to seen jails.
+        self.add_seen_jail(name);
+
         // Convenience variable
-        let labels: &[&str] = &[name];
+        let labels = &NameLabel {
+            name: name.to_string(),
+        };
 
         for (key, value) in metrics {
             // Convert the usize to an i64 as the majority of metrics take
@@ -422,98 +395,90 @@ impl Exporter {
             let value = *value as i64;
 
             match key {
-                rctl::Resource::CoreDumpSize => {
-                    self.coredumpsize_bytes
-                        .with_label_values(labels)
-                        .set(value);
+                Resource::CoreDumpSize => {
+                    self.coredumpsize.get_or_create(labels).set(value);
                 },
-                rctl::Resource::CpuTime => {
-                    let inc = self.update_metric_book(
-                        name,
-                        &BookKept::CpuTime(value as u64)
-                    );
-
-                    self.cputime_seconds_total
-                        .with_label_values(labels)
-                        .inc_by(inc);
+                Resource::CpuTime => {
+                    // CPU time should only ever increase. Store the value from
+                    // the OS directly.
+                    self.cputime
+                        .get_or_create(labels)
+                        .inner()
+                        .store(value as u64, Ordering::Relaxed);
                 },
-                rctl::Resource::DataSize => {
-                    self.datasize_bytes.with_label_values(labels).set(value);
+                Resource::DataSize => {
+                    self.datasize.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MaxProcesses => {
-                    self.maxproc.with_label_values(labels).set(value);
+                Resource::MaxProcesses => {
+                    self.maxproc.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MemoryLocked => {
-                    self.memorylocked_bytes
-                        .with_label_values(labels)
-                        .set(value);
+                Resource::MemoryLocked => {
+                    self.memorylocked.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MemoryUse => {
-                    self.memoryuse_bytes.with_label_values(labels).set(value);
+                Resource::MemoryUse => {
+                    self.memoryuse.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MsgqQueued => {
-                    self.msgqqueued.with_label_values(labels).set(value);
+                Resource::MsgqQueued => {
+                    self.msgqqueued.get_or_create(labels).set(value);
                 },
-                rctl::Resource::MsgqSize => {
-                    self.msgqsize_bytes.with_label_values(labels).set(value);
+                Resource::MsgqSize => {
+                    self.msgqsize.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NMsgq => {
-                    self.nmsgq.with_label_values(labels).set(value);
+                Resource::NMsgq => {
+                    self.nmsgq.get_or_create(labels).set(value);
                 },
-                rctl::Resource::Nsem => {
-                    self.nsem.with_label_values(labels).set(value);
+                Resource::Nsem => {
+                    self.nsem.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NSemop => {
-                    self.nsemop.with_label_values(labels).set(value);
+                Resource::NSemop => {
+                    self.nsemop.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NShm => {
-                    self.nshm.with_label_values(labels).set(value);
+                Resource::NShm => {
+                    self.nshm.get_or_create(labels).set(value);
                 },
-                rctl::Resource::NThreads => {
-                    self.nthr.with_label_values(labels).set(value);
+                Resource::NThreads => {
+                    self.nthr.get_or_create(labels).set(value);
                 },
-                rctl::Resource::OpenFiles => {
-                    self.openfiles.with_label_values(labels).set(value);
+                Resource::OpenFiles => {
+                    self.openfiles.get_or_create(labels).set(value);
                 },
-                rctl::Resource::PercentCpu => {
-                    self.pcpu_used.with_label_values(labels).set(value);
+                Resource::PercentCpu => {
+                    self.pcpu_used.get_or_create(labels).set(value);
                 },
-                rctl::Resource::PseudoTerminals => {
-                    self.pseudoterminals.with_label_values(labels).set(value);
+                Resource::PseudoTerminals => {
+                    self.pseudoterminals.get_or_create(labels).set(value);
                 },
-                rctl::Resource::ReadBps => {
-                    self.readbps.with_label_values(labels).set(value);
+                Resource::ReadBps => {
+                    self.readbps.get_or_create(labels).set(value);
                 },
-                rctl::Resource::ReadIops => {
-                    self.readiops.with_label_values(labels).set(value);
+                Resource::ReadIops => {
+                    self.readiops.get_or_create(labels).set(value);
                 },
-                rctl::Resource::ShmSize => {
-                    self.shmsize_bytes.with_label_values(labels).set(value);
+                Resource::ShmSize => {
+                    self.shmsize.get_or_create(labels).set(value);
                 },
-                rctl::Resource::StackSize => {
-                    self.stacksize_bytes.with_label_values(labels).set(value);
+                Resource::StackSize => {
+                    self.stacksize.get_or_create(labels).set(value);
                 },
-                rctl::Resource::SwapUse => {
-                    self.swapuse_bytes.with_label_values(labels).set(value);
+                Resource::SwapUse => {
+                    self.swapuse.get_or_create(labels).set(value);
                 },
-                rctl::Resource::VMemoryUse => {
-                    self.vmemoryuse_bytes.with_label_values(labels).set(value);
+                Resource::VMemoryUse => {
+                    self.vmemoryuse.get_or_create(labels).set(value);
                 },
-                rctl::Resource::Wallclock => {
-                    let inc = self.update_metric_book(
-                        name,
-                        &BookKept::Wallclock(value as u64)
-                    );
-
-                    self.wallclock_seconds_total
-                        .with_label_values(labels)
-                        .inc_by(inc);
+                Resource::Wallclock => {
+                    // Wallclock should only ever increase, store the value
+                    // from the OS directly.
+                    self.wallclock
+                        .get_or_create(labels)
+                        .inner()
+                        .store(value as u64, Ordering::Relaxed);
                 },
-                rctl::Resource::WriteBps => {
-                    self.writebps.with_label_values(labels).set(value);
+                Resource::WriteBps => {
+                    self.writebps.get_or_create(labels).set(value);
                 },
-                rctl::Resource::WriteIops => {
-                    self.writeiops.with_label_values(labels).set(value);
+                Resource::WriteIops => {
+                    self.writeiops.get_or_create(labels).set(value);
                 },
             }
         }
@@ -523,7 +488,7 @@ impl Exporter {
         debug!("get_jail_metrics");
 
         // Set jail_total to zero before gathering.
-        self.jail_total.set(0);
+        self.jail_num.set(0);
 
         // Get a new vec of seen jails.
         let mut seen = SeenJails::new();
@@ -536,13 +501,17 @@ impl Exporter {
             debug!("JID: {}, Name: {:?}", jail.jid, name);
 
             // Add to our vec of seen jails.
-            seen.push(name.clone());
+            seen.insert(name.clone());
 
             // Process rusage for the named jail, setting time series.
             self.process_rusage(&name, &rusage);
 
-            self.jail_id.with_label_values(&[&name]).set(i64::from(jail.jid));
-            self.jail_total.set(self.jail_total.get() + 1);
+            let labels = &NameLabel {
+                name: name,
+            };
+
+            self.jail_id.get_or_create(labels).set(jail.jid as i64);
+            self.jail_num.set(self.jail_num.get() + 1);
         }
 
         // Get a list of dead jails based on what we've seen, and reap them.
@@ -553,21 +522,27 @@ impl Exporter {
         Ok(())
     }
 
-    // Loop over jail names from the previous run, as determined by book
-    // keeping, and create a vector of jail names that no longer exist.
-    fn dead_jails(&self, seen: &SeenJails) -> DeadJails {
-        let book = self.cputime_seconds_total_old.lock().unwrap();
-
-        book
-            .keys()
-            .filter(|n| !seen.contains(n))
-            //.map(|n| n.clone())
-            .cloned()
-            .collect()
+    fn add_seen_jail(&self, seen: &str) {
+        let mut names = self.jail_names.lock().expect("jail names lock");
+        names.insert(seen.to_string());
     }
 
-    // Loop over DeadJails removing old labels and killing old book keeping.
-    fn reap(&self, dead: DeadJails) {
+    fn remove_dead_jails(&self, dead: &SeenJails) {
+        let mut names = self.jail_names.lock().expect("jail names lock");
+        *names = &*names - dead;
+    }
+
+    // Loop over jail names from the previous run, as determined by book
+    // keeping, and create a vector of jail names that no longer exist.
+    fn dead_jails(&self, seen: &SeenJails) -> HashSet<String> {
+        let names = self.jail_names.lock().expect("jail names lock");
+        &*names - seen
+    }
+
+    // Loop over dead jails removing old labels and killing old book keeping.
+    fn reap(&self, dead: SeenJails) {
+        self.remove_dead_jails(&dead);
+
         for name in dead {
             self.remove_jail_metrics(&name);
         }
@@ -575,54 +550,45 @@ impl Exporter {
 
     fn remove_jail_metrics(&self, name: &str) {
         // Convenience variable
-        let labels: &[&str] = &[name];
+        let labels = &NameLabel {
+            name: name.to_string(),
+        };
 
         // Remove the jail metrics
-        self.coredumpsize_bytes.remove_label_values(labels).ok();
-        self.cputime_seconds_total.remove_label_values(labels).ok();
-        self.datasize_bytes.remove_label_values(labels).ok();
-        self.maxproc.remove_label_values(labels).ok();
-        self.memorylocked_bytes.remove_label_values(labels).ok();
-        self.memoryuse_bytes.remove_label_values(labels).ok();
-        self.msgqqueued.remove_label_values(labels).ok();
-        self.msgqsize_bytes.remove_label_values(labels).ok();
-        self.nmsgq.remove_label_values(labels).ok();
-        self.nsem.remove_label_values(labels).ok();
-        self.nsemop.remove_label_values(labels).ok();
-        self.nshm.remove_label_values(labels).ok();
-        self.nthr.remove_label_values(labels).ok();
-        self.openfiles.remove_label_values(labels).ok();
-        self.pcpu_used.remove_label_values(labels).ok();
-        self.pseudoterminals.remove_label_values(labels).ok();
-        self.readbps.remove_label_values(labels).ok();
-        self.readiops.remove_label_values(labels).ok();
-        self.shmsize_bytes.remove_label_values(labels).ok();
-        self.stacksize_bytes.remove_label_values(labels).ok();
-        self.swapuse_bytes.remove_label_values(labels).ok();
-        self.vmemoryuse_bytes.remove_label_values(labels).ok();
-        self.wallclock_seconds_total.remove_label_values(labels).ok();
-        self.writebps.remove_label_values(labels).ok();
-        self.writeiops.remove_label_values(labels).ok();
+        self.coredumpsize.remove(labels);
+        self.cputime.remove(labels);
+        self.datasize.remove(labels);
+        self.maxproc.remove(labels);
+        self.memorylocked.remove(labels);
+        self.memoryuse.remove(labels);
+        self.msgqqueued.remove(labels);
+        self.msgqsize.remove(labels);
+        self.nmsgq.remove(labels);
+        self.nsem.remove(labels);
+        self.nsemop.remove(labels);
+        self.nshm.remove(labels);
+        self.nthr.remove(labels);
+        self.openfiles.remove(labels);
+        self.pcpu_used.remove(labels);
+        self.pseudoterminals.remove(labels);
+        self.readbps.remove(labels);
+        self.readiops.remove(labels);
+        self.shmsize.remove(labels);
+        self.stacksize.remove(labels);
+        self.swapuse.remove(labels);
+        self.vmemoryuse.remove(labels);
+        self.wallclock.remove(labels);
+        self.writebps.remove(labels);
+        self.writeiops.remove(labels);
 
-        // Reset metrics we generated.
-        self.jail_id.remove_label_values(labels).ok();
-
-        // Kill the books for dead jails.
-        let books = [
-            &self.cputime_seconds_total_old,
-            &self.wallclock_seconds_total_old,
-        ];
-
-        for book in &books {
-            let mut book = book.lock().unwrap();
-            book.remove(name);
-        }
+        //// Reset metrics we generated.
+        self.jail_id.remove(labels);
     }
 }
 
 /// Implements the Collector trait used by the Httpd component.
 impl Collector for Exporter {
-    fn collect(&self) -> Result<Vec<u8>, HttpdError> {
+    fn collect(&self) -> Result<String, HttpdError> {
         self.export()
             .map_err(|e| HttpdError::CollectorError(e.to_string()))
     }
@@ -638,66 +604,68 @@ mod tests {
     #[test]
     fn cputime_counter_increase() {
         let names = ["test", "test2"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         for name in names.iter() {
-            let series = exporter
-                .cputime_seconds_total
-                .with_label_values(&[&name]);
+            let mut hash = Rusage::new();
+
+            let labels = &NameLabel {
+                name: name.to_string(),
+            };
 
             // Initial check, should be zero. We didn't set anything yet.
-            assert_eq!(series.get(), 0);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 0);
 
             // First run, adds 1000, total 1000.
-            hash.insert(rctl::Resource::CpuTime, 1000);
+            hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1000);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 1000);
 
             // Second, adds 20, total 1020
-            hash.insert(rctl::Resource::CpuTime, 1020);
+            hash.insert(Resource::CpuTime, 1020);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1020);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
-            hash.insert(rctl::Resource::CpuTime, 10);
+            hash.insert(Resource::CpuTime, 10);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1030);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 10);
 
             // Fourth, adds 40, total 1070.
-            hash.insert(rctl::Resource::CpuTime, 50);
+            hash.insert(Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 50);
 
             // Fifth, add 0, total 1070
-            hash.insert(rctl::Resource::CpuTime, 50);
+            hash.insert(Resource::CpuTime, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(exporter.cputime.get_or_create(labels).get(), 50);
         }
     }
 
     #[test]
     fn dead_jails_ok() {
         let names = ["test_a", "test_b", "test_c"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         // Create some metrics for test_{a,b,c}.
         for name in names.iter() {
-            hash.insert(rctl::Resource::CpuTime, 1000);
+            let mut hash = Rusage::new();
+            hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
         }
 
         // Now, create a seen array containing only a and c.
-        let mut seen = SeenJails::new();
-        seen.push("test_a".into());
-        seen.push("test_c".into());
+        let seen = SeenJails::from([
+            "test_a".into(),
+            "test_c".into(),
+        ]);
 
         // Workout which jails are dead, it should be b.
         let dead = exporter.dead_jails(&seen);
-        let ok: DeadJails = vec![
+        let ok = SeenJails::from([
             "test_b".into(),
-        ];
+        ]);
 
         assert_eq!(ok, dead);
     }
@@ -705,78 +673,74 @@ mod tests {
     #[test]
     fn reap_ok() {
         let names = ["test_a", "test_b", "test_c"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         // Create some metrics for test_{a,b,c}.
         for name in names.iter() {
-            hash.insert(rctl::Resource::CpuTime, 1000);
+            let mut hash = Rusage::new();
+            hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(&name, &hash);
         }
 
         // Now, create a seen array containing only a and c.
-        let mut seen = SeenJails::new();
-        seen.push("test_a".into());
-        seen.push("test_c".into());
+        let seen = SeenJails::from([
+            "test_a".into(),
+            "test_c".into(),
+        ]);
 
         let dead_jail = "test_b";
-        let series = exporter
-            .cputime_seconds_total
-            .with_label_values(&[dead_jail]);
+        let labels = &NameLabel {
+            name: dead_jail.to_string(),
+        };
 
-        assert_eq!(series.get(), 1000);
+        assert_eq!(exporter.cputime.get_or_create(labels).get(), 1000);
 
         // Workout which jails are dead, it should be b.
         let dead = exporter.dead_jails(&seen);
         exporter.reap(dead);
 
-        // We need a new handle on this. Using the old one will present the old
-        // value.
-        let series = exporter
-            .cputime_seconds_total
-            .with_label_values(&[dead_jail]);
-
-        assert_eq!(series.get(), 0);
+        assert_eq!(exporter.cputime.get_or_create(labels).get(), 0);
     }
 
     #[test]
     fn wallclock_counter_increase() {
         let names = ["test", "test2"];
-        let mut hash = Rusage::new();
         let exporter = Exporter::new();
 
         for name in names.iter() {
-            let series = exporter
-                .wallclock_seconds_total
-                .with_label_values(&[&name]);
+            let mut hash = Rusage::new();
+
+            let labels = &NameLabel {
+                name: name.to_string(),
+            };
 
             // Initial check, should be zero. We didn't set anything yet.
-            assert_eq!(series.get(), 0);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 0);
 
             // First run, adds 1000, total 1000.
-            hash.insert(rctl::Resource::Wallclock, 1000);
+            hash.insert(Resource::Wallclock, 1000);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1000);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 1000);
 
             // Second, adds 20, total 1020
-            hash.insert(rctl::Resource::Wallclock, 1020);
+            hash.insert(Resource::Wallclock, 1020);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1020);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
-            hash.insert(rctl::Resource::Wallclock, 10);
+            hash.insert(Resource::Wallclock, 10);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1030);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 10);
 
             // Fourth, adds 40, total 1070.
-            hash.insert(rctl::Resource::Wallclock, 50);
+            hash.insert(Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 50);
 
             // Fifth, add 0, total 1070
-            hash.insert(rctl::Resource::Wallclock, 50);
+            hash.insert(Resource::Wallclock, 50);
             exporter.process_rusage(&name, &hash);
-            assert_eq!(series.get(), 1070);
+            assert_eq!(exporter.wallclock.get_or_create(labels).get(), 50);
         }
     }
 }

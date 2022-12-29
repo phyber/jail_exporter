@@ -4,7 +4,6 @@ task:
     freebsd_instance:
         matrix:
             - image: 'freebsd-13-1-release-amd64'
-            - image: 'freebsd-13-0-release-amd64'
             - image: 'freebsd-12-3-release-amd64'
     env:
         CARGO_HOME: '${HOME}/.cargo'

@@ -1,4 +1,4 @@
-// httpd errors
+// errors: httpd errors
 #![forbid(unsafe_code)]
 #![forbid(missing_docs)]
 use thiserror::Error;

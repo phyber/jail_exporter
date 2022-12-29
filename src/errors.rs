@@ -1,8 +1,4 @@
-//
-// `jail_exporter`
-//
-// This module implements errors used in the rest of the crate.
-//
+// errors: This module implements errors used in the rest of the crate.
 #![forbid(unsafe_code)]
 #![forbid(missing_docs)]
 use thiserror::Error;
@@ -51,8 +47,8 @@ pub enum ExporterError {
     PersistError(#[from] tempfile::PersistError),
 
     /// Raised if there are errors originating within the `prometheus` crate.
-    #[error("error within Prometheus library")]
-    PrometheusError(#[from] prometheus::Error),
+    //#[error("error within Prometheus library")]
+    //PrometheusError(#[from] prometheus::Error),
 
     /// Raised if there are issues with RACCT/RCTL support.
     #[error("RACCT/RCTL: {0}")]

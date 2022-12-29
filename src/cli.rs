@@ -1,6 +1,4 @@
-//!
-//! Command line interface parsing
-//!
+// cli: Command line interface parsing
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use crate::file::FileExporterOutput;
@@ -14,11 +12,11 @@ use clap::{
 };
 use log::debug;
 use std::net::SocketAddr;
-use std::path::{
-    Path,
-    PathBuf,
-};
+use std::path::Path;
 use std::str::FromStr;
+
+#[cfg(feature = "auth")]
+use std::path::PathBuf;
 
 #[cfg(feature = "auth")]
 // Basic checks for valid filesystem path for web.auth-config existing.

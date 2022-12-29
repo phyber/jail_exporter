@@ -7,11 +7,13 @@
 #![deny(missing_docs)]
 #![allow(clippy::redundant_field_names)]
 use log::debug;
-use std::path::PathBuf;
 use users::{
     Users,
     UsersCache,
 };
+
+#[cfg(feature = "auth")]
+use std::path::PathBuf;
 
 mod cli;
 mod errors;
@@ -19,6 +21,9 @@ mod exporter;
 mod file;
 mod httpd;
 mod rctlstate;
+
+#[macro_use]
+mod macros;
 
 #[cfg(feature = "bcrypt_cmd")]
 mod bcrypt;
@@ -112,7 +117,7 @@ async fn main() -> Result<(), ExporterError> {
     if let Some(output_path) = matches.get_one::<FileExporterOutput>("OUTPUT_FILE_PATH") {
         debug!("output.file-path: {}", output_path);
 
-        let exporter = FileExporter::new(output_path.to_owned());
+        let exporter = FileExporter::new(output_path.clone());
 
         return exporter.export();
     }
@@ -123,8 +128,7 @@ async fn main() -> Result<(), ExporterError> {
     let bind_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS")
         .ok_or_else(|| {
             ExporterError::ArgNotSet("web.listen-address".to_owned())
-        })?
-        .to_owned();
+        })?.clone();
     debug!("web.listen-address: {}", bind_address);
 
     // Get the WEB_TELEMETRY_PATH and turn it into an owned string for moving
@@ -134,8 +138,8 @@ async fn main() -> Result<(), ExporterError> {
     let telemetry_path = matches.get_one::<String>("WEB_TELEMETRY_PATH")
         .ok_or_else(|| {
             ExporterError::ArgNotSet("web.telemetry-path".to_owned())
-        })?
-        .to_owned();
+        })?.clone();
+
     debug!("web.telemetry-path: {}", telemetry_path);
 
     // Start configuring HTTP server.
@@ -148,15 +152,13 @@ async fn main() -> Result<(), ExporterError> {
 
     #[cfg(feature = "auth")]
     // Set the configuration file for HTTP Basic Auth
-    {
-        if let Some(path) = matches.get_one::<PathBuf>("WEB_AUTH_CONFIG") {
-            let config = BasicAuthConfig::from_yaml(path)?;
+    if let Some(path) = matches.get_one::<PathBuf>("WEB_AUTH_CONFIG") {
+        let config = BasicAuthConfig::from_yaml(path)?;
 
-            server = server.auth_config(config);
-        }
+        server = server.auth_config(config);
     }
 
-    let exporter = Box::new(Exporter::new());
+    let exporter = Exporter::new();
     server.run(exporter).await?;
 
     Ok(())
@@ -165,37 +167,27 @@ async fn main() -> Result<(), ExporterError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
+    use users::mock::{
+        Group,
+        MockUsers,
+        User,
+    };
+    use users::os::unix::UserExt;
 
     #[test]
     fn is_running_as_root_ok() {
-        use users::mock::{
-            Group,
-            MockUsers,
-            User,
-        };
-        use users::os::unix::UserExt;
-
         let mut users = MockUsers::with_current_uid(0);
         let user = User::new(0, "root", 0).with_home_dir("/root");
         users.add_user(user);
         users.add_group(Group::new(0, "root"));
 
-        let is_root = is_running_as_root(&mut users).unwrap();
-        let ok = ();
+        let is_root = is_running_as_root(&mut users);
 
-        assert_eq!(is_root, ok);
+        assert!(is_root.is_ok());
     }
 
     #[test]
     fn is_running_as_non_root() {
-        use users::mock::{
-            Group,
-            MockUsers,
-            User,
-        };
-        use users::os::unix::UserExt;
-
         let mut users = MockUsers::with_current_uid(10000);
         let user = User::new(10000, "ferris", 10000).with_home_dir("/ferris");
         users.add_user(user);

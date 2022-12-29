@@ -1,8 +1,4 @@
-//
-// jail_exporter
-//
-// This module deal httpd basic authentication.
-//
+// auth: This module deal httpd basic authentication.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use super::AppState;
@@ -57,6 +53,11 @@ impl BasicAuthConfig {
         config.validate()?;
 
         Ok(config)
+    }
+
+    // Returns a boolean indicating if we have any users configured.
+    pub fn has_users(&self) -> bool {
+        self.basic_auth_users.is_some()
     }
 
     // Validates that usernames don't contain invalid characters.
@@ -157,30 +158,17 @@ pub async fn validate_credentials(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::httpd::{
-        collector::Collector,
-        errors::HttpdError,
-    };
-
     use actix_web::{
         dev::Payload,
         test::TestRequest,
         FromRequest,
     };
 
-    struct TestCollector;
-    impl Collector for TestCollector {
-        fn collect(&self) -> Result<Vec<u8>, HttpdError> {
-            Ok("collector".as_bytes().to_vec())
-        }
-    }
-
     fn get_users_config() -> BasicAuthConfig {
-        let mut users: HashMap<String, String> = HashMap::new();
-        users.insert(
-            "foo".into(),
-            "$2b$04$nFPE4cwFjOFGUmdp.o2NTuh/blJDaEwikX1qoitVe144TsS2l5whS".into(),
-        );
+        let users = HashMap::from([(
+            "foo".to_string(),
+            "$2b$04$nFPE4cwFjOFGUmdp.o2NTuh/blJDaEwikX1qoitVe144TsS2l5whS".to_string(),
+        )]);
 
         BasicAuthConfig {
             basic_auth_users: Some(users),
@@ -216,12 +204,10 @@ mod tests {
 
     #[actix_web::test]
     async fn validate_credentials_ok() {
-        let exporter = Box::new(TestCollector);
         let auth_config = get_users_config();
 
         let data = AppState {
             basic_auth_config: auth_config,
-            exporter:          exporter,
             index_page:        "test".into(),
         };
 
@@ -243,12 +229,10 @@ mod tests {
 
     #[actix_web::test]
     async fn validate_credentials_unauthorized() {
-        let exporter = Box::new(TestCollector);
         let auth_config = get_users_config();
 
         let data = AppState {
             basic_auth_config: auth_config,
-            exporter:          exporter,
             index_page:        "test".into(),
         };
 
