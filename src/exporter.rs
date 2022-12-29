@@ -396,12 +396,17 @@ impl Exporter {
                     self.coredumpsize.get_or_create(labels).set(value);
                 },
                 Resource::CpuTime => {
+                    // Clamp to avoid incorrect negative readings giving us
+                    // a very high CpuTime.
+                    let value = u64::try_from(value.clamp(0, i64::MAX))
+                        .expect("u64 cputime");
+
                     // CPU time should only ever increase. Store the value from
                     // the OS directly.
                     self.cputime
                         .get_or_create(labels)
                         .inner()
-                        .store(value as u64, Ordering::Relaxed);
+                        .store(value, Ordering::Relaxed);
                 },
                 Resource::DataSize => {
                     self.datasize.get_or_create(labels).set(value);
@@ -464,12 +469,17 @@ impl Exporter {
                     self.vmemoryuse.get_or_create(labels).set(value);
                 },
                 Resource::Wallclock => {
+                    // Clamp to avoid incorrect negative readings giving us
+                    // a very high Wallclock.
+                    let value = u64::try_from(value.clamp(0, i64::MAX))
+                        .expect("u64 wallclock");
+
                     // Wallclock should only ever increase, store the value
                     // from the OS directly.
                     self.wallclock
                         .get_or_create(labels)
                         .inner()
-                        .store(value as u64, Ordering::Relaxed);
+                        .store(value, Ordering::Relaxed);
                 },
                 Resource::WriteBps => {
                     self.writebps.get_or_create(labels).set(value);
@@ -507,7 +517,7 @@ impl Exporter {
                 name: name,
             };
 
-            self.jail_id.get_or_create(labels).set(jail.jid as i64);
+            self.jail_id.get_or_create(labels).set(i64::from(jail.jid));
             self.jail_num.set(self.jail_num.get() + 1);
         }
 
