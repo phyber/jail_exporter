@@ -43,7 +43,7 @@ async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
         Err(e) => {
             HttpResponse::InternalServerError()
                 .insert_header(ContentType::plaintext())
-                .body(format!("{}", e))
+                .body(format!("{e}"))
         },
     }
 }

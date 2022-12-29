@@ -178,8 +178,10 @@ impl Server {
         let server = HttpServer::new(app)
             .bind(&self.bind_address)
             .map_err(|e| {
+                let address = &self.bind_address;
+
                 HttpdError::BindAddress(
-                    format!("{}: {}", &self.bind_address, e)
+                    format!("{address}: {e}")
                 )
             })?;
 

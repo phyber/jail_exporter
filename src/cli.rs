@@ -60,7 +60,7 @@ fn is_valid_length(s: &str) -> Result<usize, String> {
 
     let length = match s.parse::<usize>() {
         Ok(length) => Ok(length),
-        Err(_)     => Err(format!("Could not parse '{}' as valid length", s)),
+        Err(_)     => Err(format!("Could not parse '{s}' as valid length")),
     }?;
 
     if length < 1 {
@@ -142,7 +142,7 @@ fn is_valid_socket_addr(s: &str) -> Result<String, String> {
 
     match SocketAddr::from_str(s) {
         Ok(_)  => Ok(s.to_string()),
-        Err(_) => Err(format!("'{}' is not a valid ADDR:PORT string", s)),
+        Err(_) => Err(format!("'{s}' is not a valid ADDR:PORT string")),
     }
 }
 

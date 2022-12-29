@@ -51,10 +51,10 @@ pub fn generate_from(matches: &ArgMatches) -> Result<(), ExporterError> {
     let hash = bcrypt::hash(&password, cost)?;
 
     if random {
-        println!("Password: {}", password);
+        println!("Password: {password}");
     }
 
-    println!("Hash: {}", hash);
+    println!("Hash: {hash}");
 
     Ok(())
 }

@@ -23,7 +23,7 @@ impl fmt::Display for FileExporterOutput {
         match self {
             Self::File(path) => {
                 let path = path.to_str().expect("path to str");
-                write!(f, "{}", path)
+                write!(f, "{path}")
             },
             Self::Stdout => write!(f, "-"),
         }
@@ -36,7 +36,7 @@ pub struct FileExporter {
 
 impl FileExporter {
     pub fn new(output: FileExporterOutput) -> Self {
-        debug!("New FileExporter output to: {}", output);
+        debug!("New FileExporter output to: {output}");
 
         Self {
             dest: output,
