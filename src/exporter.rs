@@ -385,107 +385,101 @@ impl Exporter {
         };
 
         for (key, value) in metrics {
-            // Convert the usize to an i64 as the majority of metrics take
-            // this.
-            // Counters cast this back to a u64, which should be safe as it
-            // was a usize originally.
-            let value = *value as i64;
+            // The original value comes in as a usize. Convert it to a u64 for
+            // our Counter values, and clamp it down to an i64 for our Gauge
+            // values.
+            let uvalue = *value as u64;
+
+            // Since we come from a usize, we can't get any negative values,
+            // so clamping to a 0 min is fine.
+            let ivalue = i64::try_from(uvalue.clamp(0, i64::MAX as u64))
+                .expect("i64 from u64");
 
             match key {
                 Resource::CoreDumpSize => {
-                    self.coredumpsize.get_or_create(labels).set(value);
+                    self.coredumpsize.get_or_create(labels).set(ivalue);
                 },
                 Resource::CpuTime => {
-                    // Clamp to avoid incorrect negative readings giving us
-                    // a very high CpuTime.
-                    let value = u64::try_from(value.clamp(0, i64::MAX))
-                        .expect("u64 cputime");
-
                     // CPU time should only ever increase. Store the value from
                     // the OS directly.
                     self.cputime
                         .get_or_create(labels)
                         .inner()
-                        .store(value, Ordering::Relaxed);
+                        .store(uvalue, Ordering::Relaxed);
                 },
                 Resource::DataSize => {
-                    self.datasize.get_or_create(labels).set(value);
+                    self.datasize.get_or_create(labels).set(ivalue);
                 },
                 Resource::MaxProcesses => {
-                    self.maxproc.get_or_create(labels).set(value);
+                    self.maxproc.get_or_create(labels).set(ivalue);
                 },
                 Resource::MemoryLocked => {
-                    self.memorylocked.get_or_create(labels).set(value);
+                    self.memorylocked.get_or_create(labels).set(ivalue);
                 },
                 Resource::MemoryUse => {
-                    self.memoryuse.get_or_create(labels).set(value);
+                    self.memoryuse.get_or_create(labels).set(ivalue);
                 },
                 Resource::MsgqQueued => {
-                    self.msgqqueued.get_or_create(labels).set(value);
+                    self.msgqqueued.get_or_create(labels).set(ivalue);
                 },
                 Resource::MsgqSize => {
-                    self.msgqsize.get_or_create(labels).set(value);
+                    self.msgqsize.get_or_create(labels).set(ivalue);
                 },
                 Resource::NMsgq => {
-                    self.nmsgq.get_or_create(labels).set(value);
+                    self.nmsgq.get_or_create(labels).set(ivalue);
                 },
                 Resource::Nsem => {
-                    self.nsem.get_or_create(labels).set(value);
+                    self.nsem.get_or_create(labels).set(ivalue);
                 },
                 Resource::NSemop => {
-                    self.nsemop.get_or_create(labels).set(value);
+                    self.nsemop.get_or_create(labels).set(ivalue);
                 },
                 Resource::NShm => {
-                    self.nshm.get_or_create(labels).set(value);
+                    self.nshm.get_or_create(labels).set(ivalue);
                 },
                 Resource::NThreads => {
-                    self.nthr.get_or_create(labels).set(value);
+                    self.nthr.get_or_create(labels).set(ivalue);
                 },
                 Resource::OpenFiles => {
-                    self.openfiles.get_or_create(labels).set(value);
+                    self.openfiles.get_or_create(labels).set(ivalue);
                 },
                 Resource::PercentCpu => {
-                    self.pcpu_used.get_or_create(labels).set(value);
+                    self.pcpu_used.get_or_create(labels).set(ivalue);
                 },
                 Resource::PseudoTerminals => {
-                    self.pseudoterminals.get_or_create(labels).set(value);
+                    self.pseudoterminals.get_or_create(labels).set(ivalue);
                 },
                 Resource::ReadBps => {
-                    self.readbps.get_or_create(labels).set(value);
+                    self.readbps.get_or_create(labels).set(ivalue);
                 },
                 Resource::ReadIops => {
-                    self.readiops.get_or_create(labels).set(value);
+                    self.readiops.get_or_create(labels).set(ivalue);
                 },
                 Resource::ShmSize => {
-                    self.shmsize.get_or_create(labels).set(value);
+                    self.shmsize.get_or_create(labels).set(ivalue);
                 },
                 Resource::StackSize => {
-                    self.stacksize.get_or_create(labels).set(value);
+                    self.stacksize.get_or_create(labels).set(ivalue);
                 },
                 Resource::SwapUse => {
-                    self.swapuse.get_or_create(labels).set(value);
+                    self.swapuse.get_or_create(labels).set(ivalue);
                 },
                 Resource::VMemoryUse => {
-                    self.vmemoryuse.get_or_create(labels).set(value);
+                    self.vmemoryuse.get_or_create(labels).set(ivalue);
                 },
                 Resource::Wallclock => {
-                    // Clamp to avoid incorrect negative readings giving us
-                    // a very high Wallclock.
-                    let value = u64::try_from(value.clamp(0, i64::MAX))
-                        .expect("u64 wallclock");
-
                     // Wallclock should only ever increase, store the value
                     // from the OS directly.
                     self.wallclock
                         .get_or_create(labels)
                         .inner()
-                        .store(value, Ordering::Relaxed);
+                        .store(uvalue, Ordering::Relaxed);
                 },
                 Resource::WriteBps => {
-                    self.writebps.get_or_create(labels).set(value);
+                    self.writebps.get_or_create(labels).set(ivalue);
                 },
                 Resource::WriteIops => {
-                    self.writeiops.get_or_create(labels).set(value);
+                    self.writeiops.get_or_create(labels).set(ivalue);
                 },
             }
         }
