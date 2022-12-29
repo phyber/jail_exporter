@@ -10,6 +10,7 @@
   - Remove [mime] crate dependency
   - Replace dev-dependency [lazy-static] with [once_cell]
   - Bump MSRV to 1.57.0
+  - Move to official [prometheus-client] Rust crate
 
 ## v0.15.1
 
@@ -191,6 +192,7 @@
 [once_cell]: https://crates.io/crates/once_cell
 [pretty-assertions]: https://crates.io/crates/pretty-assertions
 [prometheus]: https://crates.io/crates/prometheus
+[prometheus-client]: https://crates.io/crates/prometheus-client
 [rctl]: https://crates.io/crates/rctl
 [thiserror]: https://github.com/dtolnay/thiserror
 [users]: https://crates/io/crates/users
