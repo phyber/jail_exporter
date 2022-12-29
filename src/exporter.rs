@@ -105,7 +105,7 @@ impl Default for Exporter {
     fn default() -> Self {
         // We want to set this as a field in the returned struct, as well as
         // pass it to the macros.
-        let mut registry = <Registry>::with_prefix("jail");
+        let mut registry = Registry::with_prefix("jail");
 
         let version_labels = VersionLabels {
             rustversion: env!("RUSTC_VERSION").to_string(),
