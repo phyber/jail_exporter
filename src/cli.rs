@@ -7,6 +7,7 @@ use clap::{
     crate_name,
     crate_version,
     Arg,
+    ArgAction,
     ArgMatches,
     Command,
 };
@@ -170,7 +171,7 @@ fn is_valid_telemetry_path(s: &str) -> Result<String, String> {
 }
 
 // Create a clap app
-fn create_app<'a>() -> Command<'a> {
+fn create_app() -> Command {
     debug!("Creating clap app");
 
     let app = Command::new(crate_name!())
@@ -179,46 +180,46 @@ fn create_app<'a>() -> Command<'a> {
         .term_width(80)
         .arg(
             Arg::new("OUTPUT_FILE_PATH")
+                .action(ArgAction::Set)
                 .env("OUTPUT_FILE_PATH")
                 .hide_env_values(true)
                 .long("output.file-path")
                 .value_name("FILE")
                 .help("File to output metrics to.")
-                .takes_value(true)
                 .value_parser(is_valid_output_file_path)
         )
         .arg(
             Arg::new("WEB_LISTEN_ADDRESS")
+                .action(ArgAction::Set)
+                .default_value("127.0.0.1:9452")
                 .env("WEB_LISTEN_ADDRESS")
+                .help("Address on which to expose metrics and web interface.")
                 .hide_env_values(true)
                 .long("web.listen-address")
                 .value_name("[ADDR:PORT]")
-                .help("Address on which to expose metrics and web interface.")
-                .takes_value(true)
-                .default_value("127.0.0.1:9452")
                 .value_parser(is_valid_socket_addr)
         )
         .arg(
             Arg::new("WEB_TELEMETRY_PATH")
+                .action(ArgAction::Set)
+                .default_value("/metrics")
                 .env("WEB_TELEMETRY_PATH")
+                .help("Path under which to expose metrics.")
                 .hide_env_values(true)
                 .long("web.telemetry-path")
                 .value_name("PATH")
-                .help("Path under which to expose metrics.")
-                .takes_value(true)
-                .default_value("/metrics")
                 .value_parser(is_valid_telemetry_path)
         );
 
     #[cfg(feature = "auth")]
     let app = app.arg(
         Arg::new("WEB_AUTH_CONFIG")
+            .action(ArgAction::Set)
             .env("WEB_AUTH_CONFIG")
+            .help("Path to HTTP Basic Authentication configuration")
             .hide_env_values(true)
             .long("web.auth-config")
             .value_name("CONFIG")
-            .help("Path to HTTP Basic Authentication configuration")
-            .takes_value(true)
             .value_parser(is_valid_basic_auth_config_path)
     );
 
@@ -228,36 +229,37 @@ fn create_app<'a>() -> Command<'a> {
             .about("Returns bcrypt encrypted passwords suitable for HTTP Basic Auth")
             .arg(
                 Arg::new("COST")
+                    .action(ArgAction::Set)
+                    .default_value("12")
+                    .help("Computes the hash using the given cost")
                     .long("cost")
                     .short('c')
                     .value_name("COST")
-                    .help("Computes the hash using the given cost")
-                    .takes_value(true)
-                    .default_value("12")
                     .value_parser(is_valid_bcrypt_cost)
             )
             .arg(
                 Arg::new("LENGTH")
+                    .action(ArgAction::Set)
+                    .default_value("32")
+                    .help("Specify the random password length")
                     .long("length")
                     .short('l')
-                    .help("Specify the random password length")
-                    .takes_value(true)
-                    .default_value("32")
                     .value_parser(is_valid_length)
             )
             .arg(
                 Arg::new("RANDOM")
-                    .long("random")
-                    .short('r')
+                    .action(ArgAction::SetTrue)
                     .help("Generate a random password instead of having to \
                            specify one")
+                    .long("random")
+                    .short('r')
             )
             .arg(
                 Arg::new("PASSWORD")
-                    .value_name("PASSWORD")
+                    .action(ArgAction::Set)
                     .help("The password to hash using bcrypt, a prompt is \
                            provided if this is not specified")
-                    .takes_value(true)
+                    .value_name("PASSWORD")
                     .value_parser(is_valid_password)
             );
 
@@ -268,8 +270,9 @@ fn create_app<'a>() -> Command<'a> {
     let app = app
         .arg(
             Arg::new("RC_SCRIPT")
-                .long("rc-script")
+                .action(ArgAction::SetTrue)
                 .help("Dump the jail_exporter rc(8) script to stdout")
+                .long("rc-script")
         );
 
     app
