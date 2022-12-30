@@ -2,7 +2,10 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use actix_web::HttpResponse;
-use actix_web::http::header::ContentType;
+use actix_web::http::header::{
+    self,
+    ContentType,
+};
 use actix_web::web::Data;
 use log::debug;
 use std::sync::Mutex;
@@ -11,6 +14,10 @@ use super::{
     AppExporter,
 };
 use super::Collector;
+
+// If we don't set this as the content-type header, Prometheus will not ingest
+// the metrics properly, complaining about the INFO metric type.
+const OPEN_METRICS_VERSION: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
@@ -37,7 +44,7 @@ async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
     match exporter.collect() {
         Ok(o) => {
             HttpResponse::Ok()
-                .insert_header(ContentType::plaintext())
+                .insert_header((header::CONTENT_TYPE, OPEN_METRICS_VERSION))
                 .body(o)
         },
         Err(e) => {
