@@ -12,6 +12,8 @@
   - Bump MSRV to 1.60.0
   - Move to official [prometheus-client] Rust crate
   - Update to [clap] 4.0
+  - Change exposition format to [OpenMetrics] 1.0.0
+  - Mutexes now use [parking_lot]
 
 ## v0.15.1
 
@@ -192,6 +194,7 @@
 [lazy_static]: https://crates.io/crates/lazy_static
 [mime]: https://crates.io/crates/mime
 [once_cell]: https://crates.io/crates/once_cell
+[parking_lot]: https://crates.io/crates/parking_lot
 [pretty-assertions]: https://crates.io/crates/pretty-assertions
 [prometheus]: https://crates.io/crates/prometheus
 [prometheus-client]: https://crates.io/crates/prometheus-client
@@ -202,4 +205,5 @@
 [Cirrus CI]: https://cirrus-ci.org/
 [FreeBSD]: https://www.freebsd.org/
 [Grafana]: https://grafana.com/grafana/
+[OpenMetrics]: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md
 [`rc(8)`]: https://man.freebsd.org/rc(8)
