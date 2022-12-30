@@ -13,6 +13,7 @@ use crate::httpd::{
 };
 use jail::RunningJail;
 use log::debug;
+use parking_lot::Mutex;
 use prometheus_client::encoding::EncodeLabelSet;
 use prometheus_client::encoding::text::encode;
 use prometheus_client::metrics::{
@@ -29,10 +30,7 @@ use std::collections::{
     HashMap,
     HashSet,
 };
-use std::sync::{
-    Arc,
-    Mutex,
-};
+use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
@@ -524,19 +522,19 @@ impl Exporter {
     }
 
     fn add_seen_jail(&self, seen: &str) {
-        let mut names = self.jail_names.lock().expect("jail names lock");
+        let mut names = self.jail_names.lock();
         names.insert(seen.to_string());
     }
 
     fn remove_dead_jails(&self, dead: &SeenJails) {
-        let mut names = self.jail_names.lock().expect("jail names lock");
+        let mut names = self.jail_names.lock();
         *names = &*names - dead;
     }
 
     // Loop over jail names from the previous run, as determined by book
     // keeping, and create a vector of jail names that no longer exist.
     fn dead_jails(&self, seen: &SeenJails) -> HashSet<String> {
-        let names = self.jail_names.lock().expect("jail names lock");
+        let names = self.jail_names.lock();
         &*names - seen
     }
 

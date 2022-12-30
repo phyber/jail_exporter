@@ -12,7 +12,7 @@ use log::{
     debug,
     info,
 };
-use std::sync::Mutex;
+use parking_lot::Mutex;
 
 #[cfg(feature = "auth")]
 use actix_web::middleware::Condition;

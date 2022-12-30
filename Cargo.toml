@@ -61,6 +61,7 @@ rc_script = []
 env_logger = "0.10"
 jail = "0.2.0"
 log = "0.4"
+parking_lot = "0.12"
 prometheus-client = "0.19"
 rctl = "0.2.0"
 sysctl = "0.5"

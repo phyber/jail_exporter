@@ -781,6 +781,7 @@ dependencies = [
  "jail",
  "log",
  "once_cell",
+ "parking_lot",
  "pretty_assertions",
  "prometheus-client",
  "rand",

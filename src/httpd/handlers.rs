@@ -8,7 +8,7 @@ use actix_web::http::header::{
 };
 use actix_web::web::Data;
 use log::debug;
-use std::sync::Mutex;
+use parking_lot::Mutex;
 use super::{
     AppState,
     AppExporter,
@@ -35,7 +35,7 @@ pub(in crate::httpd)
 async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
     debug!("Processing metrics request");
 
-    let data = data.lock().expect("data lock");
+    let data = data.lock();
 
     // Get the exporter from the state
     let exporter = &(data.exporter);

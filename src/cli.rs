@@ -289,10 +289,10 @@ pub fn parse_args() -> ArgMatches {
 mod tests {
     use super::*;
     use once_cell::sync::Lazy;
+    use parking_lot::Mutex;
     use pretty_assertions::assert_eq;
     use std::env;
     use std::panic;
-    use std::sync::Mutex;
 
     // Used during env_tests
     static LOCK: Lazy<Mutex<i8>> = Lazy::new(|| Mutex::new(0));
@@ -302,7 +302,7 @@ mod tests {
     where T: FnOnce() -> () + panic::UnwindSafe {
         // This ensures that only one test can be manipulating the environment
         // at a time.
-        let _locked = LOCK.lock().unwrap();
+        let _locked = LOCK.lock();
 
         env::set_var(key, var);
 
@@ -319,7 +319,7 @@ mod tests {
     fn default_web_listen_address() {
         // Must lock since we're still testing env vars here even though we're
         // not setting one.
-        let _locked = LOCK.lock().unwrap();
+        let _locked = LOCK.lock();
 
         let argv = vec!["jail_exporter"];
         let matches = create_app().get_matches_from(argv);
@@ -332,7 +332,7 @@ mod tests {
     fn default_web_telemetry_path() {
         // Must lock since we're still testing env vars here even though we're
         // not setting one.
-        let _locked = LOCK.lock().unwrap();
+        let _locked = LOCK.lock();
 
         let argv = vec!["jail_exporter"];
         let matches = create_app().get_matches_from(argv);
