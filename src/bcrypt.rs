@@ -17,7 +17,7 @@ pub fn generate_from(matches: &ArgMatches) -> Result<(), ExporterError> {
     // away.
     let cost: u32 = *matches.get_one("COST")
         .expect("no bcrypt cost given");
-    let random = matches.contains_id("RANDOM");
+    let random = matches.get_flag("RANDOM");
 
     // If a password was given on the CLI, just unwrap it. If none was given,
     // we either generate a random password or interactively prompt for it.

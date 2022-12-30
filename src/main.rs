@@ -91,7 +91,7 @@ async fn main() -> Result<(), ExporterError> {
 
     #[cfg(feature = "rc_script")]
     // If we have been asked to dump the rc(8) script, do that, and exit.
-    if matches.contains_id("RC_SCRIPT") {
+    if matches.get_flag("RC_SCRIPT") {
         rcscript::output();
 
         ::std::process::exit(0);
