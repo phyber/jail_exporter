@@ -3,13 +3,15 @@
 #![deny(missing_docs)]
 use super::AppState;
 use crate::errors::ExporterError;
-use actix_web::{
-    dev::ServiceRequest,
-    error::ErrorUnauthorized,
-    web::Data,
-    Error,
+use axum::extract::State;
+use axum::http::{
+    Request,
+    StatusCode,
 };
-use actix_web_httpauth::extractors::basic::BasicAuth;
+use axum::http::header::AUTHORIZATION;
+use axum::middleware::Next;
+use axum::response::Response;
+use base64::Engine;
 use log::debug;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -17,6 +19,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use std::str::FromStr;
+use std::sync::Arc;
 
 // Invalid username characters as defined in RFC7617.
 // 0x00 - 0x1f / 0x7f / :
@@ -96,45 +99,85 @@ impl BasicAuthConfig {
     }
 }
 
+// Decode a Basic base64 into a username and password
+fn decode(data: &str) -> Result<(String, Option<String>), StatusCode> {
+    let decoded = base64::engine::general_purpose::STANDARD
+        .decode(data)
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    let decoded = String::from_utf8(decoded)
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    let split = decoded.split_once(':');
+
+    match split {
+        Some((username, password)) => {
+            Ok((username.to_string(), Some(password.to_string())))
+        },
+        _ => Ok((decoded, None)),
+    }
+}
+
 // Validate HTTP Basic auth credentials.
 // Usernames and passwords aren't checked in constant time.
-pub async fn validate_credentials(
-    req: ServiceRequest,
-    credentials: BasicAuth,
-) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+pub async fn validate_credentials<B>(
+    State(state): State<Arc<AppState>>,
+    req: Request<B>,
+    next: Next<B>,
+) -> Result<Response, StatusCode> {
     debug!("Validating credentials");
 
-    let state = req.app_data::<Data<AppState>>()
-        .expect("Missing AppState")
-        .get_ref();
-
-    // Get the users from the config if they exist.
-    let auth_config = &state.basic_auth_config;
-    let auth_users = match &auth_config.basic_auth_users {
+    // Get the user database out of the AppState
+    // If no users are in the database, authentication is disabled and
+    // requests are allowed through.
+    let users = match &state.basic_auth_config.basic_auth_users {
         Some(users) => users,
-        None        => {
-            // We shouldn't end up here, because the middleware should be
-            // disabled if we have no users, but we handle it here anyway.
-            debug!("No users defined in auth config, allowing access");
-            return Ok(req);
+        None        => return Ok(next.run(req).await),
+    };
+
+    // If we have users, start working on authenticating the request.
+    // Get Authorization header
+    let auth_header = req.headers()
+        .get(AUTHORIZATION)
+        .and_then(|header| header.to_str().ok());
+
+    // Return the header if present, otherwise unauthorized.
+    let auth_header = if let Some(auth_header) = auth_header {
+        auth_header
+    }
+    else {
+        return Err(StatusCode::UNAUTHORIZED);
+    };
+
+    // Extract the username and password out of the header
+    let split = auth_header.split_once(' ');
+    let decoded = match split {
+        Some((type_, contents)) if type_ == "Basic" => {
+            decode(contents)?
         },
+        _ => return Err(StatusCode::UNAUTHORIZED),
     };
 
     // Get the incoming user_id and check for an entry in the users hash
-    let user_id = credentials.user_id();
-    if !auth_users.contains_key(user_id) {
+    let user_id = &decoded.0;
+
+    if !users.contains_key(user_id) {
         debug!("user_id doesn't match any configured user");
-        return Err((ErrorUnauthorized("Unauthorised"), req));
+
+        return Err(StatusCode::UNAUTHORIZED);
     }
 
     // We know the user_id exists in the hash, get the hashed password for it.
-    let hashed_password = &auth_users[user_id];
+    let hashed_password = &users[user_id];
 
     // We need to get the reference to the Cow str to compare
     // passwords properly, so a little unwrapping is necessary
-    let password = match credentials.password() {
+    let password = decoded.1;
+    let password = match password {
         Some(password) => password,
-        None           => return Err((ErrorUnauthorized("Unauthorized"), req)),
+        None           => {
+            return Err(StatusCode::UNAUTHORIZED);
+        },
     };
 
     let validated = match bcrypt::verify(password, hashed_password) {
@@ -149,20 +192,39 @@ pub async fn validate_credentials(
 
     if !validated {
         debug!("password doesn't match auth_password, denying access");
-        return Err((ErrorUnauthorized("Unauthorized"), req));
+
+        return Err(StatusCode::UNAUTHORIZED);
     };
 
-    Ok(req)
+    let response = next.run(req).await;
+    Ok(response)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{
-        dev::Payload,
-        test::TestRequest,
-        FromRequest,
+    use axum::{
+        body::Body,
+        http::{
+            self,
+            Request,
+        },
+        middleware,
+        routing::get,
+        Router,
     };
+    use tower::ServiceExt;
+
+    fn app(state: Arc<AppState>) -> Router {
+        Router::new()
+            .route("/", get(|| async { "Test" }))
+            .route_layer(
+                middleware::from_fn_with_state(
+                    state,
+                    validate_credentials,
+                ),
+            )
+    }
 
     fn get_users_config() -> BasicAuthConfig {
         let users = HashMap::from([(
@@ -176,8 +238,8 @@ mod tests {
     }
 
     // Tests that errors are returned when config contains an invalid username
-    #[actix_web::test]
-    async fn basic_user_config_from_yaml_invalid() {
+    #[test]
+    fn basic_user_config_from_yaml_invalid() {
         let path = Path::new("test-data/config_invalid.yaml");
         let config = BasicAuthConfig::from_yaml(&path);
 
@@ -185,8 +247,8 @@ mod tests {
     }
 
     // Config is a null auth users entry.
-    #[actix_web::test]
-    async fn basic_user_config_from_yaml_null() {
+    #[test]
+    fn basic_user_config_from_yaml_null() {
         let path = Path::new("test-data/config_null.yaml");
         let config = BasicAuthConfig::from_yaml(&path);
 
@@ -194,15 +256,15 @@ mod tests {
     }
 
     // Config consists of valid usernames
-    #[actix_web::test]
-    async fn basic_user_config_from_yaml_ok() {
+    #[test]
+    fn basic_user_config_from_yaml_ok() {
         let path = Path::new("test-data/config_ok.yaml");
         let config = BasicAuthConfig::from_yaml(&path);
 
         assert!(config.is_ok());
     }
 
-    #[actix_web::test]
+    #[tokio::test]
     async fn validate_credentials_ok() {
         let auth_config = get_users_config();
 
@@ -211,23 +273,21 @@ mod tests {
             index_page:        "test".into(),
         };
 
-        // HTTP request using Basic auth with username "foo" password "bar"
-        let req = TestRequest::get()
-            .data(data)
-            .insert_header(("Authorization", "Basic Zm9vOmJhcg=="))
-            .to_http_request();
+        let app = app(Arc::new(data));
 
-        let credentials = BasicAuth::from_request(&req, &mut Payload::None)
-            .await
+        // HTTP request using Basic auth with username "foo" password "bar"
+        let req = Request::builder()
+            .uri("/")
+            .header(http::header::AUTHORIZATION, "Basic Zm9vOmJhcg==")
+            .body(Body::empty())
             .unwrap();
 
-        let req = ServiceRequest::from_request(req);
-        let res = validate_credentials(req, credentials).await;
+        let res = app.oneshot(req).await.unwrap();
 
-        assert!(res.is_ok());
+        assert_eq!(res.status(), StatusCode::OK)
     }
 
-    #[actix_web::test]
+    #[tokio::test]
     async fn validate_credentials_unauthorized() {
         let auth_config = get_users_config();
 
@@ -236,19 +296,17 @@ mod tests {
             index_page:        "test".into(),
         };
 
-        // HTTP request using Basic auth with username "bad" password "password"
-        let req = TestRequest::get()
-            .data(data)
-            .insert_header(("Authorization", "Basic YmFkOnBhc3N3b3Jk"))
-            .to_http_request();
+        let app = app(Arc::new(data));
 
-        let credentials = BasicAuth::from_request(&req, &mut Payload::None)
-            .await
+        // HTTP request using Basic auth with username "bad" password "password"
+        let req = Request::builder()
+            .uri("/")
+            .header(http::header::AUTHORIZATION, "Basic YmFkOnBhc3N3b3Jk")
+            .body(Body::empty())
             .unwrap();
 
-        let req = ServiceRequest::from_request(req);
-        let res = validate_credentials(req, credentials).await;
+        let res = app.oneshot(req).await.unwrap();
 
-        assert!(res.is_err());
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED)
     }
 }

@@ -39,7 +39,7 @@ use file::{
 #[cfg(feature = "auth")]
 use httpd::auth::BasicAuthConfig;
 
-#[actix_web::main]
+#[tokio::main]
 async fn main() -> Result<(), ExporterError> {
     // We do as much as we can without checking if we're running as root.
     env_logger::init();

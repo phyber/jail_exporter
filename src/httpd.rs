@@ -1,24 +1,21 @@
 // httpd: This module deals with httpd related tasks.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
-use actix_web::HttpServer;
-use actix_web::middleware::Logger;
-use actix_web::web::{
-    self,
-    Bytes,
-    Data,
-};
+use axum::body::Bytes;
+use axum::routing;
+use axum::Router;
 use log::{
     debug,
     info,
 };
 use parking_lot::Mutex;
+use std::net::SocketAddr;
+use std::str::FromStr;
+use std::sync::Arc;
+use tower_http::trace::TraceLayer;
 
 #[cfg(feature = "auth")]
-use actix_web::middleware::Condition;
-
-#[cfg(feature = "auth")]
-use actix_web_httpauth::middleware::HttpAuthentication;
+use axum::middleware;
 
 #[cfg(feature = "auth")]
 pub mod auth;
@@ -42,14 +39,14 @@ use super::Exporter;
 
 // This AppState is used to pass the rendered index template to the index
 // function.
-pub(self) struct AppState {
+pub struct AppState {
     index_page: Bytes,
 
     #[cfg(feature = "auth")]
     basic_auth_config: BasicAuthConfig,
 }
 
-struct AppExporter {
+pub struct AppExporter {
     exporter: Exporter,
 }
 
@@ -129,7 +126,7 @@ impl Server {
             exporter: exporter,
         };
 
-        let app_exporter = Data::new(Mutex::new(app_exporter));
+        let app_exporter = Arc::new(Mutex::new(app_exporter));
 
         let state = AppState {
             index_page: index_page,
@@ -138,56 +135,51 @@ impl Server {
             basic_auth_config: basic_auth_config,
         };
 
-        let state = Data::new(state);
+        let state = Arc::new(state);
+
+        // May not be used depending on enable_http_auth
+        #[cfg(feature = "auth")]
+        let auth_layer = middleware::from_fn_with_state(
+            state.clone(),
+            auth::validate_credentials,
+        );
 
         // Route handlers
         debug!("Creating HTTP server app");
-        let app = move || {
-            // Order is important in the App config.
-            let app = actix_web::App::new()
-                .app_data(app_exporter.clone())
-                .app_data(state.clone())
-                // Enable request logging
-                .wrap(Logger::default());
 
-            #[cfg(feature = "auth")]
-            // Authentication
-            let app = {
-                // Only enable the authentication if there are some users to
-                // check.
-                let auth = Condition::new(
-                    enable_http_auth,
-                    HttpAuthentication::basic(auth::validate_credentials),
-                );
+        // This mut will be unused if not compiled with the auth feature.
+        // Silence that warning.
+        #[allow(unused_mut)]
+        let mut app = Router::new()
+            .route("/", routing::get(index))
+            .with_state(state)
+            .route(&self.telemetry_path, routing::get(metrics))
+            .with_state(app_exporter);
 
-                app.wrap(auth)
-            };
+        // If we have some users, enable the authentication layer
+        #[cfg(feature = "auth")]
+        if enable_http_auth {
+            app = app.route_layer(auth_layer);
+        }
 
-            // Finally add routes
-            app
-                // Root of HTTP server. Provides a basic index page and
-                // link to the metrics page.
-                .route("/", web::get().to(index))
-                // Path serving up the metrics.
-                .route(&self.telemetry_path, web::get().to(metrics))
-        };
-
+        // Finally add a tracing layer
+        let app = app
+            .layer(TraceLayer::new_for_http());
 
         // Create the server
         debug!("Attempting to bind to: {}", &self.bind_address);
-        let server = HttpServer::new(app)
-            .bind(&self.bind_address)
-            .map_err(|e| {
-                let address = &self.bind_address;
+        let addr = SocketAddr::from_str(&self.bind_address).map_err(|e| {
+            let address = &self.bind_address;
+            HttpdError::BindAddress(format!("{address}: {e}"))
+        })?;
 
-                HttpdError::BindAddress(
-                    format!("{address}: {e}")
-                )
-            })?;
+        let server = axum::Server::bind(&addr)
+            .serve(app.into_make_service());
 
         // Run it!
         info!("Starting HTTP server on {}", &self.bind_address);
-        server.run().await?;
+        //server.run().await?;
+        server.await.unwrap();
 
         Ok(())
     }

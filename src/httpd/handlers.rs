@@ -1,14 +1,24 @@
 // handlers: This module deals with httpd route handlers.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
-use actix_web::HttpResponse;
-use actix_web::http::header::{
-    self,
+use axum::extract::State;
+use axum::headers::{
     ContentType,
+    HeaderMap,
+    HeaderMapExt,
+    HeaderValue,
 };
-use actix_web::web::Data;
+use axum::http::{
+    header,
+    StatusCode,
+};
+use axum::response::{
+    Html,
+    IntoResponse,
+};
 use log::debug;
 use parking_lot::Mutex;
+use std::sync::Arc;
 use super::{
     AppState,
     AppExporter,
@@ -17,22 +27,22 @@ use super::Collector;
 
 // If we don't set this as the content-type header, Prometheus will not ingest
 // the metrics properly, complaining about the INFO metric type.
-const OPEN_METRICS_VERSION: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
+const OPEN_METRICS_HEADER: HeaderValue = HeaderValue::from_static(
+    "application/openmetrics-text; version=1.0.0; charset=utf-8",
+);
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
-pub(in crate::httpd) async fn index(data: Data<AppState>) -> HttpResponse {
+pub async fn index(State(data): State<Arc<AppState>>) -> impl IntoResponse {
     debug!("Displaying index page");
 
-    HttpResponse::Ok()
-        .insert_header(ContentType::html())
-        .body(data.index_page.clone())
+    Html(data.index_page.clone())
 }
 
 // Returns a HttpResponse containing the Prometheus Exporter output, or an
 // InternalServerError if things fail for some reason.
-pub(in crate::httpd)
-async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
+pub async fn metrics(State(data): State<Arc<Mutex<AppExporter>>>)
+-> impl IntoResponse {
     debug!("Processing metrics request");
 
     let data = data.lock();
@@ -40,17 +50,28 @@ async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
     // Get the exporter from the state
     let exporter = &(data.exporter);
 
+    // We always want a HeaderMap
+    let mut headers = HeaderMap::new();
+
     // Exporter could fail.
     match exporter.collect() {
-        Ok(o) => {
-            HttpResponse::Ok()
-                .insert_header((header::CONTENT_TYPE, OPEN_METRICS_VERSION))
-                .body(o)
+        Ok(metrics) => {
+            headers.insert(header::CONTENT_TYPE, OPEN_METRICS_HEADER);
+
+            (
+                StatusCode::OK,
+                headers,
+                metrics,
+            )
         },
         Err(e) => {
-            HttpResponse::InternalServerError()
-                .insert_header(ContentType::plaintext())
-                .body(format!("{e}"))
+            headers.typed_insert(ContentType::text_utf8());
+
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                headers,
+                format!("{e}"),
+            )
         },
     }
 }
@@ -58,16 +79,25 @@ async fn metrics(data: Data<Mutex<AppExporter>>) -> HttpResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{
-        dev::Service,
-        test,
-        web,
-        App,
+    use axum::{
+        body::Body,
+        http::{
+            header::CONTENT_TYPE,
+            Request,
+        },
+        routing::get,
+        Router,
     };
-    use actix_web::http::header::CONTENT_TYPE;
     use pretty_assertions::assert_eq;
+    use tower::ServiceExt;
 
-    #[actix_web::test]
+    fn app(state: Arc<AppState>) -> Router {
+        Router::new()
+            .route("/", get(index))
+            .with_state(state)
+    }
+
+    #[tokio::test]
     async fn index_ok() {
         let state = AppState {
             index_page: "Test Body".into(),
@@ -76,16 +106,14 @@ mod tests {
             basic_auth_config: Default::default(),
         };
 
-        let data = Data::new(state);
+        let app = app(Arc::new(state));
 
-        let mut server = test::init_service(
-            App::new()
-                .app_data(data)
-                .service(web::resource("/").to(index))
-        ).await;
+        let request = Request::builder()
+            .uri("/")
+            .body(Body::empty())
+            .unwrap();
 
-        let request  = test::TestRequest::get().uri("/").to_request();
-        let response = server.call(request).await.unwrap();
+        let response = app.oneshot(request).await.unwrap();
         assert!(response.status().is_success());
 
         let headers = response.headers();
@@ -94,10 +122,9 @@ mod tests {
             .unwrap()
             .to_str()
             .unwrap();
-        assert_eq!(content_type, ContentType::html().to_string());
+        assert_eq!(content_type, "text/html; charset=utf-8");
 
-        let request = test::TestRequest::get().uri("/").to_request();
-        let body = test::call_and_read_body(&mut server, request).await;
+        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
         assert_eq!(body, "Test Body".as_bytes());
     }
 }

@@ -14,6 +14,7 @@
   - Update to [clap] 4.0
   - Change exposition format to [OpenMetrics] 1.0.0
   - Mutexes now use [parking_lot]
+  - Switch from [actix-web] to [axum]
 
 ## v0.15.1
 
@@ -184,6 +185,7 @@
 <!-- links -->
 [actix-web]: https://crates.io/crates/actix-web
 [askama]: https://crates.io/crates/askama
+[axum]: https://crates.io/crates/axum
 [clap]: https://crates.io/crates/clap
 [clippy]: https://github.com/rust-lang/rust-clippy
 [crates.io]: https://crates.io/
