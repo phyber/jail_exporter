@@ -27,9 +27,7 @@ use super::Collector;
 
 // If we don't set this as the content-type header, Prometheus will not ingest
 // the metrics properly, complaining about the INFO metric type.
-const OPEN_METRICS_HEADER: HeaderValue = HeaderValue::from_static(
-    "application/openmetrics-text; version=1.0.0; charset=utf-8",
-);
+const OPENMETRICS_HEADER: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
@@ -56,7 +54,10 @@ pub async fn metrics(State(data): State<Arc<Mutex<AppExporter>>>)
     // Exporter could fail.
     match exporter.collect() {
         Ok(metrics) => {
-            headers.insert(header::CONTENT_TYPE, OPEN_METRICS_HEADER);
+            headers.insert(
+                header::CONTENT_TYPE,
+                HeaderValue::from_static(OPENMETRICS_HEADER),
+            );
 
             (
                 StatusCode::OK,
