@@ -42,6 +42,7 @@ const INVALID_USERNAME_CHARS: &[char] = &[
 ];
 
 // Type representing a Basic username and password pair.
+#[derive(Debug)]
 struct BasicAuth(String, Option<String>);
 
 impl BasicAuth {
@@ -58,6 +59,8 @@ impl BasicAuth {
     }
 }
 
+// This FromStr allows us to get a BasicAuth from the contents of the
+// Authorization header.
 impl FromStr for BasicAuth {
     type Err = StatusCode;
 
@@ -193,12 +196,9 @@ pub async fn validate_credentials<B>(
 
     // We need to get the reference to the Cow str to compare
     // passwords properly, so a little unwrapping is necessary
-    let password = basic_auth.password();
-    let password = match password {
+    let password = match basic_auth.password() {
         Some(password) => password,
-        None           => {
-            return Err(StatusCode::UNAUTHORIZED);
-        },
+        None           => return Err(StatusCode::UNAUTHORIZED),
     };
 
     let validated = match bcrypt::verify(password, hashed_password) {
@@ -256,6 +256,46 @@ mod tests {
         BasicAuthConfig {
             basic_auth_users: Some(users),
         }
+    }
+
+    #[test]
+    fn basic_auth_err() {
+        let tests = vec![
+            // Only Basic authorization is supported
+            "Bearer foobarbaz",
+
+            // Invalid base64
+            "Basic foobarbaz",
+
+            // Valid base64, but invalid utf8 string content.
+            // This contains the bytes for the "Sparkle Heart" emoji, but the
+            // first byte has been changed from f0 to 0.
+            "Basic AJ+Slgo=",
+        ];
+
+        for test in tests {
+            let basic_auth = BasicAuth::from_str(test);
+
+            assert!(basic_auth.is_err());
+        }
+    }
+
+    #[test]
+    fn basic_auth_ok_with_password() {
+        let authorization = "Basic Zm9vOmJhcg==";
+        let basic_auth = BasicAuth::from_str(authorization).unwrap();
+
+        assert_eq!(basic_auth.user_id(), "foo");
+        assert_eq!(basic_auth.password(), &Some("bar".to_string()));
+    }
+
+    #[test]
+    fn basic_auth_ok_without_password() {
+        let authorization = "Basic Zm9v";
+        let basic_auth = BasicAuth::from_str(authorization).unwrap();
+
+        assert_eq!(basic_auth.user_id(), "foo");
+        assert_eq!(basic_auth.password(), &None);
     }
 
     // Tests that errors are returned when config contains an invalid username
