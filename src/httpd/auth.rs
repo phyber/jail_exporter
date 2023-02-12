@@ -8,7 +8,7 @@ use axum::http::{
     Request,
     StatusCode,
 };
-use axum::http::header::AUTHORIZATION;
+use axum::http::header;
 use axum::middleware::Next;
 use axum::response::Response;
 use base64::Engine;
@@ -40,6 +40,53 @@ const INVALID_USERNAME_CHARS: &[char] = &[
     // Colon
     ':',
 ];
+
+// Type representing a Basic username and password pair.
+struct BasicAuth(String, Option<String>);
+
+impl BasicAuth {
+    fn new(user_id: String, password: Option<String>) -> Self {
+        Self(user_id, password)
+    }
+
+    fn password(&self) -> &Option<String> {
+        &self.1
+    }
+
+    fn user_id(&self) -> &str {
+        &self.0
+    }
+}
+
+impl FromStr for BasicAuth {
+    type Err = StatusCode;
+
+    // Take an Authorization header and attempt to create a BasicAuth.
+    // Any errors will result in Unauthorized.
+    fn from_str(header: &str) -> Result<Self, Self::Err> {
+        let data = match header.split_once(' ') {
+            Some((type_, contents)) if type_ == "Basic" => contents,
+            _ => return Err(StatusCode::UNAUTHORIZED),
+        };
+
+        // Decode the incoming base64 and turn it into a String
+        let decoded = base64::engine::general_purpose::STANDARD
+            .decode(data)
+            .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+        let decoded = String::from_utf8(decoded)
+            .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+        let (user_id, password) = match decoded.split_once(':') {
+            Some((username, password)) => {
+                (username.to_string(), Some(password.to_string()))
+            },
+            _ => (decoded, None),
+        };
+
+        Ok(Self::new(user_id, password))
+    }
+}
 
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct BasicAuthConfig {
@@ -99,27 +146,10 @@ impl BasicAuthConfig {
     }
 }
 
-// Decode a Basic base64 into a username and password
-fn decode(data: &str) -> Result<(String, Option<String>), StatusCode> {
-    let decoded = base64::engine::general_purpose::STANDARD
-        .decode(data)
-        .map_err(|_| StatusCode::UNAUTHORIZED)?;
-
-    let decoded = String::from_utf8(decoded)
-        .map_err(|_| StatusCode::UNAUTHORIZED)?;
-
-    let split = decoded.split_once(':');
-
-    match split {
-        Some((username, password)) => {
-            Ok((username.to_string(), Some(password.to_string())))
-        },
-        _ => Ok((decoded, None)),
-    }
-}
-
 // Validate HTTP Basic auth credentials.
 // Usernames and passwords aren't checked in constant time.
+// Any errors here will result in StatusCode::UNAUTHORIZED being returned to
+// the client.
 pub async fn validate_credentials<B>(
     State(state): State<Arc<AppState>>,
     req: Request<B>,
@@ -138,28 +168,19 @@ pub async fn validate_credentials<B>(
     // If we have users, start working on authenticating the request.
     // Get Authorization header
     let auth_header = req.headers()
-        .get(AUTHORIZATION)
+        .get(header::AUTHORIZATION)
         .and_then(|header| header.to_str().ok());
 
-    // Return the header if present, otherwise unauthorized.
-    let auth_header = if let Some(auth_header) = auth_header {
-        auth_header
+    // Get the BasicAuth from the header if present, otherwise unauthorized.
+    let basic_auth = if let Some(auth_header) = auth_header {
+        BasicAuth::from_str(auth_header)?
     }
     else {
         return Err(StatusCode::UNAUTHORIZED);
     };
 
-    // Extract the username and password out of the header
-    let split = auth_header.split_once(' ');
-    let decoded = match split {
-        Some((type_, contents)) if type_ == "Basic" => {
-            decode(contents)?
-        },
-        _ => return Err(StatusCode::UNAUTHORIZED),
-    };
-
     // Get the incoming user_id and check for an entry in the users hash
-    let user_id = &decoded.0;
+    let user_id = basic_auth.user_id();
 
     if !users.contains_key(user_id) {
         debug!("user_id doesn't match any configured user");
@@ -172,7 +193,7 @@ pub async fn validate_credentials<B>(
 
     // We need to get the reference to the Cow str to compare
     // passwords properly, so a little unwrapping is necessary
-    let password = decoded.1;
+    let password = basic_auth.password();
     let password = match password {
         Some(password) => password,
         None           => {
