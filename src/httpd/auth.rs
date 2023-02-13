@@ -69,16 +69,28 @@ impl FromStr for BasicAuth {
     fn from_str(header: &str) -> Result<Self, Self::Err> {
         let data = match header.split_once(' ') {
             Some((type_, contents)) if type_ == "Basic" => contents,
-            _ => return Err(StatusCode::UNAUTHORIZED),
+            _ => {
+                debug!("invalid authorization type");
+
+                return Err(StatusCode::UNAUTHORIZED);
+            },
         };
 
         // Decode the incoming base64 and turn it into a String
         let decoded = base64::engine::general_purpose::STANDARD
             .decode(data)
-            .map_err(|_| StatusCode::UNAUTHORIZED)?;
+            .map_err(|_| {
+                debug!("could not decode incoming base64 authorization data");
+
+                StatusCode::UNAUTHORIZED
+            })?;
 
         let decoded = String::from_utf8(decoded)
-            .map_err(|_| StatusCode::UNAUTHORIZED)?;
+            .map_err(|_| {
+                debug!("could not construct utf8 string from decoded base64");
+
+                StatusCode::UNAUTHORIZED
+            })?;
 
         let (user_id, password) = match decoded.split_once(':') {
             Some((username, password)) => {
