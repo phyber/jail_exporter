@@ -20,4 +20,8 @@ pub enum HttpdError {
     /// Returned when there are issues rendering the index template.
     #[error("failed to render template")]
     RenderTemplate(#[from] askama::Error),
+
+    /// Returned when a server error occurs.
+    #[error("server error: {0}")]
+    ServerError(#[from] hyper::Error),
 }

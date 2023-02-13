@@ -178,8 +178,7 @@ impl Server {
 
         // Run it!
         info!("Starting HTTP server on {}", &self.bind_address);
-        //server.run().await?;
-        server.await.unwrap();
+        server.await?;
 
         Ok(())
     }
