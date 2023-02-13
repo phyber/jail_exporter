@@ -150,7 +150,6 @@ impl BasicAuthConfig {
 }
 
 // Validate HTTP Basic auth credentials.
-// Usernames and passwords aren't checked in constant time.
 // Any errors here will result in StatusCode::UNAUTHORIZED being returned to
 // the client.
 pub async fn validate_credentials<B>(
@@ -184,18 +183,31 @@ pub async fn validate_credentials<B>(
 
     // Get the incoming user_id and check for an entry in the users hash
     let user_id = basic_auth.user_id();
+    let user_exists = users.contains_key(user_id);
 
-    if !users.contains_key(user_id) {
+    // If the user doesn't exist, pretend it does to prevent user enumeration,
+    // but log this fact.
+    if !user_exists {
         debug!("user_id doesn't match any configured user");
-
-        return Err(StatusCode::UNAUTHORIZED);
     }
 
     // We know the user_id exists in the hash, get the hashed password for it.
-    let hashed_password = &users[user_id];
+    // If the user doesn't exist in the users list, they don't exist and we'll
+    // return a fake password for them to prevent user enumeration.
+    let hashed_password = match users.get(user_id) {
+        Some(hashed_password) => hashed_password,
+        None                  => {
+            debug!("user doesn't exist, returning pre-baked password hash");
+
+            // A hash of the password: "userdoesntexist"
+            "$2b$10$xbVccvFGkGUTkQm5gsSr8uI2byLz2t7pY3wgo9RfQy5rt77l6fyDa"
+        },
+    };
 
     // We need to get the reference to the Cow str to compare
-    // passwords properly, so a little unwrapping is necessary
+    // passwords properly, so a little unwrapping is necessary.
+    // This also enforces that users must have passwords, although Basic itself
+    // does allow a user with no password.
     let password = match basic_auth.password() {
         Some(password) => password,
         None           => return Err(StatusCode::UNAUTHORIZED),
@@ -211,7 +223,8 @@ pub async fn validate_credentials<B>(
         },
     };
 
-    if !validated {
+    // If the password was not validated OR the user didn't exist, deny.
+    if !validated || !user_exists {
         debug!("password doesn't match auth_password, denying access");
 
         return Err(StatusCode::UNAUTHORIZED);
@@ -248,6 +261,8 @@ mod tests {
     }
 
     fn get_users_config() -> BasicAuthConfig {
+        // User "foo" with password "bar".
+        // A very cheap cost is used because this will run in CI.
         let users = HashMap::from([(
             "foo".to_string(),
             "$2b$04$nFPE4cwFjOFGUmdp.o2NTuh/blJDaEwikX1qoitVe144TsS2l5whS".to_string(),
@@ -363,6 +378,33 @@ mod tests {
         let req = Request::builder()
             .uri("/")
             .header(http::header::AUTHORIZATION, "Basic YmFkOnBhc3N3b3Jk")
+            .body(Body::empty())
+            .unwrap();
+
+        let res = app.oneshot(req).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED)
+    }
+
+    // This test attempts to use a non-existant user with our pre-baked
+    // password hash when the user doesn't exist.
+    // Although the password is correct, login should still fail.
+    #[tokio::test]
+    async fn validate_credentials_unauthorized_no_user_id() {
+        let auth_config = get_users_config();
+
+        let data = AppState {
+            basic_auth_config: auth_config,
+            index_page:        "test".into(),
+        };
+
+        let app = app(Arc::new(data));
+
+        // HTTP request using Basic auth with username "nope" and password
+        // "userdoesntexist"
+        let req = Request::builder()
+            .uri("/")
+            .header(http::header::AUTHORIZATION, "Basic bm9wZTp1c2VyZG9lc250ZXhpc3Q=")
             .body(Body::empty())
             .unwrap();
 
