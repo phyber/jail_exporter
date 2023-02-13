@@ -341,6 +341,48 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn validate_credentials_users_no_auth() {
+        let auth_config = get_users_config();
+
+        let data = AppState {
+            basic_auth_config: auth_config,
+            index_page:        "test".into(),
+        };
+
+        let app = app(Arc::new(data));
+
+        // HTTP request with no auth header.
+        let req = Request::builder()
+            .uri("/")
+            .body(Body::empty())
+            .unwrap();
+
+        let res = app.oneshot(req).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED)
+    }
+
+    #[tokio::test]
+    async fn validate_credentials_no_users_no_auth() {
+        let data = AppState {
+            basic_auth_config: BasicAuthConfig::default(),
+            index_page:        "test".into(),
+        };
+
+        let app = app(Arc::new(data));
+
+        // HTTP request using Basic auth with username "foo" password "bar"
+        let req = Request::builder()
+            .uri("/")
+            .body(Body::empty())
+            .unwrap();
+
+        let res = app.oneshot(req).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK)
+    }
+
+    #[tokio::test]
     async fn validate_credentials_ok() {
         let auth_config = get_users_config();
 
