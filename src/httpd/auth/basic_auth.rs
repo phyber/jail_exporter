@@ -8,19 +8,25 @@ use std::str::FromStr;
 
 // Type representing a Basic username and password pair.
 #[derive(Debug)]
-pub struct BasicAuth(String, Option<String>);
+pub struct BasicAuth {
+    password: Option<String>,
+    user_id: String,
+}
 
 impl BasicAuth {
     pub fn new(user_id: String, password: Option<String>) -> Self {
-        Self(user_id, password)
+        Self {
+            password,
+            user_id,
+        }
     }
 
     pub fn password(&self) -> &Option<String> {
-        &self.1
+        &self.password
     }
 
     pub fn user_id(&self) -> &str {
-        &self.0
+        &self.user_id
     }
 }
 
