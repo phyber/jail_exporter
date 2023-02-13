@@ -2,14 +2,10 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use axum::extract::State;
-use axum::headers::{
-    ContentType,
-    HeaderMap,
-    HeaderMapExt,
-    HeaderValue,
-};
 use axum::http::{
     header,
+    HeaderMap,
+    HeaderValue,
     StatusCode,
 };
 use axum::response::{
@@ -28,6 +24,7 @@ use super::Collector;
 // If we don't set this as the content-type header, Prometheus will not ingest
 // the metrics properly, complaining about the INFO metric type.
 const OPENMETRICS_HEADER: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
+const TEXT_HTML_UTF8_HEADER: &str = "text/html; charset=utf-8";
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
@@ -66,7 +63,10 @@ pub async fn metrics(State(data): State<Arc<Mutex<AppExporter>>>)
             )
         },
         Err(e) => {
-            headers.typed_insert(ContentType::text_utf8());
+            headers.insert(
+                header::CONTENT_TYPE,
+                HeaderValue::from_static(TEXT_HTML_UTF8_HEADER),
+            );
 
             (
                 StatusCode::INTERNAL_SERVER_ERROR,

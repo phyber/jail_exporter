@@ -76,7 +76,6 @@ default-features = false
 version = "0.6"
 default-features = false
 features = [
-    "headers",
     "http1",
     "tokio",
     "tower-log",
