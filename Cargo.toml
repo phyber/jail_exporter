@@ -84,6 +84,7 @@ features = [
 
 [dependencies.base64]
 version = "0.21"
+default-features = false
 optional = true
 
 [dependencies.bcrypt]
