@@ -25,3 +25,4 @@ task:
         fingerprint_script: 'cat Cargo.lock'
         folder: '${CARGO_HOME}/registry'
     test_script: 'cargo test'
+    build_script: 'cargo build'

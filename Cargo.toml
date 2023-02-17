@@ -59,6 +59,7 @@ rc_script = []
 
 [dependencies]
 env_logger = "0.10"
+hyper = "0.14"
 jail = "0.2.0"
 log = "0.4"
 parking_lot = "0.12"
@@ -152,9 +153,6 @@ rustc_version = "0.4"
 indoc = "2.0"
 once_cell = "1.17.1"
 pretty_assertions = "1.3.0"
-
-[dev-dependencies.hyper]
-version = "0.14"
 
 [dev-dependencies.tower]
 version = "0.4"
