@@ -13,11 +13,11 @@ task:
         mkdir -p "${pkg_repos_dir}"
         cat > "${pkg_repos_dir}/FreeBSD.conf" <<'EOF'
         FreeBSD: {
-            url: "pkg+http://pkg.freebsd.org/${ABI}/latest"
+            url: "pkg+http://pkg.freebsd.org/${ABI}/quarterly"
         }
         EOF
     install_script: |
-        pkg install -y \
+        pkg install --yes \
             curl \
             rust
     before_cache_script: 'rm -rf ${CARGO_HOME}/registry/index'
