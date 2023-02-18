@@ -20,6 +20,10 @@ mod basic_auth_config;
 use basic_auth::BasicAuth;
 pub use basic_auth_config::BasicAuthConfig;
 
+// A hash of the password: "userdoesntexist", used if attempting to
+// authenticate a user that doesn't exist.
+const FALLBACK_PASSWORD_HASH: &str = "$2b$10$xbVccvFGkGUTkQm5gsSr8uI2byLz2t7pY3wgo9RfQy5rt77l6fyDa";
+
 // Validate HTTP Basic auth credentials.
 // Any errors here will result in StatusCode::UNAUTHORIZED being returned to
 // the client.
@@ -52,31 +56,21 @@ pub async fn validate_credentials<B>(
         return Err(StatusCode::UNAUTHORIZED);
     };
 
-    // Get the incoming user_id and check for an entry in the users hash
+    // Get the incoming user_id
     let user_id = basic_auth.user_id();
-    let user_exists = users.contains_key(user_id);
 
-    // If the user doesn't exist, pretend it does to prevent user enumeration,
-    // but log this fact.
-    if !user_exists {
-        debug!("user_id doesn't match any configured user");
-    }
-
-    // We know the user_id exists in the hash, get the hashed password for it.
     // If the user doesn't exist in the users list, they don't exist and we'll
     // return a fake password for them to prevent user enumeration.
-    let hashed_password = match users.get(user_id) {
-        Some(hashed_password) => hashed_password,
-        None                  => {
-            debug!("user doesn't exist, returning pre-baked password hash");
-
-            // A hash of the password: "userdoesntexist"
-            "$2b$10$xbVccvFGkGUTkQm5gsSr8uI2byLz2t7pY3wgo9RfQy5rt77l6fyDa"
-        },
+    // We also remember that they don't exist, so we can reject the
+    // authentication attempt at the end, even if the attempt got the password
+    // correct.
+    let (user_exists, hashed_password) = match users.get(user_id) {
+        Some(hashed_password) => (true, hashed_password.as_str()),
+        None                  => (false, FALLBACK_PASSWORD_HASH),
     };
 
-    // We need to get the reference to the Cow str to compare
-    // passwords properly, so a little unwrapping is necessary.
+    // We need to get the reference to the Cow str to compare passwords
+    // properly, so a little unwrapping is necessary.
     // This also enforces that users must have passwords, although Basic itself
     // does allow a user with no password.
     let password = match basic_auth.password() {
@@ -94,10 +88,14 @@ pub async fn validate_credentials<B>(
         },
     };
 
+    debug!(
+        "validation status: validated: {}, exists: {}",
+        validated,
+        user_exists,
+    );
+
     // If the password was not validated OR the user didn't exist, deny.
     if !validated || !user_exists {
-        debug!("password doesn't match auth_password, denying access");
-
         return Err(StatusCode::UNAUTHORIZED);
     };
 
