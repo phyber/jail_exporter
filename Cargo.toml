@@ -133,7 +133,7 @@ features = [
 
 # Features of this crate are selected in the features section above.
 [dependencies.tower-http]
-version = "0.3"
+version = "0.4"
 features = [
     "trace",
 ]
