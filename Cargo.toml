@@ -66,7 +66,7 @@ parking_lot = "0.12"
 prometheus-client = "0.19"
 rctl = "0.2.0"
 sysctl = "0.5"
-tempfile = "3.3.0"
+tempfile = "3.4.0"
 thiserror = "1.0"
 
 [dependencies.askama]
@@ -92,7 +92,7 @@ version = "0.14.0"
 optional = true
 
 [dependencies.clap]
-version = "4.1.6"
+version = "4.1.8"
 default-features = false
 features = [
     "cargo",
@@ -133,7 +133,7 @@ features = [
 
 # Features of this crate are selected in the features section above.
 [dependencies.tower-http]
-version = "0.3"
+version = "0.4"
 features = [
     "trace",
 ]
