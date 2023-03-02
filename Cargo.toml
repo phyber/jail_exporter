@@ -125,7 +125,7 @@ version = "0.9"
 optional = true
 
 [dependencies.tokio]
-version = "1.25"
+version = "1.26"
 features = [
     "macros",
     "rt-multi-thread",
