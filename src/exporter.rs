@@ -386,16 +386,16 @@ impl Exporter {
             // The original value comes in as a usize. Convert it to a u64 for
             // our Counter values, and clamp it down to an i64 for our Gauge
             // values.
-            let uvalue = *value as u64;
+            let unsigned = *value as u64;
 
             // Since we come from a usize, we can't get any negative values,
             // so clamping to a 0 min is fine.
-            let ivalue = i64::try_from(uvalue.clamp(0, i64::MAX as u64))
+            let signed = i64::try_from(unsigned.clamp(0, i64::MAX as u64))
                 .expect("i64 from u64");
 
             match key {
                 Resource::CoreDumpSize => {
-                    self.coredumpsize.get_or_create(labels).set(ivalue);
+                    self.coredumpsize.get_or_create(labels).set(signed);
                 },
                 Resource::CpuTime => {
                     // CPU time should only ever increase. Store the value from
@@ -403,67 +403,67 @@ impl Exporter {
                     self.cputime
                         .get_or_create(labels)
                         .inner()
-                        .store(uvalue, Ordering::Relaxed);
+                        .store(unsigned, Ordering::Relaxed);
                 },
                 Resource::DataSize => {
-                    self.datasize.get_or_create(labels).set(ivalue);
+                    self.datasize.get_or_create(labels).set(signed);
                 },
                 Resource::MaxProcesses => {
-                    self.maxproc.get_or_create(labels).set(ivalue);
+                    self.maxproc.get_or_create(labels).set(signed);
                 },
                 Resource::MemoryLocked => {
-                    self.memorylocked.get_or_create(labels).set(ivalue);
+                    self.memorylocked.get_or_create(labels).set(signed);
                 },
                 Resource::MemoryUse => {
-                    self.memoryuse.get_or_create(labels).set(ivalue);
+                    self.memoryuse.get_or_create(labels).set(signed);
                 },
                 Resource::MsgqQueued => {
-                    self.msgqqueued.get_or_create(labels).set(ivalue);
+                    self.msgqqueued.get_or_create(labels).set(signed);
                 },
                 Resource::MsgqSize => {
-                    self.msgqsize.get_or_create(labels).set(ivalue);
+                    self.msgqsize.get_or_create(labels).set(signed);
                 },
                 Resource::NMsgq => {
-                    self.nmsgq.get_or_create(labels).set(ivalue);
+                    self.nmsgq.get_or_create(labels).set(signed);
                 },
                 Resource::Nsem => {
-                    self.nsem.get_or_create(labels).set(ivalue);
+                    self.nsem.get_or_create(labels).set(signed);
                 },
                 Resource::NSemop => {
-                    self.nsemop.get_or_create(labels).set(ivalue);
+                    self.nsemop.get_or_create(labels).set(signed);
                 },
                 Resource::NShm => {
-                    self.nshm.get_or_create(labels).set(ivalue);
+                    self.nshm.get_or_create(labels).set(signed);
                 },
                 Resource::NThreads => {
-                    self.nthr.get_or_create(labels).set(ivalue);
+                    self.nthr.get_or_create(labels).set(signed);
                 },
                 Resource::OpenFiles => {
-                    self.openfiles.get_or_create(labels).set(ivalue);
+                    self.openfiles.get_or_create(labels).set(signed);
                 },
                 Resource::PercentCpu => {
-                    self.pcpu_used.get_or_create(labels).set(ivalue);
+                    self.pcpu_used.get_or_create(labels).set(signed);
                 },
                 Resource::PseudoTerminals => {
-                    self.pseudoterminals.get_or_create(labels).set(ivalue);
+                    self.pseudoterminals.get_or_create(labels).set(signed);
                 },
                 Resource::ReadBps => {
-                    self.readbps.get_or_create(labels).set(ivalue);
+                    self.readbps.get_or_create(labels).set(signed);
                 },
                 Resource::ReadIops => {
-                    self.readiops.get_or_create(labels).set(ivalue);
+                    self.readiops.get_or_create(labels).set(signed);
                 },
                 Resource::ShmSize => {
-                    self.shmsize.get_or_create(labels).set(ivalue);
+                    self.shmsize.get_or_create(labels).set(signed);
                 },
                 Resource::StackSize => {
-                    self.stacksize.get_or_create(labels).set(ivalue);
+                    self.stacksize.get_or_create(labels).set(signed);
                 },
                 Resource::SwapUse => {
-                    self.swapuse.get_or_create(labels).set(ivalue);
+                    self.swapuse.get_or_create(labels).set(signed);
                 },
                 Resource::VMemoryUse => {
-                    self.vmemoryuse.get_or_create(labels).set(ivalue);
+                    self.vmemoryuse.get_or_create(labels).set(signed);
                 },
                 Resource::Wallclock => {
                     // Wallclock should only ever increase, store the value
@@ -471,13 +471,13 @@ impl Exporter {
                     self.wallclock
                         .get_or_create(labels)
                         .inner()
-                        .store(uvalue, Ordering::Relaxed);
+                        .store(unsigned, Ordering::Relaxed);
                 },
                 Resource::WriteBps => {
-                    self.writebps.get_or_create(labels).set(ivalue);
+                    self.writebps.get_or_create(labels).set(signed);
                 },
                 Resource::WriteIops => {
-                    self.writeiops.get_or_create(labels).set(ivalue);
+                    self.writeiops.get_or_create(labels).set(signed);
                 },
             }
         }

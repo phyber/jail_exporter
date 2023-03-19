@@ -28,6 +28,7 @@ const TEXT_HTML_UTF8_HEADER: &str = "text/html; charset=utf-8";
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
+#[allow(clippy::unused_async)]
 pub async fn index(State(data): State<Arc<AppState>>) -> impl IntoResponse {
     debug!("Displaying index page");
 
@@ -36,6 +37,7 @@ pub async fn index(State(data): State<Arc<AppState>>) -> impl IntoResponse {
 
 // Returns a HttpResponse containing the Prometheus Exporter output, or an
 // InternalServerError if things fail for some reason.
+#[allow(clippy::unused_async)]
 pub async fn metrics(State(data): State<Arc<Mutex<AppExporter>>>)
 -> impl IntoResponse {
     debug!("Processing metrics request");
