@@ -9,7 +9,7 @@
   - Update to [actix-web] 4.0.x
   - Remove [mime] crate dependency
   - Replace dev-dependency [lazy-static] with [once_cell]
-  - Bump MSRV to 1.60.0
+  - Bump MSRV to 1.64.0
   - Move to official [prometheus-client] Rust crate
   - Update to [clap] 4.0
   - Change exposition format to [OpenMetrics] 1.0.0
