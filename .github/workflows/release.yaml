@@ -41,8 +41,8 @@ jobs:
           cd "${ASSET_DIR}"
           mv "${RELEASE}.crate" "${ASSET_NAME}"
 
-          echo "::set-output name=asset_name::${ASSET_NAME}"
-          echo "::set-output name=asset_path::${ASSET_PATH}"
+          echo "asset_name=${ASSET_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "asset_path=${ASSET_PATH}" >> "${GITHUB_OUTPUT}"
       - name: 'Generate Release Changelog'
         id: 'generate_changelog'
         run: |
@@ -58,7 +58,7 @@ jobs:
           sed -n "/^<\!-- links -->/,//p;" CHANGELOG.md \
             >> "${OUTPUT}"
 
-          echo "::set-output name=body_path::${OUTPUT}"
+          echo "body_path=${OUTPUT}" >> "${GITHUB_OUTPUT}"
       - name: 'Create Release'
         id: 'create_release'
         uses: 'actions/create-release@v1'
