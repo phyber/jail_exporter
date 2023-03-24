@@ -16,18 +16,16 @@ jobs:
         with:
           fetch-depth: 1
       - name: 'Install Toolchain'
-        uses: 'actions-rs/toolchain@v1'
+        uses: 'dtolnay/rust-toolchain@v1'
         with:
-          profile: 'minimal'
           toolchain: 'stable'
-          override: true
       - name: 'Package Crate'
-        uses: 'actions-rs/cargo@v1'
         # We can't verify here, because we're on Linux. We should be fine, if
         # we're tagging the tests have passed on CirrusCI.
-        with:
-          command: 'publish'
-          args: '--dry-run --no-verify'
+        run: |
+            cargo publish \
+                --dry-run \
+                --no-verify
       - name: 'Rename Crate to tar.gz'
         id: 'rename_crate'
         run: |
