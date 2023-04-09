@@ -74,12 +74,13 @@ line argument.
 
 ### Command Line Arguments
 
-Argument             | Default          | Purpose
----------------------|------------------|--------
-`output.file-path`   | N/A              | Output metrics to a file instead of running an HTTPd.
-`web.auth-config`    | N/A              | HTTP Basic authentication configuration file.
-`web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
-`web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
+Argument               | Default          | Purpose
+-----------------------|------------------|--------
+`--output.file-path`   | N/A              | Output metrics to a file instead of running an HTTPd.
+`--rc-script`          | N/A              | Output an appropriate rc.d script
+`--web.auth-config`    | N/A              | HTTP Basic authentication configuration file.
+`--web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
+`--web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
 
 ### Environment variables
 
