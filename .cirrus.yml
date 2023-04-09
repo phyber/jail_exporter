@@ -20,6 +20,7 @@ task:
     install_script: |
         pkg install --yes \
             curl \
+            libnghttp2 \
             rust
     before_cache_script: 'rm -rf ${CARGO_HOME}/registry/index'
     cargo_cache:
