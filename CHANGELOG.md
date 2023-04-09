@@ -6,12 +6,11 @@
   - Add FreeBSD 12.3 to the test matrix
   - Move `rc_script` functionality to its own file
   - Move `bcrypt` command functionality to its own file
-  - Update to [actix-web] 4.0.x
   - Remove [mime] crate dependency
   - Replace dev-dependency [lazy-static] with [once_cell]
   - Bump MSRV to 1.64.0
   - Move to official [prometheus-client] Rust crate
-  - Update to [clap] 4.0
+  - Update to [clap] 4.2
   - Change exposition format to [OpenMetrics] 1.0.0
   - Mutexes now use [parking_lot]
   - Switch from [actix-web] to [axum]
