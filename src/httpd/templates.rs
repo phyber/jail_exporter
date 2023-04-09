@@ -4,9 +4,7 @@
 use super::errors::HttpdError;
 use askama::Template;
 use axum::body::Bytes;
-use log::{
-    debug,
-};
+use tracing::debug;
 
 // Template for the index served at /. Useful for people connecting to the
 // exporter via their browser.

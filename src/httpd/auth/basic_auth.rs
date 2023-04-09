@@ -3,8 +3,8 @@
 #![deny(missing_docs)]
 use axum::http::StatusCode;
 use base64::Engine;
-use log::debug;
 use std::str::FromStr;
+use tracing::debug;
 
 // Type representing a Basic username and password pair.
 #[derive(Debug)]

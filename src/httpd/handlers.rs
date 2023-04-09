@@ -12,7 +12,6 @@ use axum::response::{
     Html,
     IntoResponse,
 };
-use log::debug;
 use parking_lot::Mutex;
 use std::sync::Arc;
 use super::{
@@ -20,6 +19,7 @@ use super::{
     AppExporter,
 };
 use super::Collector;
+use tracing::debug;
 
 // If we don't set this as the content-type header, Prometheus will not ingest
 // the metrics properly, complaining about the INFO metric type.

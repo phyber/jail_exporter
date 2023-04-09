@@ -11,10 +11,10 @@ use clap::{
     ArgMatches,
     Command,
 };
-use log::debug;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::str::FromStr;
+use tracing::debug;
 
 #[cfg(feature = "auth")]
 use std::path::PathBuf;

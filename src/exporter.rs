@@ -12,7 +12,6 @@ use crate::httpd::{
     HttpdError,
 };
 use jail::RunningJail;
-use log::debug;
 use parking_lot::Mutex;
 use prometheus_client::encoding::EncodeLabelSet;
 use prometheus_client::encoding::text::encode;
@@ -32,6 +31,7 @@ use std::collections::{
 };
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use tracing::debug;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 struct NameLabel {

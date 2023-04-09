@@ -7,7 +7,7 @@
 #![deny(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::redundant_field_names)]
-use log::debug;
+use tracing::debug;
 use users::UsersCache;
 
 #[cfg(feature = "auth")]
@@ -44,7 +44,7 @@ use httpd::auth::BasicAuthConfig;
 #[tokio::main]
 async fn main() -> Result<(), ExporterError> {
     // We do as much as we can without checking if we're running as root.
-    env_logger::init();
+    tracing_subscriber::fmt::init();
 
     // Parse the commandline arguments.
     let matches = cli::parse_args();

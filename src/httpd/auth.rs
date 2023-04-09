@@ -10,9 +10,9 @@ use axum::http::{
 use axum::http::header;
 use axum::middleware::Next;
 use axum::response::Response;
-use log::debug;
 use std::str::FromStr;
 use std::sync::Arc;
+use tracing::debug;
 
 mod basic_auth;
 mod basic_auth_config;

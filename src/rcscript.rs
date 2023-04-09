@@ -1,11 +1,11 @@
 // rcscript: Handle dumping the rc script
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
-use log::debug;
 use std::io::{
     self,
     Write,
 };
+use tracing::debug;
 
 const RC_SCRIPT: &str = include_str!("../rc.d/jail_exporter.in");
 

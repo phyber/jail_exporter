@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use crate::errors::ExporterError;
-use log::debug;
+use tracing::debug;
 use users::Users;
 
 // Checks that we're running as root.

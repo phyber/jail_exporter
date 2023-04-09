@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 use crate::errors::ExporterError;
 use crate::rctlstate::RctlState;
-use log::debug;
+use tracing::debug;
 
 // Checks for the availability of RACCT/RCTL in the kernel.
 pub fn is_available() -> Result<(), ExporterError> {

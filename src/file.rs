@@ -3,7 +3,6 @@
 #![forbid(missing_docs)]
 use crate::errors::ExporterError;
 use crate::exporter::Exporter;
-use log::debug;
 use std::fmt;
 use std::io::{
     self,
@@ -11,6 +10,7 @@ use std::io::{
 };
 use std::path::PathBuf;
 use tempfile::NamedTempFile;
+use tracing::debug;
 
 #[derive(Clone, Debug)]
 pub enum FileExporterOutput {

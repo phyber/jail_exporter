@@ -4,15 +4,15 @@
 use axum::body::Bytes;
 use axum::routing;
 use axum::Router;
-use log::{
-    debug,
-    info,
-};
 use parking_lot::Mutex;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
+use tracing::{
+    debug,
+    info,
+};
 
 #[cfg(feature = "auth")]
 use axum::middleware;

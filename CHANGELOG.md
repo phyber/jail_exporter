@@ -1,5 +1,9 @@
 # `jail_exporter`
 
+## v0.16.1
+
+  - Switch from [log] and [env_logger] to [tracing] and [tracing-subscriber]
+
 ## v0.16.0
 
   - Update all crate versions, and disable some unused crate features
@@ -193,6 +197,7 @@
 [handlebars]: https://crates.io/crates/handlebars
 [jail]: https://crates.io/crates/jail
 [lazy_static]: https://crates.io/crates/lazy_static
+[log]: https://crates.io/crates/log
 [mime]: https://crates.io/crates/mime
 [once_cell]: https://crates.io/crates/once_cell
 [parking_lot]: https://crates.io/crates/parking_lot
@@ -201,6 +206,8 @@
 [prometheus-client]: https://crates.io/crates/prometheus-client
 [rctl]: https://crates.io/crates/rctl
 [thiserror]: https://github.com/dtolnay/thiserror
+[tracing]: https://crates.io/crates/tracing
+[tracing-subscriber]: https://crates.io/crates/tracing-subscriber
 [users]: https://crates/io/crates/users
 [warp]: https://crates.io/crates/warp
 [Cirrus CI]: https://cirrus-ci.org/
