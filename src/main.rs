@@ -20,7 +20,7 @@ mod file;
 mod httpd;
 mod racctrctl;
 mod rctlstate;
-mod util;
+mod user;
 
 #[macro_use]
 mod macros;
@@ -67,10 +67,10 @@ async fn main() -> Result<(), ExporterError> {
 
     // Root is required beyond this point.
     // Check that we're running as root.
-    util::is_running_as_root(&mut UsersCache::new())?;
+    user::is_running_as_root(&mut UsersCache::new())?;
 
     // Check if RACCT/RCTL is available and if it's not, exit.
-    racctrctl::available()?;
+    racctrctl::is_available()?;
 
     // If an output file was specified, we do that. We will never launch the
     // HTTPd when we're passed an OUTPUT_FILE_PATH.

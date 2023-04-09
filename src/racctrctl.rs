@@ -1,4 +1,3 @@
-// Util, a module for functions with no better home.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use crate::errors::ExporterError;
@@ -6,7 +5,7 @@ use crate::rctlstate::RctlState;
 use log::debug;
 
 // Checks for the availability of RACCT/RCTL in the kernel.
-pub fn available() -> Result<(), ExporterError> {
+pub fn is_available() -> Result<(), ExporterError> {
     debug!("Checking RACCT/RCTL status");
 
     match RctlState::check() {

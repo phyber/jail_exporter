@@ -1,4 +1,3 @@
-// Util, a module for functions with no better home.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use crate::errors::ExporterError;
