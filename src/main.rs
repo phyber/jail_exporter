@@ -18,6 +18,7 @@ mod errors;
 mod exporter;
 mod file;
 mod httpd;
+mod racctrctl;
 mod rctlstate;
 mod util;
 
@@ -69,7 +70,7 @@ async fn main() -> Result<(), ExporterError> {
     util::is_running_as_root(&mut UsersCache::new())?;
 
     // Check if RACCT/RCTL is available and if it's not, exit.
-    util::is_racct_rctl_available()?;
+    racctrctl::available()?;
 
     // If an output file was specified, we do that. We will never launch the
     // HTTPd when we're passed an OUTPUT_FILE_PATH.
