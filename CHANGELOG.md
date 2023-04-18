@@ -3,6 +3,7 @@
 ## v0.16.1
 
   - Switch from [log] and [env_logger] to [tracing] and [tracing-subscriber]
+  - Bump crate versions
 
 ## v0.16.0
 
