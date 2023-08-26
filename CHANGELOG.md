@@ -4,6 +4,7 @@
 
   - Update MSRV to 1.70.0
   - Implement `axum::response::IntoResponse` for `HttpdError`
+  - Updated FreeBSD versions for CI runs, now run on 13.2 and 12.4
 
 ## v0.16.1
 
