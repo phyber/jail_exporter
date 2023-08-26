@@ -1,5 +1,10 @@
 # `jail_exporter`
 
+## v0.17.0
+
+  - Update MSRV to 1.70.0
+  - Implement `axum::response::IntoResponse` for `HttpdError`
+
 ## v0.16.1
 
   - Switch from [log] and [env_logger] to [tracing] and [tracing-subscriber]

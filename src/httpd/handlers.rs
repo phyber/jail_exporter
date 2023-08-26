@@ -19,12 +19,12 @@ use super::{
     AppExporter,
 };
 use super::Collector;
+use super::HttpdError;
 use tracing::debug;
 
 // If we don't set this as the content-type header, Prometheus will not ingest
 // the metrics properly, complaining about the INFO metric type.
 const OPENMETRICS_HEADER: &str = "application/openmetrics-text; version=1.0.0; charset=utf-8";
-const TEXT_HTML_UTF8_HEADER: &str = "text/html; charset=utf-8";
 
 // Displays the index page. This is a page which simply links to the actual
 // telemetry path.
@@ -39,7 +39,7 @@ pub async fn index(State(data): State<Arc<AppState>>) -> impl IntoResponse {
 // InternalServerError if things fail for some reason.
 #[allow(clippy::unused_async)]
 pub async fn metrics(State(data): State<Arc<Mutex<AppExporter>>>)
--> impl IntoResponse {
+-> Result<impl IntoResponse, HttpdError> {
     debug!("Processing metrics request");
 
     let data = data.lock();
@@ -47,36 +47,16 @@ pub async fn metrics(State(data): State<Arc<Mutex<AppExporter>>>)
     // Get the exporter from the state
     let exporter = &(data.exporter);
 
-    // We always want a HeaderMap
-    let mut headers = HeaderMap::new();
-
     // Exporter could fail.
-    match exporter.collect() {
-        Ok(metrics) => {
-            headers.insert(
-                header::CONTENT_TYPE,
-                HeaderValue::from_static(OPENMETRICS_HEADER),
-            );
+    let metrics = exporter.collect()?;
 
-            (
-                StatusCode::OK,
-                headers,
-                metrics,
-            )
-        },
-        Err(e) => {
-            headers.insert(
-                header::CONTENT_TYPE,
-                HeaderValue::from_static(TEXT_HTML_UTF8_HEADER),
-            );
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static(OPENMETRICS_HEADER),
+    );
 
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                headers,
-                format!("{e}"),
-            )
-        },
-    }
+    Ok((StatusCode::OK, headers, metrics))
 }
 
 #[cfg(test)]
