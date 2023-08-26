@@ -29,9 +29,8 @@ impl RctlState {
         let res = Ctl::new(CTL_KERN_RACCT_ENABLE);
 
         // If any error occurs, we assume RCTL is not present
-        let ctl = match res {
-            Ok(ctl) => ctl,
-            Err(_)  => return Self::NotPresent,
+        let Ok(ctl) = res else {
+            return Self::NotPresent;
         };
 
         if let Ok(value) = ctl.value() {
@@ -55,9 +54,8 @@ impl RctlState {
         let res = Ctl::new(CTL_SECURITY_JAIL_JAILED);
 
         // If any error occurs, assume we're jailed
-        let ctl = match res {
-            Ok(ctl) => ctl,
-            Err(_)  => return true,
+        let Ok(ctl) = res else {
+            return true;
         };
 
         if let Ok(value) = ctl.value() {

@@ -37,9 +37,8 @@ pub async fn validate_credentials<B>(
     // Get the user database out of the AppState
     // If no users are in the database, authentication is disabled and
     // requests are allowed through.
-    let users = match &state.basic_auth_config.basic_auth_users {
-        Some(users) => users,
-        None        => return Ok(next.run(req).await),
+    let Some(users) = &state.basic_auth_config.basic_auth_users else {
+        return Ok(next.run(req).await);
     };
 
     // If we have users, start working on authenticating the request.
@@ -73,9 +72,8 @@ pub async fn validate_credentials<B>(
     // properly, so a little unwrapping is necessary.
     // This also enforces that users must have passwords, although Basic itself
     // does allow a user with no password.
-    let password = match basic_auth.password() {
-        Some(password) => password,
-        None           => return Err(StatusCode::UNAUTHORIZED),
+    let Some(password) = basic_auth.password() else {
+        return Err(StatusCode::UNAUTHORIZED);
     };
 
     let validated = match bcrypt::verify(password, hashed_password) {
