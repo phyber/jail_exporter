@@ -42,6 +42,11 @@ pub enum ExporterError {
     #[error("jail_exporter must be run as root")]
     NotRunningAsRoot,
 
+    #[cfg(feature = "bcrypt_cmd")]
+    ///Raised if there is an error during password prompting
+    #[error("error during password prompt: {0}")]
+    PasswordPromptError(#[from] dialoguer::Error),
+
     /// Raised when issues occur within the file exporter
     #[error("error occurred while persisting metrics")]
     PersistError(#[from] tempfile::PersistError),

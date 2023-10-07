@@ -39,7 +39,7 @@ impl FromStr for BasicAuth {
     // Any errors will result in Unauthorized.
     fn from_str(header: &str) -> Result<Self, Self::Err> {
         let data = match header.split_once(' ') {
-            Some((type_, contents)) if type_ == "Basic" => contents,
+            Some(("Basic", contents)) => contents,
             _ => {
                 debug!("invalid authorization type");
 
