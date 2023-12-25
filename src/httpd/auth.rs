@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 use super::AppState;
+use axum::body::Body;
 use axum::extract::State;
 use axum::http::{
     Request,
@@ -27,10 +28,10 @@ const FALLBACK_PASSWORD_HASH: &str = "$2b$10$xbVccvFGkGUTkQm5gsSr8uI2byLz2t7pY3w
 // Validate HTTP Basic auth credentials.
 // Any errors here will result in StatusCode::UNAUTHORIZED being returned to
 // the client.
-pub async fn validate_credentials<B>(
+pub async fn validate_credentials(
     State(state): State<Arc<AppState>>,
-    req: Request<B>,
-    next: Next<B>,
+    req: Request<Body>,
+    next: Next,
 ) -> Result<Response, StatusCode> {
     debug!("Validating credentials");
 

@@ -5,8 +5,6 @@ use axum::body::Bytes;
 use axum::routing;
 use axum::Router;
 use parking_lot::Mutex;
-use std::net::SocketAddr;
-use std::str::FromStr;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 use tracing::{
@@ -168,13 +166,8 @@ impl Server {
 
         // Create the server
         debug!("Attempting to bind to: {}", &self.bind_address);
-        let addr = SocketAddr::from_str(&self.bind_address).map_err(|e| {
-            let address = &self.bind_address;
-            HttpdError::BindAddress(format!("{address}: {e}"))
-        })?;
-
-        let server = axum::Server::bind(&addr)
-            .serve(app.into_make_service());
+        let listener = tokio::net::TcpListener::bind(&self.bind_address).await?;
+        let server = axum::serve(listener, app.into_make_service());
 
         // Run it!
         info!("Starting HTTP server on {}", &self.bind_address);

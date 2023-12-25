@@ -107,7 +107,10 @@ mod tests {
             .unwrap();
         assert_eq!(content_type, "text/html; charset=utf-8");
 
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+
         assert_eq!(body, "Test Body".as_bytes());
     }
 }
