@@ -6,6 +6,7 @@ use axum::routing;
 use axum::Router;
 use parking_lot::Mutex;
 use std::sync::Arc;
+use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing::{
     debug,
@@ -166,7 +167,13 @@ impl Server {
 
         // Create the server
         debug!("Attempting to bind to: {}", &self.bind_address);
-        let listener = tokio::net::TcpListener::bind(&self.bind_address).await?;
+        let listener = TcpListener::bind(&self.bind_address)
+            .await
+            .map_err(|e| {
+                let address = &self.bind_address;
+                HttpdError::BindAddress(format!("{address}: {e}"))
+            })?;
+
         let server = axum::serve(listener, app.into_make_service());
 
         // Run it!

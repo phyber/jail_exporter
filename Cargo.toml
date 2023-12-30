@@ -61,7 +61,6 @@ bcrypt_cmd = [
 rc_script = []
 
 [dependencies]
-hyper = "1.1"
 jail = "0.2.0"
 parking_lot = "0.12"
 prometheus-client = "0.22"
@@ -83,6 +82,7 @@ features = [
     "http1",
     "tokio",
     "tower-log",
+    "tracing",
 ]
 
 [dependencies.base64]

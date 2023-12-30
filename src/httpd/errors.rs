@@ -36,7 +36,7 @@ pub enum HttpdError {
 
     /// Returned when a server error occurs.
     #[error("server error: {0}")]
-    ServerError(#[from] hyper::Error),
+    ServerError(#[from] axum::Error),
 }
 
 impl IntoResponse for HttpdError {

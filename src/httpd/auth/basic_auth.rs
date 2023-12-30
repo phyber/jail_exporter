@@ -38,13 +38,9 @@ impl FromStr for BasicAuth {
     // Take an Authorization header and attempt to create a BasicAuth.
     // Any errors will result in Unauthorized.
     fn from_str(header: &str) -> Result<Self, Self::Err> {
-        let data = match header.split_once(' ') {
-            Some(("Basic", contents)) => contents,
-            _ => {
+        let Some(("Basic", data)) = header.split_once(' ') else {
                 debug!("invalid authorization type");
-
                 return Err(StatusCode::UNAUTHORIZED);
-            },
         };
 
         // Decode the incoming base64 and turn it into a String
