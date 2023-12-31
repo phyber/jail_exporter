@@ -8,7 +8,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::redundant_field_names)]
 use tracing::debug;
-use users::UsersCache;
+use uzers::UsersCache;
 
 #[cfg(feature = "auth")]
 use std::path::PathBuf;

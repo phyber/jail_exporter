@@ -141,7 +141,7 @@ features = [
     "trace",
 ]
 
-[dependencies.users]
+[dependencies.uzers]
 version = "0.11"
 default-features = false
 features = [
@@ -163,7 +163,7 @@ features = [
     "util",
 ]
 
-[dev-dependencies.users]
+[dev-dependencies.uzers]
 version = "0.11"
 default-features = false
 features = [

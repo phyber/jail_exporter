@@ -4,7 +4,8 @@
 
   - Update MSRV to 1.70.0
   - Implement `axum::response::IntoResponse` for `HttpdError`
-  - Updated FreeBSD versions for CI runs, now run on 13.2 and 12.4
+  - Updated FreeBSD versions for CI runs, now run on 14.0 and 13.2
+  - Switch from [users] crate to [uzers]
 
 ## v0.16.1
 
@@ -216,6 +217,7 @@
 [tracing]: https://crates.io/crates/tracing
 [tracing-subscriber]: https://crates.io/crates/tracing-subscriber
 [users]: https://crates/io/crates/users
+[uzers]: https://crates/io/crates/uzers
 [warp]: https://crates.io/crates/warp
 [Cirrus CI]: https://cirrus-ci.org/
 [FreeBSD]: https://www.freebsd.org/

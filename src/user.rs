@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 use crate::errors::ExporterError;
 use tracing::debug;
-use users::Users;
+use uzers::Users;
 
 // Checks that we're running as root.
 pub fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> {
@@ -17,12 +17,12 @@ pub fn is_running_as_root<U: Users>(users: &mut U) -> Result<(), ExporterError> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use users::mock::{
+    use uzers::mock::{
         Group,
         MockUsers,
         User,
     };
-    use users::os::unix::UserExt;
+    use uzers::os::unix::UserExt;
 
     #[test]
     fn is_running_as_root_ok() {
