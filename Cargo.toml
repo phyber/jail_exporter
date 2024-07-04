@@ -86,7 +86,7 @@ features = [
 ]
 
 [dependencies.base64]
-version = "0.21"
+version = "0.22"
 default-features = false
 optional = true
 
@@ -142,7 +142,7 @@ features = [
 ]
 
 [dependencies.uzers]
-version = "0.11"
+version = "0.12"
 default-features = false
 features = [
     "cache",
@@ -164,7 +164,7 @@ features = [
 ]
 
 [dev-dependencies.uzers]
-version = "0.11"
+version = "0.12"
 default-features = false
 features = [
     "mock",

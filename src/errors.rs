@@ -30,7 +30,7 @@ pub enum ExporterError {
     #[error("Invalid username: {0}")]
     InvalidUsername(String),
 
-    /// Raised if an io::Error occurs
+    /// Raised if an `io::Error` occurs
     #[error("std::io::Error")]
     IoError(#[from] std::io::Error),
 
@@ -38,7 +38,7 @@ pub enum ExporterError {
     #[error("could not get jail name")]
     JailError(jail::JailError),
 
-    /// Raised if the jail_exporter is not running as root.
+    /// Raised if the `jail_exporter` is not running as root.
     #[error("jail_exporter must be run as root")]
     NotRunningAsRoot,
 

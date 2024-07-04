@@ -22,7 +22,8 @@ pub enum HttpdError {
     #[error("failed to bind to {0}")]
     BindAddress(String),
 
-    /// Returned by the Collector::collect trait method when there are issues.
+    /// Returned by the `Collector::collect` trait method when there are
+    /// issues.
     #[error("error collecting metrics: {0}")]
     CollectorError(String),
 

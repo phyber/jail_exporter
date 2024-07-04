@@ -109,10 +109,7 @@ impl Server {
 
         #[cfg(feature = "auth")]
         // Unwrap the config if we have one, otherwise use a default.
-        let basic_auth_config = match self.basic_auth_config {
-            Some(config) => config,
-            None         => BasicAuthConfig::default(),
-        };
+        let basic_auth_config = self.basic_auth_config.unwrap_or_default();
 
         #[cfg(feature = "auth")]
         // If there are no users configured, we don't need authentication
