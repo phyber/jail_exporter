@@ -61,10 +61,10 @@ bcrypt_cmd = [
 rc_script = []
 
 [dependencies]
-jail = "0.2.0"
+jail = "0.3.0"
 parking_lot = "0.12"
 prometheus-client = "0.22"
-rctl = "0.2.0"
+rctl = "0.3.0"
 sysctl = "0.6"
 tempfile = "3.8.0"
 thiserror = "1.0"
