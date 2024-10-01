@@ -65,7 +65,7 @@ jail = "0.2.0"
 parking_lot = "0.12"
 prometheus-client = "0.22"
 rctl = "0.2.0"
-sysctl = "0.5"
+sysctl = "0.6"
 tempfile = "3.8.0"
 thiserror = "1.0"
 tracing = "0.1"
@@ -136,7 +136,7 @@ features = [
 
 # Features of this crate are selected in the features section above.
 [dependencies.tower-http]
-version = "0.5"
+version = "0.6"
 features = [
     "trace",
 ]
@@ -158,7 +158,7 @@ once_cell = "1.18.0"
 pretty_assertions = "1.4.0"
 
 [dev-dependencies.tower]
-version = "0.4"
+version = "0.5"
 features = [
     "util",
 ]
