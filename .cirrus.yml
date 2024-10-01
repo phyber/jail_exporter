@@ -13,7 +13,7 @@ task:
         mkdir -p "${pkg_repos_dir}"
         cat > "${pkg_repos_dir}/FreeBSD.conf" <<'EOF'
         FreeBSD: {
-            url: "pkg+http://pkg.freebsd.org/${ABI}/quarterly"
+            url: "pkg+http://pkg.freebsd.org/${ABI}/latest"
         }
         EOF
     install_script: |
