@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: "write"
+
 jobs:
   release:
     name: 'Create Github Release'
@@ -59,22 +62,16 @@ jobs:
           echo "body_path=${OUTPUT}" >> "${GITHUB_OUTPUT}"
       - name: 'Create Release'
         id: 'create_release'
-        uses: 'actions/create-release@v1'
+        uses: 'softprops/action-gh-release@v2'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         with:
           body_path: '${{ steps.generate_changelog.outputs.body_path }}'
           draft: false
+          generate_release_notes: false
+          fail_on_unmatched_files: true
+          name: 'Release ${{ github.ref }}'
           prerelease: false
-          release_name: 'Release ${{ github.ref }}'
           tag_name: '${{ github.ref }}'
-      - name: 'Upload Release Asset'
-        id: 'upload-release-asset'
-        uses: 'actions/upload-release-asset@v1'
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-        with:
-          asset_content_type: 'application/octet-stream'
-          asset_name: '${{ steps.rename_crate.outputs.asset_name }}'
-          asset_path: '${{ steps.rename_crate.outputs.asset_path }}'
-          upload_url: '${{ steps.create_release.outputs.upload_url }}'
+          files: |
+            ${{ steps.rename_crate.outputs.asset_path }}
