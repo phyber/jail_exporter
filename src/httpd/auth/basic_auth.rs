@@ -21,8 +21,8 @@ impl BasicAuth {
         }
     }
 
-    pub fn password(&self) -> &Option<String> {
-        &self.password
+    pub fn password(&self) -> Option<&String> {
+        self.password.as_ref()
     }
 
     pub fn user_id(&self) -> &str {
@@ -102,7 +102,7 @@ mod tests {
         let basic_auth = BasicAuth::from_str(authorization).unwrap();
 
         assert_eq!(basic_auth.user_id(), "foo");
-        assert_eq!(basic_auth.password(), &Some("bar".to_string()));
+        assert_eq!(basic_auth.password(), Some("bar".to_string()).as_ref());
     }
 
     #[test]
@@ -111,6 +111,6 @@ mod tests {
         let basic_auth = BasicAuth::from_str(authorization).unwrap();
 
         assert_eq!(basic_auth.user_id(), "foo");
-        assert_eq!(basic_auth.password(), &None);
+        assert_eq!(basic_auth.password(), None);
     }
 }

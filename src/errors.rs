@@ -51,7 +51,7 @@ pub enum ExporterError {
     #[error("error occurred while persisting metrics")]
     PersistError(#[from] tempfile::PersistError),
 
-    /// Raised if there are errors originating within the `prometheus` crate.
+    // /// Raised if there are errors originating within the `prometheus` crate.
     //#[error("error within Prometheus library")]
     //PrometheusError(#[from] prometheus::Error),
 

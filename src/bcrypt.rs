@@ -5,8 +5,7 @@ use clap::ArgMatches;
 use crate::errors::ExporterError;
 use dialoguer::Password;
 use rand::{
-    distributions::Alphanumeric,
-    thread_rng,
+    distr::Alphanumeric,
     Rng,
 };
 
@@ -30,7 +29,7 @@ pub fn generate_from(matches: &ArgMatches) -> Result<(), ExporterError> {
                 let length: usize = *matches.get_one("LENGTH")
                     .expect("no password length given");
 
-                thread_rng()
+                rand::rng()
                     .sample_iter(&Alphanumeric)
                     .take(length)
                     .map(char::from)
