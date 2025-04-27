@@ -617,27 +617,27 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(Resource::CpuTime, 1000);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.cputime.get_or_create(labels).get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(Resource::CpuTime, 1020);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.cputime.get_or_create(labels).get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(Resource::CpuTime, 10);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.cputime.get_or_create(labels).get(), 10);
 
             // Fourth, adds 40, total 1070.
             hash.insert(Resource::CpuTime, 50);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.cputime.get_or_create(labels).get(), 50);
 
             // Fifth, add 0, total 1070
             hash.insert(Resource::CpuTime, 50);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.cputime.get_or_create(labels).get(), 50);
         }
     }
@@ -651,7 +651,7 @@ mod tests {
         for name in names.iter() {
             let mut hash = Rusage::new();
             hash.insert(Resource::CpuTime, 1000);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
         }
 
         // Now, create a seen array containing only a and c.
@@ -678,7 +678,7 @@ mod tests {
         for name in names.iter() {
             let mut hash = Rusage::new();
             hash.insert(Resource::CpuTime, 1000);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
         }
 
         // Now, create a seen array containing only a and c.
@@ -718,27 +718,27 @@ mod tests {
 
             // First run, adds 1000, total 1000.
             hash.insert(Resource::Wallclock, 1000);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.wallclock.get_or_create(labels).get(), 1000);
 
             // Second, adds 20, total 1020
             hash.insert(Resource::Wallclock, 1020);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.wallclock.get_or_create(labels).get(), 1020);
 
             // Third, counter was reset. Adds 10, total 1030.
             hash.insert(Resource::Wallclock, 10);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.wallclock.get_or_create(labels).get(), 10);
 
             // Fourth, adds 40, total 1070.
             hash.insert(Resource::Wallclock, 50);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.wallclock.get_or_create(labels).get(), 50);
 
             // Fifth, add 0, total 1070
             hash.insert(Resource::Wallclock, 50);
-            exporter.process_rusage(&name, &hash);
+            exporter.process_rusage(name, &hash);
             assert_eq!(exporter.wallclock.get_or_create(labels).get(), 50);
         }
     }

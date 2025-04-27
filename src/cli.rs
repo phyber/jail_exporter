@@ -142,8 +142,8 @@ mod tests {
     static LOCK: Lazy<Mutex<i8>> = Lazy::new(|| Mutex::new(0));
 
     // Wraps setting and unsetting of environment variables
-    fn env_test<T>(key: &str, var: &str, test: T) -> ()
-    where T: FnOnce() -> () + panic::UnwindSafe {
+    fn env_test<T>(key: &str, var: &str, test: T)
+    where T: FnOnce() + panic::UnwindSafe {
         // This ensures that only one test can be manipulating the environment
         // at a time.
         let _locked = LOCK.lock();

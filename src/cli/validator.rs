@@ -167,103 +167,103 @@ mod tests {
 
     #[test]
     fn is_valid_output_file_path_absolute_path() {
-        let res = is_valid_output_file_path("tmp/metrics.prom".into());
+        let res = is_valid_output_file_path("tmp/metrics.prom");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_output_file_path_bad_extension() {
-        let res = is_valid_output_file_path("/tmp/metrics.pram".into());
+        let res = is_valid_output_file_path("/tmp/metrics.pram");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_output_file_path_bad_parent_dir() {
-        let res = is_valid_output_file_path("/tmp/nope/metrics.prom".into());
+        let res = is_valid_output_file_path("/tmp/nope/metrics.prom");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_output_file_path_directory() {
-        let res = is_valid_output_file_path("/tmp".into());
+        let res = is_valid_output_file_path("/tmp");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_output_file_path_no_extension() {
-        let res = is_valid_output_file_path("/tmp/metrics".into());
+        let res = is_valid_output_file_path("/tmp/metrics");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_output_file_path_ok() {
-        let res = is_valid_output_file_path("/tmp/metrics.prom".into());
+        let res = is_valid_output_file_path("/tmp/metrics.prom");
         assert!(res.is_ok());
     }
 
     #[test]
     fn is_valid_output_file_path_root() {
-        let res = is_valid_output_file_path("/".into());
+        let res = is_valid_output_file_path("/");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_output_file_path_stdout() {
-        let res = is_valid_output_file_path("-".into());
+        let res = is_valid_output_file_path("-");
         assert!(res.is_ok());
     }
 
     #[test]
     fn is_valid_socket_addr_ipv4_with_port() {
-        let res = is_valid_socket_addr("127.0.0.1:9452".into());
+        let res = is_valid_socket_addr("127.0.0.1:9452");
         assert!(res.is_ok());
     }
 
     #[test]
     fn is_valid_socket_addr_ipv6_with_port() {
-        let res = is_valid_socket_addr("[::1]:9452".into());
+        let res = is_valid_socket_addr("[::1]:9452");
         assert!(res.is_ok());
     }
 
     #[test]
     fn is_valid_socket_addr_ipv4_without_port() {
-        let res = is_valid_socket_addr("127.0.0.1".into());
+        let res = is_valid_socket_addr("127.0.0.1");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_socket_addr_ipv6_without_port() {
-        let res = is_valid_socket_addr("[::1]".into());
+        let res = is_valid_socket_addr("[::1]");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_socket_addr_no_ip() {
-        let res = is_valid_socket_addr("random string".into());
+        let res = is_valid_socket_addr("random string");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_slash() {
-        let res = is_valid_telemetry_path("/".into());
+        let res = is_valid_telemetry_path("/");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_empty() {
-        let res = is_valid_telemetry_path("".into());
+        let res = is_valid_telemetry_path("");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_relative() {
-        let res = is_valid_telemetry_path("metrics".into());
+        let res = is_valid_telemetry_path("metrics");
         assert!(res.is_err());
     }
 
     #[test]
     fn is_valid_telemetry_path_valid() {
-        let res = is_valid_telemetry_path("/metrics".into());
+        let res = is_valid_telemetry_path("/metrics");
         assert!(res.is_ok());
     }
 }
