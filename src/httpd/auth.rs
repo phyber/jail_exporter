@@ -96,7 +96,7 @@ pub async fn validate_credentials(
     // If the password was not validated OR the user didn't exist, deny.
     if !validated || !user_exists {
         return Err(StatusCode::UNAUTHORIZED);
-    };
+    }
 
     let response = next.run(req).await;
     Ok(response)

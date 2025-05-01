@@ -72,8 +72,12 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 
 [dependencies.askama]
-version = "0.12"
+version = "0.14"
 default-features = false
+features = [
+    "alloc",
+    "derive",
+]
 
 [dependencies.axum]
 version = "0.8.1"
