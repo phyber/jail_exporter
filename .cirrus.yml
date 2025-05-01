@@ -27,3 +27,4 @@ task:
         folder: '${CARGO_HOME}/registry'
     test_script: 'cargo test'
     build_script: 'cargo build'
+    lint_script: 'cargo clippy --all-targets'

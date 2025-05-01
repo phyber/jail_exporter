@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn basic_user_config_from_yaml_invalid() {
         let path = Path::new("test-data/config_invalid.yaml");
-        let config = BasicAuthConfig::from_yaml(&path);
+        let config = BasicAuthConfig::from_yaml(path);
 
         assert!(config.is_err());
     }
@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn basic_user_config_from_yaml_null() {
         let path = Path::new("test-data/config_null.yaml");
-        let config = BasicAuthConfig::from_yaml(&path);
+        let config = BasicAuthConfig::from_yaml(path);
 
         assert!(config.is_ok());
     }
@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn basic_user_config_from_yaml_ok() {
         let path = Path::new("test-data/config_ok.yaml");
-        let config = BasicAuthConfig::from_yaml(&path);
+        let config = BasicAuthConfig::from_yaml(path);
 
         assert!(config.is_ok());
     }

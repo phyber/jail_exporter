@@ -41,7 +41,7 @@ mod tests {
     #[test]
     fn render_index_page_ok() {
         let path = "/a1b2c3";
-        let rendered = render_index_page(&path).unwrap();
+        let rendered = render_index_page(path).unwrap();
         let ok = indoc!(
             r#"
             <!DOCTYPE html>
