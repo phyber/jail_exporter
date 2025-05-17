@@ -3,7 +3,8 @@ task:
     name: 'Cargo Test'
     freebsd_instance:
         matrix:
-            - image: 'freebsd-14-1-release-amd64-ufs'
+            - image: 'freebsd-14-2-release-amd64-ufs'
+            - image: 'freebsd-13-5-release-amd64'
             - image: 'freebsd-13-4-release-amd64'
     env:
         CARGO_HOME: '${HOME}/.cargo'

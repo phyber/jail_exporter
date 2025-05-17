@@ -115,6 +115,7 @@ mod tests {
         Request,
     };
     use axum::routing::get;
+    use crate::BasicAuthConfig;
     use std::collections::HashMap;
     use tower::ServiceExt;
 
@@ -154,14 +155,14 @@ mod tests {
         let app = app(Arc::new(data));
 
         // HTTP request with no auth header.
-        let req = Request::builder()
+        let request = Request::builder()
             .uri("/")
             .body(Body::empty())
             .unwrap();
 
-        let res = app.oneshot(req).await.unwrap();
+        let res = app.oneshot(request).await.unwrap();
 
-        assert_eq!(res.status(), StatusCode::UNAUTHORIZED)
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
@@ -174,14 +175,14 @@ mod tests {
         let app = app(Arc::new(data));
 
         // HTTP request using Basic auth with username "foo" password "bar"
-        let req = Request::builder()
+        let request = Request::builder()
             .uri("/")
             .body(Body::empty())
             .unwrap();
 
-        let res = app.oneshot(req).await.unwrap();
+        let res = app.oneshot(request).await.unwrap();
 
-        assert_eq!(res.status(), StatusCode::OK)
+        assert_eq!(res.status(), StatusCode::OK);
     }
 
     #[tokio::test]
@@ -196,15 +197,15 @@ mod tests {
         let app = app(Arc::new(data));
 
         // HTTP request using Basic auth with username "foo" password "bar"
-        let req = Request::builder()
+        let request = Request::builder()
             .uri("/")
             .header(http::header::AUTHORIZATION, "Basic Zm9vOmJhcg==")
             .body(Body::empty())
             .unwrap();
 
-        let res = app.oneshot(req).await.unwrap();
+        let res = app.oneshot(request).await.unwrap();
 
-        assert_eq!(res.status(), StatusCode::OK)
+        assert_eq!(res.status(), StatusCode::OK);
     }
 
     #[tokio::test]
@@ -219,15 +220,15 @@ mod tests {
         let app = app(Arc::new(data));
 
         // HTTP request using Basic auth with username "bad" password "password"
-        let req = Request::builder()
+        let request = Request::builder()
             .uri("/")
             .header(http::header::AUTHORIZATION, "Basic YmFkOnBhc3N3b3Jk")
             .body(Body::empty())
             .unwrap();
 
-        let res = app.oneshot(req).await.unwrap();
+        let res = app.oneshot(request).await.unwrap();
 
-        assert_eq!(res.status(), StatusCode::UNAUTHORIZED)
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
     }
 
     // This test attempts to use a non-existant user with our pre-baked
@@ -246,14 +247,14 @@ mod tests {
 
         // HTTP request using Basic auth with username "nope" and password
         // "userdoesntexist"
-        let req = Request::builder()
+        let request = Request::builder()
             .uri("/")
             .header(http::header::AUTHORIZATION, "Basic bm9wZTp1c2VyZG9lc250ZXhpc3Q=")
             .body(Body::empty())
             .unwrap();
 
-        let res = app.oneshot(req).await.unwrap();
+        let res = app.oneshot(request).await.unwrap();
 
-        assert_eq!(res.status(), StatusCode::UNAUTHORIZED)
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
     }
 }

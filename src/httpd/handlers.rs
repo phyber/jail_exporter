@@ -71,6 +71,7 @@ mod tests {
         routing::get,
         Router,
     };
+    use crate::httpd::BasicAuthConfig;
     use pretty_assertions::assert_eq;
     use tower::ServiceExt;
 
@@ -86,7 +87,7 @@ mod tests {
             index_page: "Test Body".into(),
 
             #[cfg(feature = "auth")]
-            basic_auth_config: Default::default(),
+            basic_auth_config: BasicAuthConfig::default(),
         };
 
         let app = app(Arc::new(state));

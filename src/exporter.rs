@@ -605,7 +605,7 @@ mod tests {
         let names = ["test", "test2"];
         let exporter = Exporter::new();
 
-        for name in names.iter() {
+        for name in names {
             let mut hash = Rusage::new();
 
             let labels = &NameLabel {
@@ -648,7 +648,7 @@ mod tests {
         let exporter = Exporter::new();
 
         // Create some metrics for test_{a,b,c}.
-        for name in names.iter() {
+        for name in &names {
             let mut hash = Rusage::new();
             hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(name, &hash);
@@ -675,7 +675,7 @@ mod tests {
         let exporter = Exporter::new();
 
         // Create some metrics for test_{a,b,c}.
-        for name in names.iter() {
+        for name in names {
             let mut hash = Rusage::new();
             hash.insert(Resource::CpuTime, 1000);
             exporter.process_rusage(name, &hash);
@@ -706,7 +706,7 @@ mod tests {
         let names = ["test", "test2"];
         let exporter = Exporter::new();
 
-        for name in names.iter() {
+        for name in names {
             let mut hash = Rusage::new();
 
             let labels = &NameLabel {

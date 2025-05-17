@@ -1,5 +1,10 @@
 # `jail_exporter`
 
+## v0.18.0
+
+  - Update MSRV to 1.83.0
+  - Updated FreeBSD versions for CI runs to 14.2, 13.4, and 13.5
+
 ## v0.17.0
 
   - Update MSRV to 1.74.1

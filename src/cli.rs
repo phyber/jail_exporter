@@ -132,14 +132,14 @@ pub fn parse_args() -> ArgMatches {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use once_cell::sync::Lazy;
     use parking_lot::Mutex;
     use pretty_assertions::assert_eq;
     use std::env;
     use std::panic;
+    use std::sync::LazyLock;
 
     // Used during env_tests
-    static LOCK: Lazy<Mutex<i8>> = Lazy::new(|| Mutex::new(0));
+    static LOCK: LazyLock<Mutex<i8>> = LazyLock::new(|| Mutex::new(0));
 
     // Wraps setting and unsetting of environment variables
     fn env_test<T>(key: &str, var: &str, test: T)
@@ -151,12 +151,12 @@ mod tests {
         env::set_var(key, var);
 
         let result = panic::catch_unwind(|| {
-            test()
+            test();
         });
 
         env::remove_var(key);
 
-        assert!(result.is_ok())
+        assert!(result.is_ok());
     }
 
     #[test]
