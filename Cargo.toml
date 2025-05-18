@@ -42,18 +42,18 @@ default = [
 
 # Enables HTTP basic authentication
 auth = [
-    "base64",
-    "bcrypt",
-    "serde",
-    "serde_yaml",
+    "dep:base64",
+    "dep:bcrypt",
+    "dep:serde",
+    "dep:serde_yaml",
 ]
 
 # Provides a bcrypt subcommand to assist with hashing passwords for
 # authentication
 bcrypt_cmd = [
-    "bcrypt",
-    "dialoguer",
-    "rand",
+    "dep:bcrypt",
+    "dep:dialoguer",
+    "dep:rand",
 ]
 
 # Adds a CLI option to dump out an rc(8) script, useful for users who install
