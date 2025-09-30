@@ -30,9 +30,8 @@ pub fn is_valid_basic_auth_config_path(s: &str) -> Result<PathBuf, String> {
 pub fn is_valid_bcrypt_cost(s: &str) -> Result<u32, String> {
     debug!("Ensuring that bcrypt cost is valid");
 
-    let cost = match s.parse::<u32>() {
-        Err(_) => return Err("could not parse bcrypt cost as integer".to_owned()),
-        Ok(c)  => c,
+    let Ok(cost) = s.parse::<u32>() else {
+        return Err("could not parse bcrypt cost as integer".to_owned())
     };
 
     // Min and max costs taken from the bcrypt crate. The consts are private so

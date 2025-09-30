@@ -54,9 +54,8 @@ impl BasicAuthConfig {
     // Validates that usernames don't contain invalid characters.
     fn validate(&self) -> Result<(), ExporterError> {
         // Not having users is perfectly valid.
-        let users = match &self.basic_auth_users {
-            None        => return Ok(()),
-            Some(users) => users,
+        let Some(users) = &self.basic_auth_users else {
+            return Ok(())
         };
 
         for (username, hashed_password) in users {
