@@ -2,8 +2,10 @@
 
 ## v0.18.0
 
-  - Update MSRV to 1.83.0
-  - Updated FreeBSD versions for CI runs to 14.2, 13.4, and 13.5
+  - Update MSRV to 1.85.1
+  - Updated FreeBSD versions for CI runs to 14.3, 14.2, and 13.5
+  - Thanks to Alan Somers for pointing out an issue in [tracing-subscriber]
+    https://rustsec.org/advisories/RUSTSEC-2025-0055
 
 ## v0.17.0
 
