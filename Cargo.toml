@@ -20,7 +20,7 @@ keywords = [
     "prometheus",
 ]
 exclude = [
-    ".cirrus.yml",
+    ".github",
     ".editorconfig",
     ".gitignore",
     ".rustfmt.toml",
