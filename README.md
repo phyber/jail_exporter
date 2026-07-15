@@ -1,6 +1,6 @@
 # Jail Exporter
 
-[![Build Status]](https://cirrus-ci.com/github/phyber/jail_exporter)
+[![Build Status]](https://github.com/phyber/jail_exporter/actions/workflows/ci.yaml)
 
 ## Description
 
@@ -230,7 +230,7 @@ The `rc_script` feature is enabled by default for the benefit of users
 installing via `cargo install`. It is disabled by default in the FreeBSD port
 as the [`rc(8)`] script is supplied in the ports tree.
 
-[Build Status]: https://api.cirrus-ci.com/github/phyber/jail_exporter.svg
+[Build Status]: https://github.com/phyber/jail_exporter/workflows/ci.yaml/badge.svg
 [FreeBSD]: https://www.freebsd.org/
 [Prometheus]: https://prometheus.io/
 [RFC7617]: https://tools.ietf.org/html/rfc7617

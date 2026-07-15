@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - 'main'
+  pull_request:
 
 # Main test jobs are via CirrusCI as we need FreeBSD runners.
 jobs:
@@ -22,3 +23,33 @@ jobs:
       - name: 'Lint man page'
         run: |
           make manlint
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - freebsd_version: "13.5"
+          - freebsd_version: "14.4"
+          - freebsd_version: "15.0"
+    name: FreeBSD ${{ matrix.freebsd_version }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: ${{ matrix.freebsd_version }}
+          usesh: true
+      - name: Install dependencies
+        shell: freebsd {0}
+        run: pkg install -y rust
+      - name: Build
+        shell: freebsd {0}
+        run: cargo build
+      - name: Test
+        shell: freebsd {0}
+        run: cargo test
+      - name: Clippy
+        shell: freebsd {0}
+        run: cargo clippy --all-targets
