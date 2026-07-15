@@ -20,11 +20,13 @@ keywords = [
     "prometheus",
 ]
 exclude = [
-    ".github",
     ".editorconfig",
+    ".github",
     ".gitignore",
     ".rustfmt.toml",
     "Makefile",
+    "flake.lock",
+    "flake.nix",
     "grafana/jail_exporter.json",
     "man/jail_exporter.8",
     "rc.d/jail_exporter",
