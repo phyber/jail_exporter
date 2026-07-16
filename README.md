@@ -78,7 +78,7 @@ Argument               | Default          | Purpose
 -----------------------|------------------|--------
 `--output.file-path`   | N/A              | Output metrics to a file instead of running an HTTPd.
 `--rc-script`          | N/A              | Output an appropriate rc.d script
-`--web.auth-config`    | N/A              | HTTP Basic authentication configuration file.
+`--web.auth.config`    | N/A              | HTTP Basic authentication configuration file.
 `--web.listen-address` | `127.0.0.1:9452` | Address on which to expose metrics and web interface.
 `--web.telemetry-path` | `/metrics`       | Path under which to expose metrics.
 
@@ -87,7 +87,7 @@ Argument               | Default          | Purpose
 Variable             | Equivalent Argument
 ---------------------|--------------------
 `OUTPUT_FILE_PATH`   | `output.file-path`
-`WEB_AUTH_CONFIG  `  | `web.auth-config`
+`WEB_AUTH_CONFIG`    | `web.auth.config`
 `WEB_LISTEN_ADDRESS` | `web.listen-address`
 `WEB_TELEMETRY_PATH` | `web.telemetry-path`
 

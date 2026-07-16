@@ -12,7 +12,7 @@
 .Op Fl Fl rc-script
 .Nm
 .Op Fl Fl output.file-path Ns = Ns Ar path
-.Op Fl Fl web.auth-config Ns = Ns Ar path
+.Op Fl Fl web.auth.config Ns = Ns Ar path
 .Op Fl Fl web.listen-address Ns = Ns Ar addr:port
 .Op Fl Fl web.telemetry-path Ns = Ns Ar path
 .Nm
@@ -59,7 +59,7 @@ Giving a
 of
 .Dq Cm -
 will output collected metrics to stdout.
-.It Fl Fl web.auth-config Ns = Ns Ar path
+.It Fl Fl web.auth.config Ns = Ns Ar path
 Specify a
 .Ar path
 to load HTTP Basic Authentication configuration from.
@@ -201,7 +201,7 @@ is equivalent to setting the
 option.
 .It Ev WEB_AUTH_CONFIG
 is equivalent to setting the
-.Fl Fl web.auth-config
+.Fl Fl web.auth.config
 option.
 .It Ev WEB_LISTEN_ADDRESS
 is equivalent to setting the
