@@ -6,7 +6,7 @@ use crate::errors::ExporterError;
 use dialoguer::Password;
 use rand::{
     distr::Alphanumeric,
-    Rng,
+    RngExt,
 };
 
 // Handles hashing and outputting bcrypted passwords for the bcrypt sub

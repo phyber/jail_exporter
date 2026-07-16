@@ -65,7 +65,7 @@ rc_script = []
 [dependencies]
 jail = "0.3.1"
 parking_lot = "0.12"
-prometheus-client = "0.24"
+prometheus-client = "0.25"
 rctl = "0.4.0"
 sysctl = "0.7"
 tempfile = "3.23.0"
@@ -74,7 +74,7 @@ tracing = "0.1"
 tracing-subscriber = "0.3.20"
 
 [dependencies.askama]
-version = "0.14"
+version = "0.16"
 default-features = false
 features = [
     "alloc",
@@ -97,7 +97,7 @@ default-features = false
 optional = true
 
 [dependencies.bcrypt]
-version = "0.17.1"
+version = "0.19.2"
 optional = true
 
 [dependencies.clap]
@@ -120,7 +120,7 @@ features = [
 ]
 
 [dependencies.rand]
-version = "0.9"
+version = "0.10"
 optional = true
 
 [dependencies.serde]
@@ -143,7 +143,7 @@ features = [
 
 # Features of this crate are selected in the features section above.
 [dependencies.tower-http]
-version = "0.6"
+version = "0.7"
 features = [
     "trace",
 ]
