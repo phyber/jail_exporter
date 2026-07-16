@@ -11,15 +11,15 @@ use tracing::debug;
 use std::path::PathBuf;
 
 #[cfg(feature = "auth")]
-// Basic checks for valid filesystem path for web.auth-config existing.
+// Basic checks for valid filesystem path for web.auth.config existing.
 pub fn is_valid_basic_auth_config_path(s: &str) -> Result<PathBuf, String> {
-    debug!("Ensuring that web.auth-config is valid");
+    debug!("Ensuring that web.auth.config is valid");
 
     // Get a Path from our string and start checking
     let path = Path::new(&s);
 
     if !path.is_file() {
-        return Err("web.auth-config doesn't doesn't exist".to_owned());
+        return Err("web.auth.config doesn't doesn't exist".to_owned());
     }
 
     Ok(path.to_path_buf())
