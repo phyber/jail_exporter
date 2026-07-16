@@ -1,5 +1,14 @@
 # `jail_exporter`
 
+## Upcoming
+
+  - Fix `--web.auth.config` argument
+    - The old `--web.auth-config` argument did not match what other exporters
+      were doing, which could be confusing. The old argument is now a hidden
+      alias for `--web.auth.config`, so this is not a breaking change
+  - Fix error messages by including the clap `error-context` feature
+  - Minor fixes to tests when not using default crate features
+
 ## v0.18.0
 
   - Update MSRV to 1.85.1

@@ -26,10 +26,10 @@ fn create_app() -> Command {
             Arg::new("OUTPUT_FILE_PATH")
                 .action(ArgAction::Set)
                 .env("OUTPUT_FILE_PATH")
+                .help("File to output metrics to.")
                 .hide_env_values(true)
                 .long("output.file-path")
                 .value_name("FILE")
-                .help("File to output metrics to.")
                 .value_parser(validator::is_valid_output_file_path)
         )
         .arg(
@@ -59,10 +59,11 @@ fn create_app() -> Command {
     let app = app.arg(
         Arg::new("WEB_AUTH_CONFIG")
             .action(ArgAction::Set)
+            .alias("web.auth-config")
             .env("WEB_AUTH_CONFIG")
             .help("Path to HTTP Basic Authentication configuration")
             .hide_env_values(true)
-            .long("web.auth-config")
+            .long("web.auth.config")
             .value_name("CONFIG")
             .value_parser(validator::is_valid_basic_auth_config_path)
     );
@@ -138,6 +139,9 @@ mod tests {
     use std::panic;
     use std::sync::LazyLock;
 
+    #[cfg(feature = "auth")]
+    use std::path::PathBuf;
+
     // Used during env_tests
     static LOCK: LazyLock<Mutex<i8>> = LazyLock::new(|| Mutex::new(0));
 
@@ -183,6 +187,36 @@ mod tests {
         let telemetry_path = matches.get_one::<String>("WEB_TELEMETRY_PATH");
 
         assert_eq!(telemetry_path, Some(&"/metrics".into()));
+    }
+
+    #[cfg(feature = "auth")]
+    #[test]
+    fn cli_set_web_auth_config() {
+        let argv = vec![
+            "jail_exporter",
+            "--web.auth.config=example-config.yaml",
+        ];
+
+        let matches = create_app().get_matches_from(argv);
+        let web_auth_config = matches.get_one::<PathBuf>("WEB_AUTH_CONFIG");
+
+        assert_eq!(web_auth_config, Some(&"example-config.yaml".into()));
+    }
+
+    // Tests that the hidden alias (the old name for this option) continues to
+    // set the web_auth_config correctly.
+    #[cfg(feature = "auth")]
+    #[test]
+    fn cli_set_web_auth_config_legacy() {
+        let argv = vec![
+            "jail_exporter",
+            "--web.auth-config=example-config.yaml",
+        ];
+
+        let matches = create_app().get_matches_from(argv);
+        let web_auth_config = matches.get_one::<PathBuf>("WEB_AUTH_CONFIG");
+
+        assert_eq!(web_auth_config, Some(&"example-config.yaml".into()));
     }
 
     #[test]

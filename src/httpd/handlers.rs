@@ -71,9 +71,11 @@ mod tests {
         routing::get,
         Router,
     };
-    use crate::httpd::BasicAuthConfig;
     use pretty_assertions::assert_eq;
     use tower::ServiceExt;
+
+    #[cfg(feature = "auth")]
+    use crate::httpd::BasicAuthConfig;
 
     fn app(state: Arc<AppState>) -> Router {
         Router::new()

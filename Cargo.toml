@@ -106,6 +106,7 @@ default-features = false
 features = [
     "cargo",
     "env",
+    "error-context",
     "std",
     "wrap_help",
 ]
