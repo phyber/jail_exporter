@@ -130,8 +130,17 @@ pub fn is_valid_password(s: &str) -> Result<String, String> {
 pub fn is_valid_socket_addr(s: &str) -> Result<String, String> {
     debug!("Ensuring that web.listen-address is valid");
 
-    match SocketAddr::from_str(s) {
-        Ok(_)  => Ok(s.to_string()),
+    // If the socker addr begins with : assume we just got a port and prefix it
+    // with [::].
+    let addr = if s.starts_with(':') {
+        format!("[::]{s}")
+    }
+    else {
+        s.to_string()
+    };
+
+    match SocketAddr::from_str(&addr) {
+        Ok(_)  => Ok(addr),
         Err(_) => Err(format!("'{s}' is not a valid ADDR:PORT string")),
     }
 }
@@ -215,13 +224,19 @@ mod tests {
     #[test]
     fn is_valid_socket_addr_ipv4_with_port() {
         let res = is_valid_socket_addr("127.0.0.1:9452");
-        assert!(res.is_ok());
+        assert_eq!(res, Ok("127.0.0.1:9452".to_string()));
     }
 
     #[test]
     fn is_valid_socket_addr_ipv6_with_port() {
         let res = is_valid_socket_addr("[::1]:9452");
-        assert!(res.is_ok());
+        assert_eq!(res, Ok("[::1]:9452".to_string()));
+    }
+
+    #[test]
+    fn is_valid_socket_addr_without_address() {
+        let res = is_valid_socket_addr(":9452");
+        assert_eq!(res, Ok("[::]:9452".to_string()));
     }
 
     #[test]
