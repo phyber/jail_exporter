@@ -82,6 +82,11 @@ If specifying an IPv6
 .Ar addr:port
 the address portion should be enclosed within square brackets, for example:
 .Dq Cm [::1]:9452 .
+It is also possible to just specify a port in the format of
+.Ar :port
+which will result in
+.Nm
+listening on all interfaces on the given port.
 .It Fl Fl web.telemetry-path Ns = Ns Ar path
 Specify a
 .Ar path
