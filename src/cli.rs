@@ -233,6 +233,19 @@ mod tests {
     }
 
     #[test]
+    fn cli_set_web_listen_address_without_address() {
+        let argv = vec![
+            "jail_exporter",
+            "--web.listen-address=:9452",
+        ];
+
+        let matches = create_app().get_matches_from(argv);
+        let web_listen_address = matches.get_one::<String>("WEB_LISTEN_ADDRESS");
+
+        assert_eq!(web_listen_address, Some(&"[::]:9452".into()));
+    }
+
+    #[test]
     fn cli_override_env_web_listen_address() {
         env_test("WEB_LISTEN_ADDRESS", "127.0.1.2:9452", || {
             let argv = vec![
