@@ -48,6 +48,28 @@ impl IntoResponse for HttpdError {
             HeaderValue::from_static(TEXT_PLAIN_UTF8),
         );
 
-        (StatusCode::INTERNAL_SERVER_ERROR, headers, self).into_response()
+        (StatusCode::INTERNAL_SERVER_ERROR, headers, self.to_string()).into_response()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    // Regression for https://github.com/phyber/jail_exporter/issues/294:
+    // passing `self` as the response body re-enters IntoResponse and stack-overflows.
+    #[tokio::test]
+    async fn into_response_does_not_recurse() {
+        let response = HttpdError::CollectorError("boom".into()).into_response();
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
+            TEXT_PLAIN_UTF8,
+        );
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        assert_eq!(&body[..], b"error collecting metrics: boom");
     }
 }
