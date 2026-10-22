@@ -10,6 +10,7 @@
   - Minor fixes to tests when not using default crate features
   - `--web.listen-address` can now take just a port with no address in the
     format of `:9452`
+  - Fix an infinite recursion bug in HttpdError (PR #295)
 
 ## v0.18.0
 
